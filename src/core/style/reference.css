@@ -1,0 +1,2378 @@
+/* LATTICE Course Play pack R0.4.3: structural columns, shared actions, explicit
+   responsive collapse. The canvas is a geographic compositor, not UI layout. */
+      :root {
+         --ink: #20251f;
+         --muted: #5b655a;
+         --surface: #f4f1e9;
+         --paper: #fcfaf5;
+         --rule: #d6d8cb;
+         --accent: #3e5742;
+         --accent-hover: #304634;
+         --accent-light: #e5ebdf;
+         --warn: #795629;
+         --danger: #8a392c;
+         --focus: #78967a;
+         --map-ground: #596e47;
+         --aim-label-bg: #fffdf1;
+         --aim-label-ink: #253b2c;
+         --aim-label-border: #52654c;
+         --aim-label-shadow: #102a2638;
+         --white: #ffffff;
+         --serif: Georgia, 'Times New Roman', serif;
+         --sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         --control-h: 40px;
+         --space: 14px;
+         --bp-play: 980px;
+         --bp-small: 620px
+      }
+
+      * {
+         box-sizing: border-box
+      }
+
+      [hidden] {
+         display: none !important
+      }
+
+      body {
+         margin: 0;
+         background: var(--surface);
+         color: var(--ink);
+         font: 13px/1.45 var(--sans)
+      }
+
+      button,
+      input,
+      select {
+         font: inherit
+      }
+
+      button,
+      select {
+         border: 1px solid var(--rule);
+         border-radius: 7px;
+         background: var(--paper);
+         color: var(--ink);
+         min-height: var(--control-h);
+         padding: 7px 10px;
+         max-width: 100%
+      }
+
+      button {
+         cursor: pointer;
+         white-space: normal
+      }
+
+      button:hover {
+         background: var(--accent-light)
+      }
+
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      summary:focus-visible,
+      canvas:focus-visible {
+         outline: 3px solid var(--focus);
+         outline-offset: 3px
+      }
+
+      button:disabled {
+         opacity: .5;
+         cursor: not-allowed
+      }
+
+      .primary {
+         background: var(--accent);
+         color: var(--white);
+         border-color: var(--accent)
+      }
+
+      .primary:hover {
+         background: var(--accent-hover)
+      }
+
+      .primary:disabled {
+         background: var(--muted)
+      }
+
+      header {
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         padding: 15px 26px;
+         border-bottom: 1px solid var(--rule);
+         gap: 15px;
+         min-height: 65px
+      }
+
+      .wordmark {
+         white-space: nowrap;
+         flex: none;
+         font: 27px/1 var(--serif);
+         letter-spacing: -.8px
+      }
+
+      .header-right {
+         display: flex;
+         gap: 14px;
+         align-items: center;
+         font-size: 11px;
+         color: var(--muted);
+         text-align: right
+      }
+
+      .eyebrow {
+         font-size: 10px;
+         letter-spacing: 1.4px;
+         font-weight: 650;
+         text-transform: uppercase;
+         color: var(--muted)
+      }
+
+      .shell {
+         max-width: 1460px;
+         margin: auto;
+         padding: 18px 22px
+      }
+
+      #gameShell {
+         max-width: none;
+         margin: 0;
+         padding: 0
+      }
+
+      h1 {
+         font: 30px/1.15 var(--serif);
+         font-weight: normal;
+         margin: 7px 0 10px
+      }
+
+      h2 {
+         font: 23px/1.2 var(--serif);
+         font-weight: normal;
+         margin: 0 0 10px
+      }
+
+      p {
+         margin: 6px 0 10px
+      }
+
+      .intro {
+         display: flex;
+         justify-content: space-between;
+         align-items: flex-end;
+         gap: 24px;
+         margin-bottom: 20px
+      }
+
+      .intro p {
+         margin: 0;
+         color: var(--muted)
+      }
+
+      .mode {
+         border: 1px solid var(--rule);
+         border-radius: 40px;
+         padding: 7px 12px;
+         font-size: 12px
+      }
+
+      .layout {
+         display: grid;
+         grid-template-columns: clamp(250px, 20vw, 330px) minmax(0, 1fr) clamp(250px, 20vw, 330px);
+         gap: 0;
+         align-items: stretch
+      }
+
+      .panel {
+         border: 1px solid var(--rule);
+         background: var(--paper);
+         border-radius: 12px;
+         min-width: 0
+      }
+
+      .sidebar {
+         padding: 18px;
+         max-height: 100dvh;
+         height: 100dvh;
+         overflow: auto;
+         scrollbar-width: thin;
+         scrollbar-gutter: stable;
+         overscroll-behavior: contain;
+         border-radius: 0
+      }
+
+      .course-column {
+         min-width: 0;
+         height: 100dvh
+      }
+
+      .course-column>.panel {
+         overflow: hidden
+      }
+
+      .hole-summary {
+         padding-bottom: 13px;
+         border-bottom: 1px solid var(--rule);
+         margin-bottom: 14px
+      }
+
+      .hole-summary h1 {
+         font-size: 29px
+      }
+
+      .hole-yardage {
+         display: flex;
+         gap: 8px;
+         align-items: baseline
+      }
+
+      .hole-yardage strong {
+         font: 26px var(--serif)
+      }
+
+      .hole-yardage span {
+         font-size: 11px;
+         color: var(--muted)
+      }
+
+      .row,
+      .export-row,
+      .setup-bottom,
+      .preset-row,
+      .dialog-actions {
+         display: flex;
+         gap: 8px;
+         align-items: center;
+         flex-wrap: wrap
+      }
+
+      .row>* {
+         min-width: 0
+      }
+
+      .row.fill>* {
+         flex: 1 1 0
+      }
+
+      .export-row {
+         margin-top: 12px
+      }
+
+      .export-row>* {
+         flex: 1 1 90px;
+         font-size: 11px
+      }
+
+      .field {
+         margin: 12px 0
+      }
+
+      .field label {
+         display: block;
+         font-size: 12px;
+         font-weight: 600;
+         margin-bottom: 5px
+      }
+
+      .field select {
+         width: 100%
+      }
+
+      .field input[type=range] {
+         width: 100%;
+         accent-color: var(--accent);
+         min-height: 24px;
+         margin: 4px 0
+      }
+
+      .rangeEnds {
+         display: flex;
+         justify-content: space-between;
+         color: var(--muted);
+         font-size: 10px;
+         gap: 12px;
+         margin-top: -2px
+      }
+
+      .subtle,
+      .small,
+      .control-note {
+         color: var(--muted);
+         font-size: 12px
+      }
+
+      .small {
+         font-size: 11px;
+         line-height: 1.55
+      }
+
+      .inlineValue {
+         float: right;
+         font-weight: 400;
+         color: var(--muted);
+         font-size: 11px
+      }
+
+      .statline {
+         display: flex;
+         gap: 14px;
+         padding-bottom: 12px;
+         border-bottom: 1px solid var(--rule);
+         margin-bottom: 12px
+      }
+
+      .stat {
+         flex: 1;
+         min-width: 0
+      }
+
+      .stat strong {
+         font: 26px/1.2 var(--serif);
+         display: block
+      }
+
+      .stat span {
+         font-size: 10px;
+         color: var(--muted);
+         text-transform: uppercase
+      }
+
+      .stat span b {
+         font-weight: 500
+      }
+
+      .shot-button {
+         width: 100%;
+         font-size: 15px;
+         font-weight: 600;
+         margin: 12px 0 8px;
+         min-height: 46px
+      }
+
+      .stock-button {
+         width: 100%;
+         font-size: 12px
+      }
+
+      .status {
+         font-size: 12px;
+         color: var(--accent);
+         min-height: 52px;
+         line-height: 1.5
+      }
+
+      details {
+         border-top: 1px solid var(--rule);
+         padding-top: 12px;
+         margin-top: 13px
+      }
+
+      summary {
+         cursor: pointer;
+         font-size: 12px;
+         font-weight: 600;
+         min-height: 26px
+      }
+
+      .notes {
+         margin: 10px 0 0;
+         padding: 10px;
+         background: var(--accent-light);
+         border-radius: 7px;
+         font-size: 12px;
+         line-height: 1.6
+      }
+
+      .mapbar {
+         display: flex;
+         align-items: center;
+         padding: 4px 0 9px
+      }
+
+      .maptools {
+         display: flex;
+         gap: 6px;
+         flex-wrap: wrap;
+         justify-content: center
+      }
+
+      .maptools button {
+         font-size: 12px;
+         min-height: 36px;
+         padding: 5px 12px
+      }
+
+      .canvasWrap {
+         position: relative;
+         width: 100%;
+         height: 100%;
+         background: var(--map-ground);
+         overflow: hidden
+      }
+
+      .canvasWrap canvas {
+         width: 100%;
+         height: 100%;
+         display: block;
+         touch-action: none;
+         cursor: crosshair
+      }
+
+      .map-caption {
+         padding: 7px 0 0;
+         font-size: 11px;
+         color: var(--muted);
+         min-height: 34px
+      }
+
+      .key {
+         display: flex;
+         gap: 5px 10px;
+         align-items: center;
+         flex-wrap: wrap;
+         padding: 7px 0;
+         font-size: 10px;
+         color: var(--muted);
+         border-top: 1px solid var(--rule)
+      }
+
+      .key i {
+         display: inline-block;
+         width: 7px;
+         height: 7px;
+         border: 1px solid var(--accent);
+         border-radius: 50%;
+         margin-right: 5px
+      }
+
+      .round-strip {
+         display: flex;
+         flex-direction: column;
+         gap: 10px;
+         border-bottom: 1px solid var(--rule);
+         padding-bottom: 14px
+      }
+
+      .round-strip p {
+         font-size: 12px;
+         color: var(--muted);
+         margin: 4px 0
+      }
+
+      .round-strip small {
+         font-size: 11px;
+         color: var(--muted)
+      }
+
+      .round-strip button {
+         align-self: flex-start;
+         font-size: 11px
+      }
+
+      .wind-panel {
+         display: flex;
+         gap: 10px;
+         align-items: center;
+         padding: 16px 0;
+         border-bottom: 1px solid var(--rule)
+      }
+
+      .wind-compass {
+         width: 95px;
+         flex: 0 0 95px;
+         color: var(--accent)
+      }
+
+      .wind-compass svg {
+         display: block;
+         width: 100%;
+         height: auto
+      }
+
+      .wind-compass text {
+         text-anchor: middle;
+         dominant-baseline: central;
+         font: 11px var(--sans);
+         fill: currentColor
+      }
+
+      .wind-info {
+         min-width: 0;
+         flex: 1
+      }
+
+      .wind-head {
+         display: flex;
+         align-items: center;
+         gap: 6px;
+         flex-wrap: wrap;
+         font-size: 11px
+      }
+
+      .wind-gust {
+         color: var(--warn);
+         font-weight: 700
+      }
+
+      #windDirectionText {
+         font-size: 11px
+      }
+
+      .wind-track {
+         height: 8px;
+         margin-top: 10px;
+         background: var(--accent-light);
+         border-radius: 6px;
+         overflow: hidden
+      }
+
+      .wind-fill {
+         height: 100%;
+         width: 0;
+         background: var(--accent);
+         border-radius: 6px
+      }
+
+      .wind-scale {
+         display: flex;
+         justify-content: space-between;
+         font-size: 10px;
+         color: var(--muted);
+         margin-top: 3px
+      }
+
+      #windHelp {
+         font-size: 10px;
+         line-height: 1.45;
+         color: var(--muted);
+         margin: 8px 0 0
+      }
+
+      .terrain-area {
+         padding-top: 14px
+      }
+
+      .terrain-toggle {
+         width: 100%;
+         font-weight: 600
+      }
+
+      .terrain-guide {
+         padding: 12px 0 4px
+      }
+
+      .terrain-guide .row {
+         gap: 6px
+      }
+
+      .terrain-guide button {
+         font-size: 10px;
+         padding: 5px 7px;
+         min-height: 34px
+      }
+
+      .terrain-guide select {
+         width: 100%;
+         font-size: 11px
+      }
+
+      .terrain-legend {
+         display: flex;
+         gap: 5px;
+         flex-wrap: wrap;
+         font-size: 10px;
+         color: var(--muted)
+      }
+
+      .legend-chip {
+         display: inline-block;
+         width: 8px;
+         height: 8px;
+         margin-right: 3px
+      }
+
+      .terrain-panel {
+         padding: 12px;
+         margin-top: 10px
+      }
+
+      .terrain-heading {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 7px;
+         align-items: center;
+         justify-content: space-between
+      }
+
+      .terrain-heading h2 {
+         font-size: 19px;
+         margin: 4px 0
+      }
+
+      .terrain-heading p {
+         font-size: 10px;
+         color: var(--muted)
+      }
+
+      .terrain-heading button {
+         font-size: 10px;
+         min-height: 32px
+      }
+
+      .terrain-controls {
+         display: grid;
+         grid-template-columns: 1fr;
+         gap: 8px;
+         margin: 12px 0
+      }
+
+      .terrain-controls label {
+         font-size: 11px;
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         gap: 8px
+      }
+
+      .terrain-controls select {
+         max-width: 65%;
+         font-size: 10px;
+         min-height: 32px
+      }
+
+      .terrain-controls input {
+         width: 65%;
+         accent-color: var(--accent)
+      }
+
+      .mesh-wrap {
+         height: 190px;
+         background: var(--accent-light);
+         border-radius: 5px;
+         overflow: hidden
+      }
+
+      .mesh-wrap canvas {
+         width: 100%;
+         height: 100%;
+         display: block
+      }
+
+      .terrain-readout {
+         font-size: 11px;
+         line-height: 1.6;
+         margin-top: 9px
+      }
+
+      .terrain-foot {
+         font-size: 10px;
+         color: var(--muted);
+         line-height: 1.5;
+         margin: 7px 0 0
+      }
+
+      .golfer-summary {
+         border-top: 1px solid var(--rule);
+         margin-top: 14px;
+         padding-top: 14px
+      }
+
+      .golfer-summary>strong {
+         font: 20px var(--serif);
+         display: block;
+         margin-top: 4px
+      }
+
+      .golfer-summary>p {
+         font-size: 11px;
+         color: var(--muted);
+         margin: 4px 0
+      }
+
+      .golfer-summary button {
+         margin-top: 8px;
+         font-size: 11px;
+         width: 100%
+      }
+
+      #saveNotice {
+         font-size: 10px
+      }
+
+      .yardage-table {
+         width: 100%;
+         border-collapse: collapse;
+         font-size: 11px
+      }
+
+      .yardage-table th {
+         text-align: left;
+         font-weight: 600
+      }
+
+      .yardage-table td,
+      .yardage-table th {
+         border-bottom: 1px solid var(--rule);
+         padding: 6px 4px
+      }
+
+      .yardage-table td:last-child,
+      .yardage-table th:last-child {
+         text-align: right
+      }
+
+      .result {
+         margin: 13px 0;
+         padding: 13px;
+         background: var(--accent-light);
+         border-color: var(--rule)
+      }
+
+      .result h2 {
+         font-size: 21px
+      }
+
+      .pill {
+         font-size: 10px;
+         color: var(--muted)
+      }
+
+      .metrics {
+         display: grid;
+         grid-template-columns: 1fr 1fr;
+         gap: 10px;
+         margin: 13px 0
+      }
+
+      .metric b {
+         font: 22px/1.2 var(--serif);
+         display: block
+      }
+
+      .metric span {
+         font-size: 9px;
+         color: var(--muted)
+      }
+
+      .metric span b {
+         font: inherit;
+         display: inline
+      }
+
+      .message {
+         font-size: 11px;
+         line-height: 1.6
+      }
+
+      #log,
+      pre {
+         font: 10px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+         white-space: pre-wrap;
+         overflow-wrap: anywhere;
+         max-height: 180px;
+         overflow: auto
+      }
+
+      #groundStudy {
+         display: none;
+         background: var(--accent-light);
+         padding: 10px;
+         border-radius: 5px
+      }
+
+      .sectionPanel {
+         padding: 10px;
+         border: none;
+         margin-top: 9px
+      }
+
+      .sectionTitle {
+         font-size: 10px;
+         color: var(--muted);
+         display: flex;
+         flex-direction: column;
+         gap: 4px
+      }
+
+      .profileWrap {
+         height: 170px
+      }
+
+      .profileWrap canvas {
+         width: 100%;
+         height: 100%;
+         display: block
+      }
+
+      .checkrow {
+         display: flex;
+         align-items: center;
+         gap: 8px;
+         font-size: 11px;
+         margin: 12px 0
+      }
+
+      .checkrow input {
+         accent-color: var(--accent)
+      }
+
+      .warning {
+         font-size: 11px;
+         line-height: 1.6;
+         color: var(--warn)
+      }
+
+      .footer {
+         display: flex;
+         flex-direction: column;
+         justify-content: space-between;
+         gap: 15px;
+         font-size: 10px;
+         color: var(--muted);
+         padding: 10px 0 0
+      }
+
+      .builder-grid,
+      .setup-grid {
+         display: grid;
+         grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+         gap: 20px;
+         align-items: start
+      }
+
+      .builder-form,
+      .builder-preview,
+      .setup-fields,
+      .setup-card {
+         padding: 24px
+      }
+
+      .budget {
+         margin: 16px 0
+      }
+
+      .budget-head {
+         display: flex;
+         justify-content: space-between;
+         gap: 14px;
+         align-items: center
+      }
+
+      .budget-total {
+         font-size: 16px;
+         font-weight: 650
+      }
+
+      .budget-track {
+         height: 7px;
+         background: var(--accent-light);
+         border-radius: 5px;
+         overflow: hidden;
+         margin: 9px 0
+      }
+
+      .budget-fill {
+         height: 100%;
+         background: var(--accent)
+      }
+
+      .bad {
+         color: var(--danger)
+      }
+
+      .budget-fill.bad {
+         background: var(--danger)
+      }
+
+      .skill-row {
+         border-top: 1px solid var(--rule);
+         padding: 12px 0
+      }
+
+      .skill-title {
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         gap: 14px;
+         font-weight: 600
+      }
+
+      .skill-title input {
+         width: 70px;
+         padding: 6px;
+         border: 1px solid var(--rule);
+         border-radius: 5px;
+         background: var(--paper);
+         min-height: var(--control-h)
+      }
+
+      .skill-row p {
+         font-size: 11px;
+         color: var(--muted);
+         margin: 4px 0
+      }
+
+      .skill-row input[type=range] {
+         width: 100%;
+         accent-color: var(--accent)
+      }
+
+      .field input[type=text] {
+         width: 100%;
+         padding: 9px;
+         border: 1px solid var(--rule);
+         border-radius: 6px;
+         background: var(--paper);
+         min-height: var(--control-h)
+      }
+
+      .field-grid,
+      .style-grid {
+         display: grid;
+         grid-template-columns: 1fr 1fr;
+         gap: 16px
+      }
+
+      .builder-actions {
+         display: flex;
+         gap: 10px;
+         align-items: center;
+         flex-wrap: wrap;
+         margin-top: 18px
+      }
+
+      .builder-actions>* {
+         flex: 1
+      }
+
+      .preview-name {
+         font: 28px var(--serif);
+         margin: 7px 0 12px
+      }
+
+      .preview-callout,
+      .setup-notice {
+         padding: 13px;
+         background: var(--accent-light);
+         border-radius: 7px;
+         font-size: 12px;
+         margin: 15px 0
+      }
+
+      .setup-card dl {
+         display: grid;
+         grid-template-columns: 1fr;
+         gap: 4px;
+         margin: 18px 0
+      }
+
+      .setup-card dt {
+         font-size: 11px;
+         color: var(--muted)
+      }
+
+      .setup-card dd {
+         margin: 0 0 9px;
+         font-weight: 600
+      }
+
+      .setup-bottom {
+         margin-top: 20px
+      }
+
+      .setup-bottom>* {
+         flex: 1 1 135px
+      }
+
+      .pin-check {
+         font-size: 11px;
+         color: var(--accent);
+         line-height: 1.55
+      }
+
+      dialog {
+         padding: 18px;
+         width: min(880px, 94vw);
+         max-height: 92dvh;
+         overflow: auto;
+         border: 1px solid var(--rule);
+         border-radius: 12px;
+         background: var(--paper);
+         color: var(--ink)
+      }
+
+      dialog::backdrop {
+         background: color-mix(in srgb, var(--ink) 55%, transparent)
+      }
+
+      .dialog-actions {
+         justify-content: flex-end
+      }
+
+      dialog .terrain-panel {
+         border: none;
+         padding: 5px
+      }
+
+      dialog .mesh-wrap {
+         height: min(520px, 55dvh)
+      }
+
+      dialog .terrain-controls {
+         grid-template-columns: 1fr 1fr 1fr
+      }
+
+      dialog #terrainExpand {
+         display: none
+      }
+
+      @media(max-width:980px) {
+         .layout {
+            grid-template-columns: minmax(0, 1fr)
+         }
+
+         .course-column {
+            grid-row: 1
+         }
+
+         .shot-panel {
+            grid-row: 2
+         }
+
+         .context-panel {
+            grid-row: 3
+         }
+
+         .sidebar {
+            height: auto;
+            max-height: none;
+            overflow: visible;
+            scrollbar-gutter: auto
+         }
+
+         #gameShell {
+            max-width: none;
+            padding: 0
+         }
+
+         .course-column {
+            height: 100dvh
+         }
+
+         .canvasWrap {
+            height: 100%
+         }
+
+         .builder-grid,
+         .setup-grid {
+            grid-template-columns: minmax(0, 1fr)
+         }
+
+         .wind-panel {
+            max-width: 420px
+         }
+
+         .terrain-controls {
+            grid-template-columns: 1fr 1fr 1fr
+         }
+
+         .mesh-wrap {
+            height: 300px
+         }
+
+         .footer {
+            flex-direction: column;
+            gap: 4px
+         }
+      }
+
+      @media(max-width:620px) {
+         header {
+            padding: 14px 16px;
+            gap: 8px
+         }
+
+         .wordmark {
+            font-size: 25px
+         }
+
+         .header-right {
+            flex-direction: column;
+            gap: 2px;
+            font-size: 10px
+         }
+
+         .shell {
+            padding: 18px 12px
+         }
+
+         .intro {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 10px
+         }
+
+         .field-grid,
+         .style-grid,
+         .terrain-controls,
+         dialog .terrain-controls {
+            grid-template-columns: minmax(0, 1fr)
+         }
+
+         .builder-form,
+         .builder-preview,
+         .setup-fields,
+         .setup-card {
+            padding: 17px
+         }
+
+         .sidebar {
+            padding: 16px
+         }
+
+         .maptools {
+            gap: 4px
+         }
+
+         .maptools button {
+            padding: 5px 10px
+         }
+
+         .key {
+            font-size: 9px;
+            gap: 7px
+         }
+
+         .map-caption {
+            font-size: 10px
+         }
+
+         .mesh-wrap {
+            height: 230px
+         }
+      }
+
+      /* Entry screens retain the complete R0.3 builder and setup controls. */
+      .builder {
+         max-width: 1240px;
+         margin: 26px auto;
+         padding: 0 22px 24px
+      }
+
+      .build-panel,
+      .preview-panel {
+         padding: 24px
+      }
+
+      .builder-intro {
+         max-width: 780px;
+         color: var(--muted);
+         margin-bottom: 22px
+      }
+
+      .budget-row {
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         margin-top: 18px
+      }
+
+      .build-note {
+         color: var(--muted);
+         font-size: 11px
+      }
+
+      .builder-footer {
+         display: flex;
+         gap: 10px;
+         flex-wrap: wrap;
+         margin-top: 18px
+      }
+
+      .preview-card {
+         padding: 18px
+      }
+
+      .setup-shell {
+         max-width: 1240px;
+         margin: 26px auto;
+         padding: 0 22px 24px
+      }
+
+      @media(max-width:620px) {
+
+         .builder,
+         .setup-shell {
+            padding: 0 12px 20px
+         }
+
+         .build-panel,
+         .preview-panel {
+            padding: 17px
+         }
+      }
+
+      /* R0.4.1: declared map annotation overlay; this never changes layout or aiming. */
+      .aim-distance-label {
+         position: absolute;
+         z-index: 1;
+         pointer-events: none;
+         user-select: none;
+         white-space: nowrap;
+         padding: 5px 8px;
+         border: 1px solid var(--aim-label-border);
+         border-radius: 5px;
+         background: var(--aim-label-bg);
+         color: var(--aim-label-ink);
+         box-shadow: 0 1px 5px var(--aim-label-shadow);
+         font: 600 13px/1.25 var(--sans);
+         font-variant-numeric: tabular-nums
+      }
+
+      .maptools button[aria-pressed="true"] {
+         background: var(--accent);
+         color: var(--paper);
+         border-color: var(--accent)
+      }
+
+      /* Input modes are explicit and separate from the terrain overlay. */
+      .map-actionbar {
+         display: flex;
+         align-items: center;
+         flex-direction: column;
+         gap: 6px;
+         padding: 0 0 10px;
+         margin-bottom: 10px;
+         border-bottom: 1px solid var(--rule);
+         background: var(--paper)
+      }
+
+      .map-modes {
+         display: flex;
+         gap: 6px;
+         width: 100%
+      }
+
+      .map-modes button {
+         flex: 1 1 0
+      }
+
+      .map-modes button {
+         font-size: 12px;
+         min-height: 36px;
+         padding: 5px 10px
+      }
+
+      .map-modes button[aria-pressed=true] {
+         background: var(--accent);
+         color: var(--white);
+         border-color: var(--accent)
+      }
+
+      #mapModeHint {
+         font-size: 11px;
+         color: var(--muted);
+         width: 100%;
+         text-align: left
+      }
+
+      #map[data-mode=inspect] {
+         outline: 2px solid var(--warn);
+         outline-offset: -2px
+      }
+
+      @media(max-width:620px) {
+         .map-actionbar {
+            justify-content: center
+         }
+
+         #mapModeHint {
+            text-align: center;
+            flex-basis: 100%
+         }
+      }
+
+      /* Course Play pack: full-height center is an exclusive geographical surface.
+   Only the ball/aim/cup, trace and optional terrain annotations are overlays. */
+      body.playing>#entryHeader {
+         display: none
+      }
+
+      .play-brand {
+         padding-bottom: 16px;
+         margin-bottom: 16px;
+         border-bottom: 1px solid var(--rule)
+      }
+
+      .play-brand>span {
+         display: block;
+         margin-top: 8px;
+         font-size: 11px;
+         color: var(--muted)
+      }
+
+      .view-controls {
+         padding: 14px 0;
+         border-bottom: 1px solid var(--rule)
+      }
+
+      .view-controls h2 {
+         font-size: 19px
+      }
+
+      .practice-actions {
+         display: flex;
+         align-items: center;
+         gap: 10px;
+         margin: 4px 0 6px
+      }
+
+      .practice-actions button {
+         flex: 0 0 auto;
+         min-width: 100px;
+         font-weight: 650
+      }
+
+      .practice-help {
+         font-size: 10px;
+         margin-bottom: 10px
+      }
+
+      .shot-reference {
+         padding: 8px 10px;
+         background: var(--accent-light);
+         border-radius: 6px;
+         font-variant-numeric: tabular-nums
+      }
+
+      .shot-reference[data-unreachable=true] {
+         color: var(--warn)
+      }
+
+      .export-row {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 8px
+      }
+
+      .export-row>button {
+         flex: 1 1 120px
+      }
+
+      /* R0.5 photographic play. Dark visual direction, implemented as live UI. */
+      :root {
+         color-scheme: dark;
+         --ink: #f0f2e9;
+         --muted: #adbdb5;
+         --surface: #102421;
+         --paper: #102522;
+         --rule: #34504a;
+         --accent: #397d60;
+         --accent-hover: #468e6d;
+         --accent-light: #1b3930;
+         --warn: #e4c690;
+         --danger: #eeaaa0;
+         --focus: #94d9bd;
+         --map-ground: #405233;
+         --aim-label-bg: #f5f5df;
+         --aim-label-ink: #283d30;
+         --aim-label-border: #526a49;
+         --aim-label-shadow: #08191466
+      }
+
+      body {
+         font-size: 13px;
+         background: #0c211e
+      }
+
+      .layout {
+         grid-template-columns: clamp(250px, 20vw, 340px) minmax(0, 1fr) clamp(250px, 20vw, 340px)
+      }
+
+      .sidebar {
+         background: linear-gradient(125deg, #102522, #10221f 66%, #142b24);
+         padding: 22px 22px 24px;
+         border: 0;
+         scrollbar-color: #435e52 transparent
+      }
+
+      .context-panel {
+         border-right: 1px solid #31483e;
+         box-shadow: 5px 0 18px #06171222;
+         z-index: 2
+      }
+
+      .shot-panel {
+         border-left: 1px solid #31483e;
+         box-shadow: -5px 0 18px #06171222;
+         z-index: 2
+      }
+
+      .play-brand {
+         padding-bottom: 18px;
+         margin-bottom: 18px
+      }
+
+      .play-brand .wordmark {
+         font-size: clamp(30px, 2.55vw, 43px);
+         letter-spacing: -1px;
+         line-height: 1.05;
+         color: #f5f6ed
+      }
+
+      .play-brand>span {
+         font-size: 10px;
+         letter-spacing: 2px;
+         font-weight: 450;
+         margin-top: 9px;
+         color: #bfd0c4
+      }
+
+      .hole-summary h1 {
+         font-size: 28px;
+         margin: 6px 0 12px;
+         line-height: 1.15
+      }
+
+      .eyebrow {
+         font-weight: 450;
+         letter-spacing: 1.8px;
+         font-size: 10px;
+         color: #c0cec4
+      }
+
+      .compact-yardage {
+         font-size: 10px;
+         margin: 3px 0 7px
+      }
+
+      .compact-yardage strong {
+         font-size: 16px
+      }
+
+      .compact-yardage span {
+         font-size: 10px
+      }
+
+      .tee-strip {
+         display: flex;
+         gap: 10px;
+         margin-top: 14px
+      }
+
+      .tee-chip {
+         flex: 1;
+         display: flex;
+         flex-direction: column;
+         align-items: flex-start;
+         border: 0;
+         border-bottom: 2px solid transparent;
+         border-radius: 0;
+         background: none;
+         padding: 3px 1px 7px;
+         min-height: 42px;
+         font-size: 11px
+      }
+
+      .tee-chip strong {
+         font-size: 17px;
+         font-weight: 500;
+         line-height: 1.3
+      }
+
+      .tee-chip strong:before {
+         content: '';
+         display: inline-block;
+         width: 9px;
+         height: 9px;
+         border-radius: 50%;
+         margin-right: 6px;
+         vertical-align: middle
+      }
+
+      .tee-chip.blue strong:before {
+         background: #4c8cca
+      }
+
+      .tee-chip.white strong:before {
+         background: #f2f1e9
+      }
+
+      .tee-chip.red strong:before {
+         background: #bc6254
+      }
+
+      .tee-chip span {
+         color: #b5c7bd;
+         margin: 3px 0 0 15px;
+         font-size: 11px
+      }
+
+      .tee-chip[aria-pressed=true] {
+         border-bottom-color: #75a389;
+         background: #1b382d55
+      }
+
+      .tee-chip:hover {
+         background: #274936
+      }
+
+      button,
+      select {
+         border-radius: 5px;
+         background: #102622;
+         border-color: #597367;
+         color: #eef4eb;
+         min-height: 37px;
+         transition: background .1s, border-color .1s
+      }
+
+      button:hover {
+         border-color: #88ae97;
+         background: #254636
+      }
+
+      button:disabled {
+         opacity: .4
+      }
+
+      .primary {
+         background: linear-gradient(105deg, #286346, #3c8a64);
+         border: 1px solid #74a38a;
+         box-shadow: 0 2px 8px #04150f44;
+         color: #f8f6e9
+      }
+
+      .primary:hover {
+         background: #448d65
+      }
+
+      .statline {
+         gap: 10px;
+         margin-bottom: 14px;
+         padding-bottom: 14px
+      }
+
+      .stat strong {
+         font-size: 32px;
+         line-height: 1.3
+      }
+
+      .stat span {
+         font-size: 9px;
+         letter-spacing: .6px;
+         color: #bdccc2
+      }
+
+      #shotHeading {
+         font-size: 24px;
+         margin-top: 8px;
+         margin-bottom: 12px
+      }
+
+      .map-actionbar {
+         background: transparent;
+         border-bottom: 1px solid var(--rule);
+         margin-bottom: 13px;
+         padding-bottom: 11px
+      }
+
+      .map-modes {
+         gap: 8px
+      }
+
+      .map-modes button {
+         font-size: 12px;
+         min-height: 40px
+      }
+
+      .map-modes button[aria-pressed=true] {
+         background: #367459;
+         color: #fff;
+         border-color: #739782
+      }
+
+      #mapModeHint {
+         font-size: 11px;
+         line-height: 1.5;
+         margin-top: 4px
+      }
+
+      .field {
+         margin: 16px 0
+      }
+
+      .field label {
+         font-size: 12px;
+         font-weight: 500;
+         margin-bottom: 6px
+      }
+
+      .field select {
+         font-size: 13px;
+         min-height: 39px
+      }
+
+      .field input[type=range] {
+         accent-color: #80c6a8;
+         height: 22px
+      }
+
+      .rangeEnds {
+         font-size: 10px;
+         color: #adbfb0
+      }
+
+      .inlineValue {
+         font-size: 11px;
+         color: #c2d5c5
+      }
+
+      .play-hint {
+         font-size: 11px;
+         line-height: 1.55;
+         color: #bdcbbb
+      }
+
+      .shot-reference {
+         border: 1px solid #526e5b;
+         background: #192f27;
+         font-size: 11px;
+         line-height: 1.6;
+         padding: 10px 12px;
+         margin: 13px 0
+      }
+
+      .shot-reference[data-unreachable=true] {
+         color: #d7c79e
+      }
+
+      .shot-button {
+         min-height: 47px;
+         margin: 12px 0 10px;
+         font-family: var(--serif);
+         font-size: 19px;
+         font-weight: 500;
+         letter-spacing: .2px
+      }
+
+      .stock-button {
+         background: transparent;
+         font-size: 11px;
+         min-height: 32px
+      }
+
+      .practice-actions {
+         align-items: center;
+         margin: 0 0 9px;
+         gap: 10px
+      }
+
+      .practice-actions button {
+         min-height: 36px;
+         min-width: 97px;
+         font-size: 11px
+      }
+
+      .practice-actions .small {
+         font-size: 10px
+      }
+
+      .practice-help {
+         font-size: 10px;
+         color: #aebfb0;
+         line-height: 1.5;
+         margin-bottom: 11px
+      }
+
+      .status {
+         font-size: 11px;
+         line-height: 1.6;
+         color: #bfd9c6;
+         min-height: 0;
+         margin: 10px 0 14px;
+         padding: 0
+      }
+
+      .view-controls h2,
+      .quick-terrain>.eyebrow {
+         font: 10px var(--sans);
+         text-transform: uppercase;
+         letter-spacing: 1.8px;
+         color: #c0cec4;
+         margin: 0 0 12px
+      }
+
+      .view-controls {
+         padding: 17px 0
+      }
+
+      .maptools {
+         justify-content: flex-start;
+         gap: 6px
+      }
+
+      .maptools button {
+         font-size: 11px;
+         padding: 6px 10px;
+         min-height: 33px
+      }
+
+      .maptools button[aria-pressed=true] {
+         background: #397b5b;
+         color: #f5f7eb;
+         border-color: #7aa68b
+      }
+
+      .wind-panel {
+         padding: 13px 0;
+         background: transparent
+      }
+
+      .wind-compass {
+         border-color: #496052
+      }
+
+      .wind-track {
+         background: #3b5042
+      }
+
+      .wind-fill {
+         background: #89b89a
+      }
+
+      .wind-needle {
+         color: #e3ebd8
+      }
+
+      #windHelp {
+         font-size: 10px;
+         color: #abc0af
+      }
+
+      .wind-head {
+         font-size: 11px
+      }
+
+      .quick-terrain {
+         border-top: 1px solid var(--rule);
+         padding: 17px 0 10px;
+         margin-top: 12px
+      }
+
+      .quick-terrain dl {
+         display: grid;
+         grid-template-columns: 1fr auto;
+         gap: 7px;
+         margin: 10px 0 14px;
+         font-size: 12px
+      }
+
+      .quick-terrain dt {
+         color: #bbcabd
+      }
+
+      .quick-terrain dd {
+         margin: 0;
+         text-transform: capitalize;
+         color: #f3f6e5;
+         font-variant-numeric: tabular-nums
+      }
+
+      .quick-terrain button {
+         font-size: 11px;
+         width: 100%
+      }
+
+      .terrain-panel {
+         background: #173129;
+         border-color: #526a57
+      }
+
+      .mesh-wrap {
+         background: #263e2e
+      }
+
+      .terrain-heading h2 {
+         font-size: 19px
+      }
+
+      .terrain-toggle {
+         background: transparent;
+         font-size: 11px;
+         min-height: 36px
+      }
+
+      .terrain-area {
+         padding-top: 12px
+      }
+
+      summary {
+         font-size: 10px;
+         font-weight: 450;
+         letter-spacing: 1.05px;
+         text-transform: uppercase;
+         padding: 1px 0;
+         min-height: 22px;
+         color: #d4dfd3
+      }
+
+      details {
+         padding-top: 11px;
+         margin-top: 12px
+      }
+
+      .sectionTitle {
+         font-size: 11px
+      }
+
+      #sourceDetails p {
+         font-size: 11px
+      }
+
+      .key,
+      .map-caption {
+         color: #b5c7b4;
+         font-size: 10px
+      }
+
+      .key {
+         line-height: 1.7
+      }
+
+      .golfer-summary {
+         padding-top: 16px
+      }
+
+      .golfer-summary>strong {
+         font-size: 23px
+      }
+
+      .golfer-summary button {
+         background: transparent
+      }
+
+      .result {
+         background: #1b362a
+      }
+
+      .pill {
+         color: #b8ceb9
+      }
+
+      .footer {
+         font-size: 10px
+      }
+
+      input[type=checkbox] {
+         accent-color: #81b791
+      }
+
+      .checkrow {
+         font-size: 11px
+      }
+
+      .warning {
+         color: #e0c797
+      }
+
+      .panel {
+         border-color: #38583f
+      }
+
+      .builder-intro {
+         font-size: 14px
+      }
+
+      .budget-fill {
+         background: #6fbb91
+      }
+
+      #setupPinWarning {
+         color: #e6c997
+      }
+
+      dialog {
+         background: #122a22
+      }
+
+      .field input[type=text],
+      .skill-title input {
+         color: var(--ink)
+      }
+
+      @media (min-width:981px) and (max-height:850px) {
+         .sidebar {
+            padding: 17px
+         }
+
+         .play-brand {
+            padding-bottom: 12px;
+            margin-bottom: 12px
+         }
+
+         .play-brand .wordmark {
+            font-size: 31px
+         }
+
+         .play-brand>span {
+            font-size: 9px
+         }
+
+         .hole-summary {
+            padding-bottom: 10px;
+            margin-bottom: 11px
+         }
+
+         .hole-summary h1 {
+            font-size: 25px
+         }
+
+         .field {
+            margin: 12px 0
+         }
+
+         .shot-button {
+            margin: 9px 0
+         }
+
+         .map-actionbar {
+            padding-bottom: 8px
+         }
+
+         .statline {
+            margin-bottom: 10px
+         }
+
+         .play-hint {
+            font-size: 10px
+         }
+
+         .view-controls {
+            padding: 13px 0
+         }
+      }
+
+      @media(max-width:980px) {
+         .layout {
+            grid-template-columns: minmax(0, 1fr)
+         }
+
+         .sidebar {
+            padding: 22px;
+            max-height: none;
+            height: auto
+         }
+
+         .context-panel {
+            grid-row: 3
+         }
+
+         .shot-panel {
+            grid-row: 2
+         }
+
+         .course-column {
+            grid-row: 1;
+            height: 100dvh
+         }
+
+         .play-brand .wordmark {
+            font-size: 36px
+         }
+
+         .tee-strip {
+            max-width: 310px
+         }
+
+         .statline {
+            max-width: 470px
+         }
+
+         .maptools {
+            flex-wrap: wrap
+         }
+
+         .quick-terrain {
+            max-width: 470px
+         }
+      }
+
+      /* Compact primary tools; explanatory and diagnostic choices are secondary. */
+      .hole-summary .eyebrow {
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         gap: 8px
+      }
+
+      .small-setup {
+         font: 10px var(--sans);
+         min-height: 27px;
+         padding: 3px 8px;
+         background: transparent;
+         letter-spacing: 0
+      }
+
+      .view-controls .terrain-area {
+         padding-top: 5px
+      }
+
+      .display-options {
+         margin-top: 10px;
+         padding-top: 10px
+      }
+
+      .display-options .key {
+         padding: 8px 0;
+         margin: 6px 0
+      }
+
+      .display-options .map-caption {
+         font-size: 10px
+      }
+
+      .quick-terrain {
+         padding-top: 14px
+      }
+
+      .practice-actions {
+         width: 100%;
+         gap: 10px
+      }
+
+      .practice-actions button {
+         flex: 1 1 0
+      }
+
+      .practice-ledger-line {
+         display: block;
+         margin: 0 0 5px;
+         font-size: 10px;
+         color: #bfd0bc
+      }
+
+      .wind-compass {
+         color: #dcebd9;
+         border-color: #718c77
+      }
+
+      .wind-compass .needle,
+      .wind-needle {
+         color: #dcebd9
+      }
+
+      #windArrow {
+         color: #dcebd9
+      }
+
+      .wind-compass span {
+         color: #b3c7b0
+      }
+
+      @media(min-width:981px) and (max-height:950px) {
+         .play-hint {
+            display: none
+         }
+
+         .field {
+            margin: 12px 0
+         }
+
+         .shot-reference {
+            font-size: 10px;
+            line-height: 1.45;
+            padding: 8px 9px
+         }
+
+         .stat strong {
+            font-size: 29px
+         }
+
+         .shot-button {
+            min-height: 43px
+         }
+
+         .status {
+            font-size: 10px
+         }
+
+         .wind-panel {
+            padding: 10px 0
+         }
+      }
+
+      .quick-terrain dd {
+         text-transform: none
+      }
+
+      #quickSurface {
+         text-transform: capitalize
+      }
+
+      .shot-reference {
+         min-height: 92px
+      }
+
+      /* R0.6: four-state entry. The State 3 layout and renderer are unchanged. */
+      .welcome-screen {
+         min-height: 100vh;
+         min-height: 100dvh;
+         display: grid;
+         place-items: center;
+         padding: 48px 24px;
+         background: radial-gradient(ellipse at 50% 38%, #173a30 0%, #0c211e 58%, #081814 100%)
+      }
+
+      .welcome-content {
+         width: min(880px, 100%);
+         text-align: center;
+         transform: translateY(-4vh)
+      }
+
+      #welcomeTitle {
+         font: normal clamp(66px, 11vw, 138px)/1.05 var(--serif);
+         letter-spacing: -.045em;
+         margin: 0 0 23px;
+         color: #f5f4e8;
+         outline: none
+      }
+
+      .welcome-byline {
+         font: normal clamp(15px, 1.45vw, 21px)/1.6 var(--sans);
+         letter-spacing: .02em;
+         color: #c2d0c5;
+         margin: 0 auto;
+         max-width: 640px;
+         text-wrap: balance
+      }
+
+      .proceed-link {
+         display: inline-block;
+         background: none;
+         border: 0;
+         border-bottom: 1px solid #75a58a;
+         border-radius: 0;
+         box-shadow: none;
+         color: #b5e2c9;
+         padding: 12px 0 8px;
+         font-size: 15px;
+         font-weight: 500;
+         min-height: 44px;
+         text-decoration: none;
+         cursor: pointer;
+         line-height: 1.5;
+         text-align: left
+      }
+
+      .proceed-link:hover {
+         background: none;
+         border-color: #dcf5e2;
+         color: #f5f9ef
+      }
+
+      .proceed-link:focus-visible,
+      a:focus-visible {
+         outline: 3px solid var(--focus);
+         outline-offset: 7px
+      }
+
+      .proceed-link:disabled {
+         background: none;
+         color: var(--muted);
+         opacity: .45;
+         cursor: not-allowed
+      }
+
+      .welcome-content>.proceed-link {
+         margin-top: 42px
+      }
+
+      #entryHeader {
+         max-width: 1200px;
+         margin: auto;
+         padding: 25px 30px;
+         border: 0;
+         min-height: 82px
+      }
+
+      #entryHeader .wordmark {
+         font-size: 30px;
+         letter-spacing: -.8px
+      }
+
+      #entryHeader .header-right {
+         gap: 20px
+      }
+
+      .builder,
+      .setup-page {
+         max-width: 1200px;
+         margin: 0 auto;
+         padding: 24px 30px 50px
+      }
+
+      .builder h1,
+      .setup-page h1 {
+         font-size: clamp(30px, 4vw, 44px);
+         margin-top: 9px
+      }
+
+      .builder-intro {
+         max-width: 760px;
+         margin-bottom: 27px;
+         line-height: 1.65;
+         color: var(--muted)
+      }
+
+      .build-panel {
+         padding: 26px
+      }
+
+      .build-panel h2,
+      .setup-fields h2 {
+         font-size: 25px
+      }
+
+      .builder-summary {
+         margin-top: 22px;
+         padding-top: 18px;
+         border-top: 1px solid var(--rule)
+      }
+
+      .builder-summary>strong {
+         font: 26px var(--serif);
+         display: block;
+         margin-top: 6px
+      }
+
+      .build-note {
+         color: var(--muted);
+         font-size: 11px;
+         line-height: 1.7;
+         margin-top: 14px
+      }
+
+      .builder-footer {
+         max-width: 1000px
+      }
+
+      .budget-row {
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         margin-top: 20px
+      }
+
+      .budget-total {
+         font: 24px var(--serif)
+      }
+
+      #budgetStatus {
+         min-height: 20px
+      }
+
+      .pro-tag {
+         font-size: 10px;
+         color: #b7cdbe;
+         margin-top: 14px
+      }
+
+      .preset-row {
+         margin: 16px 0
+      }
+
+      .skill-row p {
+         line-height: 1.6
+      }
+
+      .builder-actions,
+      .setup-bottom {
+         align-items: flex-start;
+         gap: 16px
+      }
+
+      .builder-actions>.proceed-link,
+      .setup-bottom>.proceed-link {
+         flex: 1 0 100%;
+         width: max-content;
+         max-width: max-content
+      }
+
+      .builder-actions>button:not(.proceed-link),
+      .setup-bottom>button:not(.proceed-link) {
+         flex: 0 1 auto;
+         font-size: 11px
+      }
+
+      #profileNotice,
+      #setupStatus {
+         min-height: 22px;
+         margin-top: 15px
+      }
+
+      .noscript-message {
+         position: fixed;
+         bottom: 20px;
+         left: 20px;
+         right: 20px;
+         text-align: center;
+         background: #372c1e;
+         padding: 15px
+      }
+
+      @media(max-width:620px) {
+         #entryHeader {
+            padding: 20px
+         }
+
+         .header-right {
+            font-size: 10px
+         }
+
+         #entryHeader .header-right {
+            display: block
+         }
+
+         #entryHeader .header-right span {
+            display: block;
+            margin: 3px 0
+         }
+
+         .builder,
+         .setup-page {
+            padding: 20px 18px 36px
+         }
+
+         .build-panel,
+         .setup-fields,
+         .setup-card {
+            padding: 20px
+         }
+
+         .welcome-content {
+            transform: none
+         }
+
+         .welcome-content>.proceed-link {
+            margin-top: 32px
+         }
+
+         .welcome-byline {
+            max-width: 340px
+         }
+
+         .field-grid {
+            gap: 12px
+         }
+
+         .builder-actions>.proceed-link,
+         .setup-bottom>.proceed-link {
+            font-size: 14px
+         }
+      }
+
+      .pin-check {
+         color: #bfd7c7
+      }

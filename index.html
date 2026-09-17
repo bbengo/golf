@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+   <meta charset="utf-8" />
+   <meta content="width=device-width,initial-scale=1" name="viewport" />
+   <title>UCG-50</title>
+   <meta name="robots" content="noindex,nofollow,noarchive" />
+   <meta name="description" content="The fiftieth anniversary edition of Ultimate Challenge Golf" />
+   <meta name="theme-color" content="#0c211e" />
+   <link rel="icon" href="data:," />
+   <meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ws://localhost:* ws://127.0.0.1:*; font-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'" />
+   
+   
+</head>
+
+<body data-state="0">
+   <section id="welcomeScreen" class="welcome-screen" aria-labelledby="welcomeTitle">
+      <div class="welcome-content">
+         <h1 id="welcomeTitle" tabindex="-1">UCG-50</h1>
+         <p class="welcome-byline">The fiftieth anniversary edition of Ultimate Challenge Golf</p>
+         <a id="proceedProfile" class="proceed-link" href="#player-profile">Proceed to player profile.</a>
+      </div>
+   </section>
+   <noscript>
+      <p class="noscript-message">UCG-50 needs JavaScript to run the game. Enable JavaScript, then reload this page.</p>
+   </noscript>
+   <header id="entryHeader" hidden>
+      <div class="wordmark">UCG-50</div>
+      <div class="header-right"><span id="journeyStep">State 1 · Player profile</span><span>Team preview · R0.6</span>
+      </div>
+   </header>
+   <section aria-labelledby="builderHeading" class="builder" id="playerBuilder" hidden>
+      <div class="eyebrow">State 1 · Player profile</div>
+      <h1 id="builderHeading" tabindex="-1">Your player profile.</h1>
+      <p class="builder-intro">Start with a professional foundation. Spend 100 points on your strengths, then choose
+         your stock ball flight. The golfer executes; you make the decisions.</p>
+      <div class="builder-grid">
+         <section class="panel build-panel">
+            <h2>Where is your edge?</h2>
+            <p class="subtle">Every area starts capable. Points add an advantage, with diminishing returns. Zero points
+               does not mean zero skill.</p>
+            <div class="budget-row"><span class="subtle">Total allocated</span>
+               <div class="budget-total"><span id="pointsTotal">100</span><span style="font:13px var(--sans)"> /
+                     100</span></div>
+            </div>
+            <div aria-hidden="true" class="budget-track">
+               <div class="budget-fill" id="budgetFill"></div>
+            </div>
+            <div aria-live="polite" class="status" id="budgetStatus" role="status">All 100 points allocated.</div>
+            <div aria-label="Starting allocations" class="preset-row"><button data-preset="balanced"
+                  type="button">Balanced</button><button data-preset="longGame" type="button">Long game</button><button
+                  data-preset="touch" type="button">Touch &amp; feel</button><button id="clearPoints"
+                  type="button">Clear points</button></div>
+            <div id="skillRows"></div>
+            <p class="build-note">To strengthen one area, take points from another. No category is silently rebalanced.
+               Power and accuracy both use the same budget.</p>
+         </section>
+         <section class="panel build-panel">
+            <h2>A style of your own.</h2>
+            <div class="field"><label class="top-label" for="playerName">Golfer name</label><input autocomplete="off"
+                  id="playerName" maxlength="40" type="text" value="My golfer" /></div>
+            <div class="field"><label class="top-label" for="stockCurve">Stock shot shape · no point cost</label><select
+                  id="stockCurve">
+                  <option value="-2">Left → right · pronounced</option>
+                  <option value="-1">Left → right · gentle</option>
+                  <option selected="" value="0">Straight</option>
+                  <option value="1">Right → left · gentle</option>
+                  <option value="2">Right → left · pronounced</option>
+               </select></div>
+            <div class="field"><label class="top-label" for="stockFlight">Stock trajectory · no point
+                  cost</label><select id="stockFlight">
+                  <option value="-1">Low flight</option>
+                  <option selected="" value="0">Mid flight</option>
+                  <option value="1">High flight</option>
+               </select></div>
+            <p class="build-note">Left and right are relative to your shot line, not the screen. Style changes launch
+               and spin, not your skill rating. You may work the ball away from stock on any shot, at a small
+               consistency cost.</p>
+            <div class="builder-summary">
+               <div class="eyebrow">Your player card</div><strong id="previewName">My golfer</strong>
+               <p class="subtle" id="previewStyle"></p>
+               <p class="small" id="previewStrengths"></p>
+               <div class="pro-tag">Professional-design range · calibration in progress</div>
+               <p class="subtle" id="previewCarry"></p>
+               <details>
+                  <summary>Stock club yardages · model reference</summary>
+                  <p class="small">Flat fairway, calm wind, 100% stock effort, no execution variation. These are this
+                     model’s carry distances—not measured TOUR statistics or a promise on the course.</p>
+                  <table class="yardage-table">
+                     <thead>
+                        <tr>
+                           <th>Club</th>
+                           <th>Carry · yards</th>
+                        </tr>
+                     </thead>
+                     <tbody id="previewYardages"></tbody>
+                  </table>
+               </details>
+            </div>
+            <div class="builder-actions"><button class="proceed-link" id="enterGame" type="button">Proceed to course
+                  setup.</button><button id="backToOpening" class="text-back" type="button">Back to
+                  opening</button><button hidden="" id="cancelBuilder" type="button">Keep current round</button></div>
+            <p aria-live="polite" class="small" id="profileNotice" role="status"></p>
+            <details>
+               <summary>Save or restore a player file</summary>
+               <div class="export-row"><button id="exportPlayer" type="button">Export golfer</button><button
+                     id="importPlayer" type="button">Import golfer</button></div><input accept="application/json,.json"
+                  hidden="" id="playerFile" type="file" />
+               <p class="small">Your accepted golfer is saved in this browser when local storage is available. Export a
+                  file to carry it to another browser or build.</p>
+            </details>
+         </section>
+      </div>
+      <p class="build-note builder-footer">This first pass groups the larger specification into six playable skills.
+         Green reading and course management belong to you. There is no automatic aim correction, score bonus,
+         guaranteed handicap, or named TOUR player hidden in the model. Editing an accepted golfer starts a new practice
+         hole; earlier shot evidence is preserved.</p>
+   </section>
+   <section aria-labelledby="setupHeading" class="shell setup-page" hidden="" id="roundSetup">
+      <div class="intro">
+         <div>
+            <div class="eyebrow">State 2 · Course setup</div>
+            <h1 id="setupHeading" tabindex="-1">Your course setup.</h1>
+            <p>The course keeps its character. You choose the conditions.</p>
+         </div>
+         <div class="mode">Creek &amp; Shoulder · par 4</div>
+      </div>
+      <div class="setup-grid">
+         <section class="panel setup-fields">
+            <h2>Your round</h2>
+            <div class="field-grid">
+               <div class="field"><label for="teeChoice">Tee</label><select id="teeChoice">
+                     <option value="red">Red · shorter</option>
+                     <option selected="" value="white">White · middle</option>
+                     <option value="blue">Blue · longest</option>
+                  </select></div>
+               <div class="field"><label for="pinChoice">Pin position</label><select id="pinChoice">
+                     <option value="easy">Easy</option>
+                     <option selected="" value="moderate">Moderate</option>
+                     <option value="challenging">Challenging</option>
+                  </select></div>
+            </div>
+            <p class="setup-notice" id="setupDeferred">These choices now move the ball and cup. Each tee has its own
+               start and yardage; all three pin neighborhoods have passed the prototype slope check.</p>
+            <div class="field-grid">
+               <div class="field"><label for="windChoice">Wind</label><select id="windChoice">
+                     <option value="calm">Calm</option>
+                     <option value="light">Light</option>
+                     <option selected="" value="moderate">Moderate</option>
+                     <option value="strong">Strong · occasional gusts</option>
+                  </select></div>
+               <div class="field"><label for="moistureChoice">Ground conditions</label><select id="moistureChoice">
+                     <option value="dry">Dry</option>
+                     <option selected="" value="moderate">Moderate</option>
+                     <option value="wet">Wet</option>
+                  </select></div>
+            </div>
+            <div class="field"><label for="windDirection">Prevailing wind · blowing toward <output
+                     id="setupDirection">N</output></label><input aria-valuetext="Toward north" id="windDirection"
+                  max="359" min="0" step="1" type="range" value="0" />
+               <div class="rangeEnds"><span>Full circle · 360° compass</span><span>Direction varies gently</span></div>
+            </div>
+            <p class="small" id="setupWindNote">Read the moving compass and unmarked strength bar during play.</p>
+            <div class="setup-bottom"><button class="proceed-link" id="startRound" type="button">Proceed to the
+                  course.</button><button id="backToGolfer" type="button">Back to player profile</button><button
+                  hidden="" id="cancelSetup" type="button">Keep current round</button></div>
+            <p aria-live="polite" class="small" id="setupStatus" role="status"></p>
+         </section>
+         <section class="panel setup-card">
+            <div class="eyebrow">Course-owned defaults · read only</div>
+            <h2>Creek &amp; Shoulder</h2>
+            <p class="subtle">An elevated tee, a creek-side driving corridor, quirky left-side mounds, and an uphill
+               green. The raised left shoulder is your terrain experiment.</p>
+            <dl>
+               <dt>Default green speed</dt>
+               <dd>13.0 feet · authored fast-green test reference</dd>
+               <dt>Default fairway firmness</dt>
+               <dd>Medium-firm</dd>
+            </dl>
+            <div class="setup-notice"><strong>Today’s modeled response</strong>
+               <p id="setupSurfacePreview"></p>
+            </div>
+            <p class="small">Moisture adjusts bounce, roll and green pace. Geometry, local ground character and the
+               course’s baseline stay unchanged. These first-pass responses are not field-calibrated.</p>
+            <h2 style="margin-top:22px">A reviewed place for the cup</h2>
+            <p class="small">The three prototype cup sites are checked over a 3 m neighborhood against the 3° ceiling.
+               The moderate pin is set behind the measured severe drop. Public elevation data is not a putting-green
+               survey.</p>
+            <p class="pin-check" id="setupPinCheck"></p>
+         </section>
+      </div>
+   </section>
+   <main class="shell" hidden="" id="gameShell">
+      <div class="layout course-play-layout">
+         <aside aria-label="Hole, conditions and terrain" class="sidebar panel context-panel" id="contextPanel">
+            <div class="play-brand">
+               <div class="wordmark">UCG-50</div><span>State 3 · Play · R0.6 · TEAM PREVIEW</span>
+            </div>
+            <section class="hole-summary">
+               <div class="eyebrow">Hole 01 · Par 4<button class="small-setup" id="editConditions"
+                     type="button">Setup</button></div>
+               <h1 id="holeTitle">Creek &amp; Shoulder</h1>
+               <div class="hole-yardage compact-yardage"><strong id="holeYardage">438</strong><span>yards · selected
+                     tee</span></div>
+               <p class="subtle">A ground-game experiment.</p>
+               <div aria-label="Tee choice — opens setup for confirmation" class="tee-strip"><button
+                     aria-pressed="false" class="tee-chip blue" id="quickTee-blue"
+                     title="Choose blue tee in round setup"
+                     type="button"><strong>—</strong><span>Blue</span></button><button aria-pressed="false"
+                     class="tee-chip white" id="quickTee-white" title="Choose white tee in round setup"
+                     type="button"><strong>—</strong><span>White</span></button><button aria-pressed="false"
+                     class="tee-chip red" id="quickTee-red" title="Choose red tee in round setup"
+                     type="button"><strong>—</strong><span>Red</span></button></div>
+            </section>
+            <div class="round-strip">
+               <div><strong id="roundHeadline">Today’s conditions</strong>
+                  <p id="roundSubline"></p><small id="roundPreferenceLine"></small>
+               </div>
+            </div>
+            <div class="wind-panel" id="windPanel">
+               <div class="wind-compass"><svg aria-label="Wind compass" id="windCompass" role="img"
+                     viewbox="0 0 120 120">
+                     <circle cx="60" cy="60" fill="none" opacity=".45" r="40" stroke="currentColor" stroke-width="1">
+                     </circle>
+                     <path d="M60 20v6 M100 60h-6 M60 100v-6 M20 60h6 M32 32l4 4 M88 32l-4 4 M88 88l-4-4 M32 88l4-4"
+                        fill="none" opacity=".5" stroke="currentColor"></path><text x="60" y="10">N</text><text x="110"
+                        y="60">E</text><text x="60" y="111">S</text><text x="10" y="60">W</text>
+                     <g id="windArrow" transform="rotate(0 60 60)">
+                        <path d="M60 86V34" stroke="currentColor" stroke-linecap="round" stroke-width="4"></path>
+                        <path d="M60 27L50 44L60 40L70 44Z" fill="currentColor"></path>
+                     </g>
+                     <circle cx="60" cy="60" fill="currentColor" r="4"></circle>
+                  </svg></div>
+               <div class="wind-info">
+                  <div class="wind-head"><strong>Wind</strong><span class="wind-gust" id="windGust"></span><span
+                        id="windDirectionText">Toward N</span></div>
+                  <div aria-label="Estimate strength from the unmarked bar" class="wind-strength" id="windStrength"
+                     role="img">
+                     <div aria-hidden="true" class="wind-track">
+                        <div class="wind-fill" id="windFill"></div>
+                     </div>
+                     <div aria-hidden="true" class="wind-scale"><span>0</span><span>40 mph</span></div>
+                  </div>
+                  <p id="windHelp">Arrow shows where the wind is blowing. Judge the strength.</p>
+               </div>
+            </div>
+            <section aria-label="Course view controls" class="view-controls">
+               <h2>View &amp; layers</h2>
+               <div class="mapbar">
+                  <div class="maptools"><button aria-pressed="true" id="shotView"
+                        title="Frame the current shot; auto framing resumes at each new shot" type="button">Auto
+                        shot</button><button id="fit" title="Fit the whole hole">Hole</button><button
+                        id="ballView">Ball</button><button id="greenView">Green</button><button aria-label="Zoom in"
+                        id="zoomIn">+</button><button aria-label="Zoom out" id="zoomOut">−</button></div>
+               </div>
+               <section class="terrain-area"><button aria-controls="terrainPanel" aria-pressed="false"
+                     class="terrain-toggle" id="terrainToggle" type="button">Read terrain</button>
+                  <div class="terrain-guide" hidden="" id="terrainGuide">
+                     <div class="row"><strong id="terrainModeTitle">Terrain overlay</strong><label
+                           for="terrainLayer">Overlay</label><select id="terrainLayer">
+                           <option value="contour">Contour chart</option>
+                           <option value="slope">Slope shading + contours</option>
+                        </select><button id="probeBall" type="button">At ball</button><button id="probeAim"
+                           type="button">At dot</button><button id="probeGreen" type="button">At green</button></div>
+                     <p class="small" id="terrainInteractionHelp">Contours stay visible while you aim. Choose Inspect
+                        ground above the course to probe elevations without moving your target.</p>
+                     <div class="terrain-legend"><span>Contours: <b id="contourInterval">1 ft</b> · close lines mean
+                           steeper ground</span><span>Arrows point downhill</span><span><i class="legend-chip"
+                              style="background:#d9e7d2"></i>Below 1°</span><span><i class="legend-chip"
+                              style="background:#eddaa2"></i>1–3°</span><span><i class="legend-chip"
+                              style="background:#d7a28e"></i>Above 3°</span></div>
+                  </div>
+                  <div id="terrainPanelSlot">
+                     <div class="panel terrain-panel" hidden="" id="terrainPanel">
+                        <div class="terrain-heading">
+                           <div>
+                              <div class="eyebrow">Same terrain as the simulation</div>
+                              <h2>The shape of the ground</h2>
+                              <p>Same ground as the ball uses.</p>
+                           </div><button class="terrain-close" id="terrainClose" type="button">Aim with
+                              contours</button><button id="terrainExpand" type="button">Enlarge study</button>
+                        </div>
+                        <div class="terrain-controls"><label for="terrainRadius">Area <select id="terrainRadius">
+                                 <option value="14">Near · 30 yd across</option>
+                                 <option selected="" value="28">Local · 60 yd across</option>
+                                 <option value="60">Wide · 130 yd across</option>
+                              </select></label><label for="terrainYaw">Rotate <input id="terrainYaw" max="359" min="0"
+                                 type="range" value="35" /></label><label for="terrainExaggeration">Height scale <select
+                                 id="terrainExaggeration">
+                                 <option value="1">True · 1×</option>
+                                 <option selected="" value="3">Exaggerated · 3×</option>
+                                 <option value="6">Exaggerated · 6×</option>
+                              </select></label></div>
+                        <div class="mesh-wrap"><canvas aria-label="Terrain wireframe inspection" id="terrainMesh"
+                              role="img"></canvas></div>
+                        <div aria-live="polite" class="terrain-readout" id="terrainReadout" role="status"></div>
+                        <p class="terrain-foot" id="terrainFoot"></p>
+                     </div>
+                  </div>
+               </section>
+               <details class="display-options">
+                  <summary>Display options</summary>
+                  <div class="field"><label for="skin">Course view</label><select id="skin">
+                        <option selected="" value="art">Photographic course</option>
+                        <option value="meadow">Terrain plan</option>
+                        <option value="sepia">Yardage-book plan</option>
+                     </select></div><label class="checkrow"><input id="routeLayer" type="checkbox" />Show yardage-book
+                     route</label>
+                  <div class="key"><span>Aim starts at cup · adjust freely</span><span>One line · your selected
+                        target</span><span id="scale">—</span><span>Tee below · green above</span></div>
+                  <div class="map-caption" id="mapCaption">Click to move the dot · drag to pan · scroll to zoom</div>
+               </details>
+            </section>
+            <section class="quick-terrain">
+               <div class="eyebrow">Terrain inspector</div>
+               <p class="small" id="quickTerrainCaption">At your ball</p>
+               <dl>
+                  <dt>Elevation</dt>
+                  <dd id="quickElevation">—</dd>
+                  <dt>Slope</dt>
+                  <dd id="quickSlope">—</dd>
+                  <dt>Surface</dt>
+                  <dd id="quickSurface">—</dd>
+               </dl><button id="terrainShortcut" type="button">Inspect a location</button>
+            </section>
+            <div class="golfer-summary">
+               <div class="eyebrow">Your golfer</div><strong id="currentPlayerName">My golfer</strong>
+               <p id="currentPlayerStyle"></p>
+               <p id="currentPlayerStrengths"></p>
+               <p id="saveNotice"></p><button id="editPlayer" type="button">Edit golfer · new practice hole</button>
+               <details>
+                  <summary>My club yardages</summary>
+                  <p class="small">Model stock carry, flat and calm. Judge the conditions yourself.</p>
+                  <table class="yardage-table">
+                     <thead>
+                        <tr>
+                           <th>Club</th>
+                           <th>Carry · yd</th>
+                        </tr>
+                     </thead>
+                     <tbody id="activeYardages"></tbody>
+                  </table>
+               </details>
+            </div>
+            <details id="aimNotes">
+               <summary>At your aiming dot</summary>
+               <div class="notes" id="caddie">Course notes appear here.</div>
+            </details>
+            <details>
+               <summary>Today’s course</summary>
+               <p class="round-summary" id="activeConditions"></p>
+               <p class="small">Baseline: 13.0 ft Stimp test reference; inherited medium-firm fairways. These are
+                  authored surface coefficients, not measurements from the real course.</p>
+               <p class="small">Three physical tees and three reviewed prototype pin positions are active. Setup changes
+                  begin a new practice hole.</p><button id="editConditionsSide" type="button">Change setup · new
+                  practice hole</button>
+            </details>
+            <details id="sourceDetails">
+               <summary>Ground &amp; visual provenance</summary>
+               <p class="small">This is a newly authored fantasy layout, not an exact Inverness reconstruction. The
+                  retained government ground has been adapted into the undistorted illustration frame. Source terrain,
+                  earlier course and previous builds are preserved.</p>
+               <p class="small">The photographic-looking overview uses the approved generated landscape. Close short
+                  grass combines that macro appearance with procedural native-scale turf detail. This is not a newly
+                  photographed high-resolution green; the full landscape retains its original macro-detail limit.</p>
+               <p class="small">Visible playing surfaces are authored in the same coordinates as targeting, terrain
+                  inspection and physics. Obscured creek banks and tree crowns remain approximate. Branch/leaf collision
+                  physics and empirical flight/turf calibration remain future work.</p>
+            </details>
+            <footer class="footer"><span>Measured base ground · authored shoulder · experimental
+                  physics</span><span>R0.6 · R0.3 preserved unchanged</span></footer>
+         </aside>
+         <section aria-label="Centered course view" class="course-column" id="coursePanel">
+            <div class="canvasWrap"><canvas
+                  aria-label="Top-view hole. Tee below, green above. Click to aim; drag to pan; wheel or plus and minus to zoom."
+                  id="map" tabindex="0"></canvas><output aria-atomic="true" aria-live="polite"
+                  class="aim-distance-label" hidden="" id="aimDistanceLabel"></output></div>
+         </section>
+         <aside aria-label="Shot controls and results" class="sidebar panel controls shot-panel" id="shotPanel">
+            <div class="eyebrow">Your next decision</div>
+            <h2 id="shotHeading">From the tee</h2>
+            <div class="statline">
+               <div class="stat"><strong id="distance">—</strong><span>To dot · <b id="distanceUnit">yd</b></span></div>
+               <div class="stat"><strong id="toPin">—</strong><span>To pin · <b id="toPinUnit">yd</b></span></div>
+               <div class="stat"><strong id="stroke">1</strong><span>Shot</span></div>
+            </div>
+            <div class="map-actionbar">
+               <div aria-label="Map click action" class="map-modes" role="group"><button aria-pressed="true"
+                     id="aimMode" title="Clicks place your target; contours can stay on" type="button">Aim
+                     shot</button><button aria-pressed="false" id="inspectMode"
+                     title="Clicks inspect ground without moving your target" type="button">Inspect ground</button>
+               </div><span aria-live="polite" id="mapModeHint" role="status">Click the course to place your
+                  target.</span>
+            </div>
+            <p class="small play-hint" id="dotHelp">Click the course to aim. Drag the target to adjust it; drag
+               elsewhere to pan.</p>
+            <div class="field"><label for="club">Club <span class="inlineValue" id="carryLabel"></span></label><select
+                  id="club"></select></div>
+            <div class="field"><label for="effort">Pace / effort <output class="inlineValue"
+                     id="effortValue">100%</output></label><input id="effort" max="110" min="15" step="0.1" type="range"
+                  value="100" />
+               <div class="rangeEnds"><span>Less</span><span>Stock shot</span></div>
+            </div>
+            <div class="field"><label for="shape">Curve adjustment <output class="inlineValue"
+                     id="shapeValue">Straight</output></label><input id="shape" max="100" min="-100" step="5"
+                  type="range" value="0" />
+               <div class="rangeEnds"><span>More left → right</span><span>More right → left</span></div>
+            </div>
+            <div class="field"><label for="height">Flight adjustment <output class="inlineValue"
+                     id="heightValue">Stock</output></label><input id="height" max="100" min="-100" step="5"
+                  type="range" value="0" />
+               <div class="rangeEnds"><span>Lower</span><span>Higher</span></div>
+            </div>
+            <p class="small play-hint" id="shotStockNote"></p>
+            <p aria-live="polite" class="small shot-reference" id="shotReference"></p><button class="stock-button"
+               id="stockShot" type="button">Use my stock shot</button><button class="primary shot-button" id="play">Play
+               this shot</button>
+            <div class="practice-actions"><button disabled="" id="mulligan" type="button">Mulligan</button><button
+                  disabled="" id="gimme" title="Available only when the ball is resting on the green"
+                  type="button">Gimme</button></div><span class="small practice-ledger-line" id="practiceCount">Practice
+               · no shots yet</span>
+            <p class="small practice-help" id="mulliganHelp">Redo the last shot from its exact start. Original evidence
+               is retained.</p>
+            <div aria-live="polite" class="status" id="status" role="status">Ready to plan.</div>
+            <div class="panel result" hidden="" id="resultPanel">
+               <div class="row" style="justify-content:space-between">
+                  <h2 id="resultHeading" style="margin:0">The result</h2><span class="pill">Recorded shot</span>
+               </div>
+               <div class="metrics">
+                  <div class="metric"><b id="carry">—</b><span>Carry · <b id="carryUnit">yd</b></span></div>
+                  <div class="metric"><b id="total">—</b><span>Start-to-finish · <b id="totalUnit">yd</b></span></div>
+                  <div class="metric"><b id="apex">—</b><span>Apex above launch · ft</span></div>
+                  <div class="metric"><b id="lie">—</b><span>Final surface</span></div>
+               </div>
+               <p class="subtle message" id="explanation"></p>
+               <div class="export-row"><button class="primary" hidden="" id="next">Next shot</button><button
+                     id="replay">Replay same shot</button></div>
+               <details>
+                  <summary>Contact evidence</summary>
+                  <div id="log"></div>
+               </details>
+            </div>
+            <details id="profileDetails">
+               <summary>Terrain &amp; shot profile</summary>
+               <div class="panel sectionPanel">
+                  <div class="sectionTitle"><b id="profileTitle">Terrain along your aim line</b><span>Section view ·
+                        vertical scale exaggerated · feet</span></div>
+                  <div class="profileWrap"><canvas aria-label="Terrain and shot elevation profile"
+                        id="profile"></canvas></div>
+               </div>
+            </details>
+            <details>
+               <summary>Golfer &amp; learning record</summary>
+               <p class="subtle">Custom golfer. Skill, stock style and conditions are saved with each shot.
+                  Professional-design bounds; scoring calibration remains unverified.</p><label class="checkrow"><input
+                     checked="" id="variance" type="checkbox" />Include modeled execution variation</label>
+               <p class="small" id="learning"></p>
+               <div class="export-row"><button id="export" style="font-size:11px">Export shot evidence</button><button
+                     id="exportLast" type="button">Export last shot</button></div>
+               <p class="small">Simulation decisions only. Nothing is sent to Savant Swing or treated as a real-world
+                  measurement. Records stay in this page until exported.</p>
+            </details>
+            <details>
+               <summary>Research tools &amp; limits</summary>
+               <p class="warning">This is a course/shot integration lab—not a validated golf simulator or competition
+                  ruleset. Club cards show calm, flat model reference carries, not real-world statistics or
+                  condition-adjusted predictions. Flight, bounce, rolling, trees, bridges and cup capture are
+                  experimental approximations.</p>
+               <div class="export-row"><button id="reset">Reset to tee</button><button id="approach">Approach
+                     study</button><button id="frontApproach" type="button">Front-slope study</button><button
+                     id="putt">Putting study</button></div><label class="checkrow"><input id="zones"
+                     type="checkbox" />Show ground study zones</label>
+               <div class="row fill"><button id="laneOn" type="button">Shaped ground</button><button id="laneOff"
+                     type="button">Source ground</button></div>
+               <p class="small" id="laneStatus">Authored shoulder active.</p><label class="checkrow"><input id="masks"
+                     type="checkbox" /> Show physical boundary outlines</label><button id="compare">Compare ground
+                  response</button>
+               <pre id="groundStudy"></pre>
+               <div class="export-row"><button id="plateExport">Export plate contract</button><button
+                     id="courseExport">Export course data</button><button id="exportDiagnostic" type="button">Export
+                     input diagnostic</button></div>
+               <p class="small">The input diagnostic keeps recent clicks and camera state locally in this page. Nothing
+                  is uploaded automatically.</p>
+               <p class="small">The image can be hidden without changing the shot. Boundary outlines expose the playable
+                  surface contract. Canopies, bridge and cup behavior remain simplified; no individual branches,
+                  detailed lip physics, or spin-to-turf impulse model.</p>
+            </details>
+         </aside>
+      </div>
+   </main>
+   <dialog aria-label="Enlarged terrain inspection" id="terrainDialog">
+      <div class="dialog-actions"><button id="closeTerrainDialog" type="button">Close enlarged study</button></div>
+      <div id="terrainDialogBody"></div>
+   </dialog>
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

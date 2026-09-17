@@ -1,0 +1,16 @@
+import { Contract } from '../contracts/contract.js';
+import { Course } from './course.js';
+import { Wind } from './wind.js';
+
+/* Round setup is a versioned contract, not an editable course. */
+      const Conditions = ((factory) => factory(Contract, Course, Wind))(function (C, Q, W) {
+         'use strict';
+         const VERSION = 'round-setup/0.3.0', DEFAULTS = Object.freeze({ schema: VERSION, tee: 'white', pin: 'moderate', wind: 'moderate', moisture: 'moderate', towardDeg: 0 });
+         const moisturePresets = { dry: { label: 'Dry', stimpDelta: 1, moisture: .12, rollFactor: .78, bounceFactor: 1.10, fairway: 'Firmer' }, moderate: { label: 'Moderate', stimpDelta: 0, moisture: .32, rollFactor: 1, bounceFactor: 1, fairway: 'Medium-firm' }, wet: { label: 'Wet', stimpDelta: -1.5, moisture: .75, rollFactor: 1.7, bounceFactor: .68, fairway: 'Softer' } };
+         function validate(s) { if (!s || s.schema !== VERSION) throw Error('Unsupported round setup.'); if (Object.keys(s).some(k => !Object.hasOwn(DEFAULTS, k))) throw Error('Unknown setup field; course defaults cannot be edited here.'); for (const [k, values] of Object.entries({ tee: ['red', 'white', 'blue'], pin: ['easy', 'moderate', 'challenging'], wind: Object.keys(W.regimes), moisture: Object.keys(moisturePresets) })) if (!values.includes(s[k])) throw Error('Invalid ' + k + ' choice.'); if (!Number.isFinite(s.towardDeg) || s.towardDeg < 0 || s.towardDeg >= 360) throw Error('Direction must be 0–359 degrees toward.'); return true; }
+         function setup(changes = {}) { const s = { ...DEFAULTS, ...changes }; validate(s); return s; }
+         function makeDay(course, s, seed = 270919, startSeconds = 0) { validate(s); if (!Number.isFinite(startSeconds) || startSeconds < 0) throw Error('Invalid weather clock.'); const p = moisturePresets[s.moisture], windProgram = W.program(s.wind, s.towardDeg, seed), w = W.sample(windProgram, startSeconds); return { id: 'day-' + C.fingerprint({ s, seed }), name: p.label, moisture: p.moisture, rollFactor: p.rollFactor, bounceFactor: p.bounceFactor, greenStimpFt: (course.baseline?.greenStimpFt ?? 10.5) + p.stimpDelta, fairwayDescription: p.fairway, airDensity: 1.225, wind: W.vector(w), windMetadata: { ...w, convention: 'toward_clockwise_from_north', variation: 'continuous_seeded_program' }, windProgram, windStartSeconds: startSeconds, setup: C.clone(s), courseBaseline: C.clone(course.baseline), realizedSetup: course.tees && course.pins ? { teeId: course.tees[s.tee].id, pinId: course.pins[s.pin].id, tee: C.clone(course.tees[s.tee].point), pin: C.clone(course.pins[s.pin].point), teePreferenceApplied: true, pinPreferenceApplied: true, note: 'Three authored physical tees and three reviewed prototype pin sites. Difficulty labels express design intent, not scoring calibration.' } : { teeId: 'original-test-tee', pinId: 'original-test-pin', tee: C.clone(course.tee), pin: C.clone(course.pin), teePreferenceApplied: false, pinPreferenceApplied: false, note: 'Red/white/blue and pin difficulty are saved preferences only; all choices use the original tee and checked fixed pin in R0.3.' }, modelStatus: 'authored_course_and_experimental_moisture_response_not_field_calibration' }; }
+         return { VERSION, DEFAULTS, moisturePresets, validate, setup, makeDay };
+      });
+
+export { Conditions };
