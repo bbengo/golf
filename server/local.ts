@@ -171,9 +171,8 @@ server.on('upgrade', (req, socket, head) => {
    });
 });
 server.listen(port, '0.0.0.0', () => {
-   console.log(`Local display: http://localhost:${port}/?mode=display`);
-   for (const address of addresses)
-      console.log(`Wi-Fi display: http://${address}:${port}/?mode=display`);
+   console.log(`Purity: http://localhost:${port}/`);
+   for (const address of addresses) console.log(`Wi-Fi: http://${address}:${port}/`);
 });
 function shutdown() {
    for (const client of wss.clients) client.terminate();

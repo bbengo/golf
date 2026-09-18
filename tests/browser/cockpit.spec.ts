@@ -29,7 +29,7 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await expect(phone.locator('#controls')).toBeEnabled();
    await expect(screen.locator('#pairing')).toBeHidden();
    await expect(phone.locator('canvas')).toHaveCount(0);
-   await expect(screen.locator('aside, input, #shotPanel')).toHaveCount(0);
+   await expect(screen.locator('#desktopControls')).toBeHidden();
    const course = screen.locator('#course');
    expect(await course.boundingBox()).toEqual({ x: 0, y: 0, width: 1440, height: 900 });
    expect(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -47,13 +47,17 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await screen.mouse.up();
    await expect(course).not.toHaveAttribute('data-camera-x', cameraX!);
    await expect(phone.locator('#distance')).toHaveText(distanceBeforeCamera!);
+   await phone.locator('[data-panel="round"]').click();
    await phone.locator('[data-view="hole"]').click();
+   await phone.locator('[data-panel="shot"]').click();
    await expect(course).toHaveAttribute('data-camera-zoom', '1.000');
+   await phone.locator('#chooseClub').click();
    await phone.locator('#club').selectOption('6I');
+   await phone.locator('#backToShot').click();
    await phone.locator('#effort').fill('85');
    await expect(phone.locator('#effortValue')).toHaveText('85%');
    const before = await phone.locator('#distance').textContent();
-   await phone.locator('[aria-label="Move up"]').click();
+   await phone.locator('[aria-label="Move right"]').click();
    await expect(phone.locator('#distance')).not.toHaveText(before!);
    await screen.screenshot({ path: 'test-results/procedural-course.png' });
    await phone.screenshot({ path: 'test-results/cockpit-phone.png', fullPage: true });
@@ -75,7 +79,9 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await expect(phone.locator('#play')).toHaveText('Play this shot');
    await expect(course).toHaveAttribute('data-camera-zoom', '3.000');
    await screen.emulateMedia({ reducedMotion: 'reduce' });
+   await phone.locator('[data-panel="round"]').click();
    await phone.locator('[data-view="hole"]').click();
+   await phone.locator('[data-panel="shot"]').click();
    await expect(course).toHaveAttribute('data-camera-zoom', '1.000');
    await phone.locator('#play').click();
    await expect(phone.locator('#play')).toHaveText('Show result');

@@ -1,0 +1,861 @@
+.experience {
+   height: 100dvh;
+   overflow: hidden;
+   background: #254935;
+   --muted: #afbbaa;
+   --surface: #202c23;
+   --line: #42503b;
+   color: #edf0e5;
+}
+.experience > #course {
+   display: block;
+   width: 100vw;
+   height: 100dvh;
+   touch-action: none;
+   cursor: grab;
+   outline-offset: -4px;
+}
+.experience > #course:active {
+   cursor: grabbing;
+}
+.experience > #course:focus:not(:focus-visible) {
+   outline: 0;
+}
+.experience em {
+   font-style: normal;
+   color: #c6e292;
+}
+.brand {
+   font-weight: 650;
+   font-size: 33px;
+   letter-spacing: -1.8px;
+   line-height: 1;
+}
+.brand span {
+   font-size: 12px;
+   vertical-align: top;
+   margin: 3px 0 0 4px;
+   display: inline-block;
+   letter-spacing: 0;
+}
+#portal {
+   position: fixed;
+   inset: 0;
+   overflow: auto;
+   background: linear-gradient(90deg, #121e18fa 0%, #14231aed 33%, #162d2180 67%, #18382722 100%);
+   scrollbar-width: thin;
+}
+.site-header {
+   position: relative;
+   z-index: 2;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 24px;
+   max-width: 1600px;
+   margin: auto;
+   padding: 32px 5vw;
+}
+.site-header nav {
+   display: flex;
+   gap: 32px;
+   font-size: 12px;
+   color: #bfcbba;
+}
+.site-header nav a {
+   padding: 12px 0;
+   position: relative;
+}
+.site-header nav a[aria-current='page'] {
+   color: #e7f0d9;
+}
+.site-header nav a[aria-current='page']:after {
+   content: '';
+   position: absolute;
+   bottom: 3px;
+   width: 4px;
+   height: 4px;
+   border-radius: 50%;
+   background: #c6e292;
+   left: 50%;
+}
+.header-play {
+   padding: 12px 20px;
+   border: 1px solid #b5c99750;
+   border-radius: 100px;
+   font-size: 11px;
+}
+.portal-page {
+   max-width: 1450px;
+   margin: auto;
+   padding: 34px 5vw 40px;
+   min-height: calc(100dvh - 179px);
+}
+.home-page {
+   position: relative;
+   display: flex;
+   flex-direction: column;
+   justify-content: space-between;
+   padding-top: 7vh;
+}
+.hero-copy {
+   max-width: 660px;
+}
+.hero-copy .eyebrow {
+   font-size: 10px;
+   display: flex;
+   gap: 9px;
+   align-items: center;
+}
+.status-dot {
+   height: 6px;
+   width: 6px;
+   background: #c8e68f;
+   border-radius: 50%;
+   box-shadow: 0 0 0 5px #c8e68f0b;
+}
+.hero-copy h1 {
+   font-size: clamp(55px, 6.8vw, 103px);
+   font-weight: 450;
+   line-height: 1.03;
+   letter-spacing: -0.06em;
+   margin: 28px 0;
+}
+.hero-description {
+   font-size: 17px;
+   line-height: 1.65;
+   color: #bec9b8;
+   letter-spacing: -0.2px;
+}
+.hero-actions {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 26px;
+   align-items: center;
+   margin-top: 30px;
+}
+.hero-actions .primary {
+   font-size: 12px;
+   min-height: 50px;
+   gap: 25px;
+}
+.quiet-link {
+   font-size: 12px;
+   display: inline-flex;
+   gap: 20px;
+   align-items: center;
+   padding: 12px 0;
+}
+.hero-note {
+   font-size: 10px;
+   color: #9aa892;
+   margin-top: 20px;
+}
+.scene-label {
+   position: absolute;
+   right: 6vw;
+   top: 55%;
+   font-size: 10px;
+   letter-spacing: 0.1em;
+   display: flex;
+   gap: 14px;
+   align-items: center;
+   color: #e4eed3;
+   text-shadow: 0 1px 12px #173322;
+}
+.scene-label small {
+   display: block;
+   font-size: 8px;
+   letter-spacing: 0.15em;
+   margin-top: 6px;
+   color: #c1d1ad;
+}
+.label-line {
+   width: 50px;
+   height: 1px;
+   background: #ddeac477;
+}
+.home-bottom {
+   display: grid;
+   grid-template-columns: 1.65fr 1fr;
+   gap: 35px;
+   max-width: 940px;
+   margin-top: 70px;
+   padding-top: 28px;
+   border-top: 1px solid #cee2bb30;
+}
+.feature-link {
+   display: flex;
+   align-items: center;
+   gap: 20px;
+}
+.feature-number {
+   font-size: 36px;
+   color: #819c71;
+   letter-spacing: -1px;
+}
+.feature-link small {
+   color: #a7b79b;
+   font-size: 8px;
+   letter-spacing: 0.15em;
+}
+.feature-link h2 {
+   font-size: 18px;
+   margin: 7px 0;
+}
+.feature-link p {
+   font-size: 11px;
+   color: #9cad92;
+   line-height: 1.6;
+}
+.round-arrow {
+   border: 1px solid #b9cba342;
+   border-radius: 50%;
+   width: 40px;
+   height: 40px;
+   display: grid;
+   place-items: center;
+   margin-left: auto;
+   flex-shrink: 0;
+}
+.story-link {
+   padding-left: 35px;
+   border-left: 1px solid #cee2bb30;
+}
+.story-link h2 {
+   font-size: 18px;
+   line-height: 1.4;
+   margin-top: 10px;
+}
+.site-footer {
+   max-width: 1600px;
+   margin: auto;
+   padding: 24px 5vw;
+   display: flex;
+   gap: 25px;
+   align-items: center;
+   justify-content: flex-end;
+   font-size: 9px;
+   color: #9fb190;
+   letter-spacing: 0.04em;
+}
+.site-footer > span {
+   margin-right: auto;
+}
+.site-footer a {
+   font-size: 10px;
+}
+.back-link {
+   font-size: 12px;
+   color: #becdaf;
+   display: inline-block;
+   margin-bottom: 28px;
+   padding: 8px 0;
+}
+.portal-page:not(.home-page) h1 {
+   font-size: clamp(40px, 5vw, 70px);
+   font-weight: 450;
+   letter-spacing: -0.05em;
+   margin: 20px 0 35px;
+   max-width: 900px;
+}
+.experience:not([data-route='home']) #portal {
+   background: #132219f5;
+}
+.course-selection {
+   display: grid;
+   grid-template-columns: 1.1fr 1fr;
+   border: 1px solid #51654477;
+   border-radius: 28px;
+   overflow: hidden;
+}
+.course-art {
+   position: relative;
+   background: radial-gradient(ellipse at 70% 30%, #648553, #31553d);
+   display: grid;
+   place-items: center;
+   overflow: hidden;
+   min-height: 350px;
+}
+.course-art svg {
+   width: 110%;
+   height: auto;
+   transform: rotate(-12deg);
+}
+.course-art > span {
+   position: absolute;
+   bottom: 25px;
+   left: 30px;
+   font-size: 8px;
+   letter-spacing: 0.18em;
+   color: #c1d2ab;
+}
+.course-details {
+   padding: 35px;
+   background: #203023;
+}
+.pill {
+   display: inline-flex;
+   border: 1px solid #75965a66;
+   border-radius: 100px;
+   padding: 7px 12px;
+   font-size: 8px;
+   letter-spacing: 0.12em;
+   color: #b9d38d;
+}
+.course-details h2 {
+   font-size: 30px;
+   font-weight: 450;
+   letter-spacing: -1px;
+   margin: 18px 0 12px;
+}
+.course-details > p {
+   font-size: 13px;
+   color: #b7c4ad;
+   line-height: 1.8;
+   max-width: 370px;
+}
+.course-details dl {
+   margin: 25px 0;
+}
+.course-details dl div {
+   display: flex;
+   justify-content: space-between;
+   gap: 12px;
+   font-size: 11px;
+   border-bottom: 1px solid #8b9e7440;
+   padding: 12px 0;
+}
+.course-details dt {
+   color: #a1b18f;
+}
+.course-details dd {
+   margin: 0;
+   text-align: right;
+}
+.course-details .hero-actions {
+   gap: 18px;
+   margin-top: 25px;
+}
+.page-footnote {
+   font-size: 11px;
+   color: #a7b698;
+   margin-top: 25px;
+}
+.guide-cards {
+   display: grid;
+   grid-template-columns: repeat(3, 1fr);
+   gap: 18px;
+}
+.guide-cards article {
+   background: #243326;
+   border: 1px solid #4b5c3d;
+   border-radius: 24px;
+   padding: 28px;
+}
+.guide-number {
+   font-size: 42px;
+   letter-spacing: -2px;
+   color: #adc581;
+}
+.guide-cards h2 {
+   font-size: 22px;
+   margin: 26px 0 15px;
+}
+.guide-cards p {
+   font-size: 13px;
+   line-height: 1.8;
+   color: #b7c4aa;
+}
+.guide-cards a {
+   display: inline-block;
+   font-size: 11px;
+   color: #d0e7a9;
+   padding: 15px 0;
+   margin-top: 14px;
+}
+.guide-footer {
+   display: flex;
+   gap: 40px;
+   padding-top: 35px;
+   margin-top: 35px;
+   border-top: 1px solid #65784b55;
+   align-items: center;
+}
+.guide-footer span {
+   font-size: 9px;
+   letter-spacing: 0.18em;
+   color: #b5c795;
+   white-space: nowrap;
+}
+.guide-footer p {
+   font-size: 12px;
+   line-height: 1.8;
+   color: #acbd9b;
+}
+.story-columns {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 8vw;
+   max-width: 1050px;
+}
+.story-lead {
+   font-size: 25px;
+   line-height: 1.6;
+   color: #d7e0cb;
+   letter-spacing: -0.5px;
+}
+.story-columns > div > p {
+   font-size: 14px;
+   color: #b7c6aa;
+   line-height: 1.9;
+   margin-bottom: 20px;
+}
+.story-columns .secondary {
+   margin-top: 30px;
+}
+.story-columns small {
+   display: block;
+   color: #a5b496;
+   font-size: 10px;
+   line-height: 1.7;
+   margin-top: 15px;
+}
+.display-tools {
+   position: fixed;
+   top: 24px;
+   left: 28px;
+   right: 28px;
+   display: flex;
+   align-items: center;
+   gap: 25px;
+   padding: 14px 18px;
+   background: #132219de;
+   backdrop-filter: blur(15px);
+   border: 1px solid #c9dfb533;
+   border-radius: 100px;
+   z-index: 3;
+}
+.display-tools .brand {
+   font-size: 25px;
+}
+.course-nav-label {
+   font-size: 9px;
+   letter-spacing: 0.12em;
+   color: #d4dfc6;
+}
+.course-nav-label small {
+   display: block;
+   font-size: 8px;
+   color: #9fb58b;
+   margin-top: 4px;
+}
+.display-tools > div {
+   margin-left: auto;
+   display: flex;
+   gap: 10px;
+   align-items: center;
+}
+.display-tools button,
+.display-tools > div > a {
+   font-size: 11px;
+   padding: 10px 17px;
+   min-height: 40px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   border: 1px solid #b4c79a3b;
+   border-radius: 100px;
+   background: transparent;
+}
+.display-tools #toggleControls {
+   background: #d0ee96;
+   color: #23351b;
+}
+.display-tools #quietView {
+   padding: 8px;
+   width: 40px;
+   font-size: 18px;
+}
+.reveal-tools {
+   position: fixed;
+   left: 25px;
+   bottom: 25px;
+   z-index: 4;
+   border-radius: 100px;
+   background: #18281de0;
+   color: #d5e3c1;
+   font-size: 11px;
+   padding: 12px 18px;
+   border: 1px solid #a6bc8966;
+}
+.desktop-controls {
+   position: fixed;
+   z-index: 4;
+   right: 28px;
+   top: 104px;
+   bottom: 24px;
+   width: 370px;
+   overflow: auto;
+   border-radius: 26px;
+   border: 1px solid var(--line);
+   box-shadow: 0 20px 80px #09140b66;
+   scrollbar-width: thin;
+   overscroll-behavior: contain;
+}
+.desktop-controls .cockpit-shell {
+   padding: 18px 18px 0;
+   min-height: 100%;
+   display: flex;
+   flex-direction: column;
+}
+.desktop-controls .app-header {
+   margin-bottom: 15px;
+}
+.desktop-controls .controller-brand {
+   font-size: 21px;
+}
+.desktop-controls .connection-row {
+   margin-bottom: 18px;
+}
+.desktop-controls h1 {
+   font-size: 29px;
+}
+.desktop-controls .shot-heading > p:last-child {
+   font-size: 11px;
+}
+.desktop-controls .shot-ticket {
+   padding: 18px;
+}
+.desktop-controls .readings .distance-reading span {
+   font-size: 45px;
+}
+.desktop-controls .play-dock {
+   position: sticky;
+   bottom: 64px;
+   left: auto;
+   transform: none;
+   width: auto;
+   margin: 18px -18px 0;
+   padding: 15px 18px;
+   z-index: 4;
+}
+.desktop-controls .controller-nav {
+   position: sticky;
+   bottom: 0;
+   left: auto;
+   transform: none;
+   width: auto;
+   flex-shrink: 0;
+   min-height: 64px;
+   height: 64px;
+   margin: 0 -18px;
+   padding: 4px 15px;
+   background: var(--bg);
+   z-index: 5;
+}
+.desktop-controls #controls {
+   flex: 1;
+}
+.desktop-controls .cockpit-shell > nav {
+   margin-top: auto;
+}
+.desktop-controls .settings-sheet {
+   right: 28px;
+   left: auto;
+   bottom: 24px;
+   width: 370px;
+   max-height: calc(100dvh - 130px);
+   border-radius: 26px;
+}
+.pairing {
+   margin: auto;
+   width: min(460px, 94vw);
+   max-height: 94dvh;
+   overflow: auto;
+   background: #16241b;
+   color: #edf0e5;
+   border: 1px solid #567047;
+   border-radius: 30px;
+   padding: 28px;
+   text-align: center;
+}
+.pairing::backdrop {
+   background: #06110b99;
+   backdrop-filter: blur(14px);
+}
+.pairing header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+.pairing .back-link {
+   margin: 0;
+}
+.pairing .eyebrow {
+   margin: 26px 0 15px;
+}
+.pairing h1 {
+   font-size: 38px;
+   font-weight: 450;
+   letter-spacing: -1.8px;
+   line-height: 1.1;
+}
+.pairing > p:not(.eyebrow) {
+   font-size: 12px;
+   line-height: 1.8;
+   color: #b0c0a3;
+   margin: 20px auto;
+   max-width: 290px;
+}
+.pairing #qr {
+   display: block;
+   margin: 25px auto 15px;
+   border: 12px solid #f0f2e8;
+   border-radius: 20px;
+}
+.pairing > a {
+   display: block;
+   font-size: 11px;
+   color: #c9dda9;
+   padding: 8px;
+}
+.pairing label {
+   font-size: 11px;
+   display: block;
+   margin-top: 20px;
+}
+.pairing #pairUrl {
+   width: 100%;
+   font:
+      11px ui-monospace,
+      monospace;
+   color: #e5edda;
+   background: #273d2b;
+   border: 1px solid #78925e;
+   border-radius: 10px;
+   padding: 12px;
+   margin-top: 12px;
+}
+.pairing select {
+   border-radius: 10px;
+   padding: 8px;
+   background: #263925;
+   border: 1px solid #526e42;
+   margin-left: 8px;
+   font-size: 11px;
+}
+.pairing .secondary {
+   width: 100%;
+   font-size: 12px;
+   margin-top: 20px;
+}
+.experience #portal h1:focus {
+   outline: 0;
+}
+@media (min-width: 1600px) {
+   .hero-copy {
+      max-width: 740px;
+   }
+   .home-page {
+      padding-top: 10vh;
+   }
+   .home-bottom {
+      margin-top: 9vh;
+   }
+}
+@media (max-width: 900px) {
+   .site-header {
+      padding: 24px 5vw;
+   }
+   .site-header nav {
+      gap: 20px;
+   }
+   .header-play {
+      display: none;
+   }
+   .hero-copy h1 {
+      font-size: 72px;
+   }
+   .scene-label {
+      display: none;
+   }
+   .home-bottom {
+      gap: 20px;
+   }
+   .story-link {
+      padding-left: 20px;
+   }
+   .guide-cards {
+      grid-template-columns: 1fr;
+   }
+   .guide-cards article {
+      padding: 22px;
+   }
+   .guide-cards h2 {
+      margin-top: 15px;
+   }
+   .course-selection {
+      grid-template-columns: 1fr;
+   }
+   .course-art {
+      min-height: 230px;
+   }
+   .course-art svg {
+      max-height: 280px;
+   }
+   .story-columns {
+      gap: 30px;
+   }
+   .display-tools {
+      left: 16px;
+      right: 16px;
+      top: 16px;
+      gap: 15px;
+   }
+   .desktop-controls {
+      right: 16px;
+      top: 96px;
+      bottom: 16px;
+   }
+   .course-nav-label {
+      display: none;
+   }
+   .desktop-controls .settings-sheet {
+      right: 16px;
+      bottom: 16px;
+   }
+}
+@media (max-width: 600px) {
+   #portal {
+      background: linear-gradient(180deg, #15271acf, #14261ded 65%, #122016);
+   }
+   .site-header {
+      padding: 22px 6vw;
+   }
+   .brand {
+      font-size: 28px;
+   }
+   .site-header nav {
+      gap: 15px;
+      font-size: 10px;
+   }
+   .home-page {
+      padding: 50px 6vw 25px;
+      min-height: calc(100dvh - 160px);
+   }
+   .hero-copy h1 {
+      font-size: clamp(52px, 13vw, 72px);
+      margin: 24px 0;
+   }
+   .hero-description {
+      font-size: 15px;
+   }
+   .hero-actions {
+      gap: 20px;
+      margin-top: 25px;
+   }
+   .hero-actions .primary {
+      padding: 13px 19px;
+      font-size: 11px;
+   }
+   .quiet-link {
+      font-size: 11px;
+      gap: 10px;
+   }
+   .hero-note {
+      max-width: 230px;
+      line-height: 1.7;
+   }
+   .home-bottom {
+      grid-template-columns: 1fr;
+      margin-top: 60px;
+   }
+   .feature-number {
+      font-size: 30px;
+   }
+   .feature-link h2 {
+      font-size: 16px;
+   }
+   .feature-link p {
+      font-size: 10px;
+   }
+   .feature-link {
+      gap: 14px;
+   }
+   .story-link {
+      border-left: 0;
+      border-top: 1px solid #b6c99833;
+      padding: 20px 0 0;
+   }
+   .story-link h2 {
+      font-size: 17px;
+   }
+   .story-link h2 br {
+      display: none;
+   }
+   .site-footer {
+      flex-wrap: wrap;
+      font-size: 7px;
+      padding: 20px 6vw;
+      gap: 14px;
+   }
+   .site-footer > span {
+      width: 100%;
+   }
+   .portal-page:not(.home-page) {
+      padding: 25px 6vw;
+   }
+   .portal-page:not(.home-page) h1 {
+      font-size: 43px;
+   }
+   .course-details {
+      padding: 25px;
+   }
+   .course-details h2 {
+      font-size: 27px;
+   }
+   .story-columns {
+      grid-template-columns: 1fr;
+   }
+   .story-lead {
+      font-size: 22px;
+   }
+   .guide-footer {
+      gap: 16px;
+      align-items: flex-start;
+      flex-direction: column;
+   }
+   .display-tools .brand {
+      font-size: 23px;
+   }
+   .display-tools > div {
+      gap: 5px;
+   }
+   .display-tools button,
+   .display-tools > div > a {
+      font-size: 9px;
+      padding: 10px 12px;
+   }
+   .display-tools #quietView {
+      display: none;
+   }
+   .desktop-controls {
+      width: calc(100% - 24px);
+      right: 12px;
+      top: 91px;
+      bottom: 12px;
+   }
+   .desktop-controls .settings-sheet {
+      width: calc(100% - 24px);
+      right: 12px;
+      bottom: 12px;
+      max-height: calc(100dvh - 115px);
+   }
+   .pairing {
+      padding: 22px;
+   }
+   .pairing h1 {
+      font-size: 33px;
+   }
+}

@@ -10,6 +10,7 @@ export class CourseCamera {
    h = 1;
    scale = 1;
    angle = 0;
+   offsetX = 0;
    target = { x: 0, y: 0, zoom: 1 };
    private fitScale = 1;
    private ready = false;
@@ -18,9 +19,14 @@ export class CourseCamera {
       this.w = w;
       this.h = h;
       this.bounds = bounds;
+      this.angle = w / h > 1.15 ? -Math.PI / 2.6 : 0;
+      const co = Math.abs(Math.cos(this.angle)),
+         si = Math.abs(Math.sin(this.angle));
+      const bw = bounds.maxX - bounds.minX,
+         bh = bounds.maxY - bounds.minY;
       this.fitScale = Math.min(
-         w / (bounds.maxX - bounds.minX + 30),
-         h / (bounds.maxY - bounds.minY + 30),
+         (w - Math.abs(this.offsetX) * 1.3) / (co * bw + si * bh + 30),
+         h / (si * bw + co * bh + 45),
       );
       if (!this.ready) {
          this.fit();
@@ -53,31 +59,47 @@ export class CourseCamera {
       this.scale = this.fitScale * this.zoom;
    }
    world(p: Point) {
+      const co = Math.cos(this.angle),
+         si = Math.sin(this.angle),
+         dx = p.x - this.x,
+         dy = p.y - this.y;
       return {
-         x: (p.x - this.x) * this.scale + this.w / 2,
-         y: this.h / 2 - (p.y - this.y) * this.scale,
+         x: (co * dx - si * dy) * this.scale + this.w / 2 + this.offsetX,
+         y: this.h / 2 - (si * dx + co * dy) * this.scale,
       };
    }
    inverse(p: Point) {
+      const co = Math.cos(this.angle),
+         si = Math.sin(this.angle),
+         dx = (p.x - this.w / 2 - this.offsetX) / this.scale,
+         dy = (this.h / 2 - p.y) / this.scale;
       return {
-         x: this.x + (p.x - this.w / 2) / this.scale,
-         y: this.y - (p.y - this.h / 2) / this.scale,
+         x: this.x + co * dx + si * dy,
+         y: this.y - si * dx + co * dy,
       };
    }
    pan(dx: number, dy: number) {
-      this.target.x -= dx / this.scale;
-      this.target.y += dy / this.scale;
+      const co = Math.cos(this.angle),
+         si = Math.sin(this.angle);
+      this.target.x -= (co * dx - si * dy) / this.scale;
+      this.target.y += (si * dx + co * dy) / this.scale;
       this.clamp();
    }
    zoomAt(p: Point, factor: number) {
+      const co = Math.cos(this.angle),
+         si = Math.sin(this.angle);
+      const dx = p.x - this.w / 2 - this.offsetX,
+         dy = this.h / 2 - p.y;
+      const vx = co * dx + si * dy,
+         vy = -si * dx + co * dy;
       const anchor = {
-         x: this.target.x + (p.x - this.w / 2) / (this.fitScale * this.target.zoom),
-         y: this.target.y - (p.y - this.h / 2) / (this.fitScale * this.target.zoom),
+         x: this.target.x + vx / (this.fitScale * this.target.zoom),
+         y: this.target.y + vy / (this.fitScale * this.target.zoom),
       };
       const zoom = Math.max(0.65, Math.min(10, this.target.zoom * factor));
       this.target = {
-         x: anchor.x - (p.x - this.w / 2) / (this.fitScale * zoom),
-         y: anchor.y + (p.y - this.h / 2) / (this.fitScale * zoom),
+         x: anchor.x - vx / (this.fitScale * zoom),
+         y: anchor.y - vy / (this.fitScale * zoom),
          zoom,
       };
       this.clamp();

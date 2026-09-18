@@ -23,6 +23,7 @@ export type Snapshot = {
    revision: number;
    phase: 'plan' | 'animating' | 'resolved';
    canMulligan: boolean;
+   cameraAngle: number;
    shot: number;
    intent: Intent;
    ball: Point;

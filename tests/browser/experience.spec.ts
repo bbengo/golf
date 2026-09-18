@@ -1,0 +1,74 @@
+import { expect, test } from '@playwright/test';
+
+test('clubhouse navigation preserves a desktop round and controls collapse in place', async ({
+   page,
+}) => {
+   test.setTimeout(90000);
+   const errors: string[] = [];
+   page.on('pageerror', (error) => errors.push(error.message));
+   await page.goto('/');
+   await expect(page.getByRole('heading', { name: 'A wider view. A closer feel.' })).toBeVisible();
+   await page.screenshot({ path: 'test-results/purity-home.png' });
+   await page.getByRole('navigation', { name: 'Main navigation' }).getByText('The course').click();
+   await expect(page.locator('.course-selection')).toBeVisible();
+   await page.screenshot({ path: 'test-results/purity-course-selection.png' });
+   await page.getByRole('link', { name: 'Play this course' }).click();
+   const controls = page.locator('#desktopControls');
+   await expect(controls).toBeVisible();
+   await expect(controls).toHaveAttribute('data-theme', 'dark');
+   await controls.locator('#chooseClub').click();
+   await controls.locator('#club').selectOption('6I');
+   await controls.locator('#backToShot').click();
+   await controls.locator('#effort').fill('72');
+   await expect(controls.locator('#effortValue')).toHaveText('72%');
+   await page.screenshot({ path: 'test-results/purity-desktop-controls.png' });
+   await page.locator('#toggleControls').click();
+   await expect(controls).toBeHidden();
+   await page.getByRole('link', { name: 'Back to home', exact: true }).click();
+   await page.getByRole('navigation', { name: 'Main navigation' }).getByText('How to play').click();
+   await expect(page.locator('.guide-cards')).toBeVisible();
+   await page.goBack();
+   await expect(page.locator('.home-page')).toBeVisible();
+   await page.getByRole('link', { name: 'Play on this screen' }).click();
+   await expect(controls.locator('#effort')).toHaveValue('72');
+   await expect(controls.locator('#club')).toHaveValue('6I');
+   await controls.locator('#play').click();
+   await expect(controls.locator('#play')).toHaveText('Show result');
+   await expect(controls.locator('#play')).toHaveText('Next shot', { timeout: 20000 });
+   await controls.locator('#play').click();
+   await expect(controls.locator('#shot')).toHaveText('2');
+   await controls.locator('#controllerBack').click();
+   await expect(controls).toBeHidden();
+   await page.locator('#toggleControls').click();
+   await expect(controls.locator('#shot')).toHaveText('2');
+   await controls.locator('#openSettings').click();
+   await controls.locator('#theme').selectOption('light');
+   await expect(controls).toHaveAttribute('data-theme', 'light');
+   await controls.locator('#closeSettings').click();
+   await page.locator('#pairButton').click();
+   await expect(page.locator('#pairing')).toBeVisible();
+   await page.getByRole('button', { name: 'Close pairing', exact: true }).click();
+   await expect(controls.locator('#shot')).toHaveText('2');
+   expect(errors).toEqual([]);
+});
+
+test('small-screen home and local controls remain usable without the relay', async ({ page }) => {
+   await page.setViewportSize({ width: 390, height: 844 });
+   await page.route('**/api/session', (route) => route.abort());
+   await page.goto('/');
+   await expect(page.locator('.home-page')).toBeVisible();
+   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+   await page.getByRole('link', { name: 'Play on this screen' }).click();
+   const controls = page.locator('#desktopControls');
+   await expect(controls.locator('#controls')).toBeEnabled();
+   await controls.locator('[data-panel="bag"]').click();
+   await expect(controls.locator('#club')).toBeVisible();
+   await controls.locator('#controllerBack').click();
+   await expect(controls.locator('#touchpad')).toBeVisible();
+   await controls.locator('#controllerBack').click();
+   await expect(controls).toBeHidden();
+   await page.locator('#pairButton').click();
+   await expect(page.locator('#pairStatus')).toContainText('You can still play on this screen');
+   await page.locator('#playHere').click();
+   await expect(controls).toBeVisible();
+});

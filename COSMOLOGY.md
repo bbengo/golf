@@ -5,10 +5,15 @@ display and a phone cockpit, before carrying the pattern into Odysseus/Unreal.
 The phone carries decisions; the screen carries the place. The original
 `UCG50_R06_Play.html` is retained as evidence and an executable baseline.
 
+The next experience is not obliged to inherit the original entry flow. Purity now
+opens with a clubhouse, course selection, guidance and a short account of that
+transition. A collapsible controller can also live directly over the course. The
+owner explicitly requested this desktop alternative; the full-screen course is
+still available by collapsing controls and hiding navigation.
+
 ## Decisions and their reasons
 
-**Vanilla TypeScript and Vite.** This follows the owner's GoSavis and portfolio
-pattern: explicit application surfaces, shared core, native DOM and CSS. New
+**Vanilla TypeScript and Vite.** This follows the owner's pattern: explicit application surfaces, shared core, native DOM and CSS. New
 code uses strict TypeScript because messages and physics refactors cross module
 boundaries. Existing JavaScript remains allowed so extraction does not require a
 simultaneous language rewrite. `checkJs` is off; those files are not fully typed.
@@ -17,6 +22,19 @@ simultaneous language rewrite. `checkJs` is off; those files are not fully typed
 results. A relay delivers messages without calculating physics. This avoids two
 independent engines drifting and keeps the complete shot calculation local to the
 display browser. The shared engine is reusable without the lab's DOM controls.
+
+**One controller, two transports.** Phone and desktop mount the same controller.
+Desktop commands go directly to the authoritative session; phone commands arrive
+through the relay. Both use the same validation, shot gates and snapshots. A second
+window, iframe or second simulation is unnecessary. Local controls work even when
+the pairing server is unavailable.
+
+**Dark by default.** Indoor play motivated the owner's explicit preference for
+dark controls. Forest/charcoal surfaces, warm ivory text and restrained lime actions
+replace the washed-out light stack. An ivory option is saved per browser. The
+provided sports-interface references informed hierarchy, navigation and distinct
+screens; the illustrated landscape informed composition and layered ground colour.
+The reference images stay review-only and ignored, never imported by the app.
 
 **Local WebSocket relay.** One Node process serves the built app and joins one
 display to one phone. There is no signalling service, cloud session database,

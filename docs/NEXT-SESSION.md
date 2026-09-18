@@ -36,6 +36,13 @@ checks are not a substitute for iOS/Safari testing.
 
 ## Presentation follow-up
 
+- Try the new Home/course/guide journey and dark controller on a real indoor phone
+  and display. Check the Shot/My bag/Round navigation, controller collapse, phone
+  handoff and the optional ivory theme. Reloading or leaving for the original lab
+  ends the in-memory round; in-app navigation preserves it.
+- Assess the diagonal course composition and screen-relative aiming. Check aiming
+  during a display resize/orientation change, including the 300 ms snapshot interval.
+
 - Evaluate sunlight readability, colour on the actual display, and phone thumb
   reach. Try landscape, larger text and an iPhone with a home indicator.
 - Assess shot-follow speed and manual handover with several clubs.

@@ -33,6 +33,7 @@ export class CockpitSession {
    renderer: Snapshot['renderer'] = 'procedural';
    view: 'hole' | 'ball' | 'green' = 'hole';
    viewRevision = 0;
+   cameraAngle = 0;
    shot = 1;
    revision = 0;
    records: ReturnType<typeof Shot.run>[] = [];
@@ -77,6 +78,7 @@ export class CockpitSession {
          revision: this.revision,
          phase: this.phase,
          canMulligan: this.undoAvailable && this.phase !== 'animating',
+         cameraAngle: this.cameraAngle,
          shot: this.shot,
          intent: { ...this.intent },
          ball: { ...this.ball },

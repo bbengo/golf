@@ -27,6 +27,14 @@ Tests run locally; no hosted workflow is required by this proof of concept.
   It also checks viewport coverage, phone overflow, mouse pan/zoom without aim
   changes, phone reframing, automatic follow/manual interruption, reduced-motion
   framing, results/mulligan and the settings dialog.
+- `browser/experience.spec.ts` covers the new clubhouse and native history,
+  single-screen controls, preservation of intent/shot count through navigation and
+  collapse, club selection, theme selection, reopening pairing, narrow-screen
+  layout and local control when `/api/session` is unavailable.
+
+Camera round-trip and pointer-anchor checks now exercise the landscape rotation.
+The browser aim nudge follows the screen's horizontal direction; one perpendicular
+metre need not change a rounded yards-to-aim reading.
 
 Screenshots and traces are disposable test evidence under ignored `test-results/`.
 The browser check uses a desktop Chromium mobile viewport, not an actual iPhone

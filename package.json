@@ -11,8 +11,8 @@
     "test": "node --import tsx --test tests/*.test.mjs",
     "test:e2e": "npm run build && playwright test",
     "local": "npm run build && node --import tsx server/local.ts",
-    "format": "prettier --write \"src/**/*.ts\" \"server/**/*.ts\" \"tests/**/*.ts\" \"tests/*.test.mjs\" src/core/style/cockpit.css playwright.config.ts",
-    "format:check": "prettier --check \"src/**/*.ts\" \"server/**/*.ts\" \"tests/**/*.ts\" \"tests/*.test.mjs\" src/core/style/cockpit.css playwright.config.ts"
+    "format": "prettier --write \"src/**/*.ts\" \"server/**/*.ts\" \"tests/**/*.ts\" \"tests/*.test.mjs\" src/core/style/cockpit.css src/core/style/experience.css playwright.config.ts",
+    "format:check": "prettier --check \"src/**/*.ts\" \"server/**/*.ts\" \"tests/**/*.ts\" \"tests/*.test.mjs\" src/core/style/cockpit.css src/core/style/experience.css playwright.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

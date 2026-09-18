@@ -2,71 +2,129 @@ import QRCode from 'qrcode';
 import { CockpitSession } from '../core/session/cockpit-session';
 import { SimpleCourse } from '../core/rendering/simple-course';
 import { connectRelay } from '../core/network/relay-client';
-import type { Command } from '../core/contracts/cockpit';
+import { startCockpit } from '../cockpit/app';
+import type { Message } from '../core/contracts/cockpit';
+import { displayMarkup } from './markup';
 
 export async function startDisplay() {
-   document.body.className = 'display';
-   document.body.innerHTML = `<canvas id="course" tabindex="0" aria-label="Golf course. Drag to explore, scroll to zoom, double click or press Home to see the whole hole."></canvas>
-    <section id="pairing" class="pairing"><p class="eyebrow">PURITY · LOCAL PLAY</p><h1>The course is here.<br>The controls are in your hand.</h1>
-    <p>Scan with your phone on the same Wi-Fi.</p><canvas id="qr" aria-label="Scan to open the cockpit"></canvas>
-    <a id="cockpitLink" target="_blank" rel="noopener">Open cockpit on this device</a>
-    <label id="networkLabel" hidden>Wi-Fi address <select id="network"></select></label>
-    <p id="connection" role="status">Starting local session…</p><a href="/">Open the desktop lab</a></section>`;
+   document.body.className = 'experience';
+   document.title = 'Purity — A wider view. A closer feel.';
+   document.body.innerHTML = displayMarkup;
+   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
    const session = new CockpitSession(),
-      renderer = new SimpleCourse(document.querySelector('#course')!);
-   let token: string, addresses: string[], port: number;
-   try {
-      const response = await fetch('/api/session');
-      if (!response.ok) throw Error();
-      ({ token, addresses, port } = await response.json());
-   } catch {
-      document.querySelector('#connection')!.textContent =
-         'Run npm run local, then open the address it prints.';
-      renderer.draw(session, performance.now());
-      return;
+      renderer = new SimpleCourse($<HTMLCanvasElement>('course'));
+   const pairing = $<HTMLDialogElement>('pairing'),
+      controls = $('desktopControls');
+   let localReceive: ((message: Message) => void) | undefined;
+   let relay: ReturnType<typeof connectRelay> | undefined;
+   let controlsOpen = false,
+      phoneConnected = false,
+      quiet = false;
+   const initial = new URLSearchParams(location.search).get('mode') === 'display' ? 'pair' : 'home';
+   let previousPage = 'home';
+   function publish() {
+      const state = session.snapshot();
+      localReceive?.(state);
+      relay?.send(state);
    }
-   const host = ['localhost', '127.0.0.1'].includes(location.hostname)
-      ? addresses[0] || location.hostname
-      : location.hostname;
-   const network = document.querySelector<HTMLSelectElement>('#network')!;
-   for (const address of new Set([host, ...addresses])) network.add(new Option(address, address));
-   document.querySelector<HTMLElement>('#networkLabel')!.hidden = network.options.length < 2;
-   async function pairing() {
-      const url = new URL(location.href);
-      url.hostname = network.value;
-      url.port = String(port);
-      url.search = '';
-      url.searchParams.set('mode', 'cockpit');
-      url.searchParams.set('token', token);
-      await QRCode.toCanvas(document.querySelector('#qr'), url.href, {
-         width: 210,
-         margin: 2,
-         color: { dark: '#132e27', light: '#f5f1e6' },
+   startCockpit(controls, (receive, status) => {
+      localReceive = receive;
+      queueMicrotask(() => {
+         status(true, 'Controls on this screen');
+         receive({ type: 'PEERS', display: true, cockpit: true });
+         receive(session.snapshot());
       });
-      document.querySelector<HTMLAnchorElement>('#cockpitLink')!.href = url.href;
+      return {
+         send(message) {
+            if (message.type !== 'COMMAND') return false;
+            const ack = session.apply(message);
+            queueMicrotask(() => {
+               receive(ack);
+               publish();
+            });
+            return true;
+         },
+         close() {
+            localReceive = undefined;
+         },
+      };
+   });
+   function showControls(open: boolean) {
+      controlsOpen = open;
+      controls.hidden = !open;
+      $('toggleControls').setAttribute('aria-expanded', String(open));
+      document.body.classList.toggle('controls-open', open);
    }
-   network.onchange = () => void pairing();
-   await pairing();
-   let paired = false;
-   const relay = connectRelay(
-      'display',
-      token,
-      (message) => {
-         if (message.type === 'COMMAND') {
-            const response = session.apply(message as Command);
-            relay.send(response);
-            relay.send(session.snapshot());
-         } else if (message.type === 'PEERS') {
-            if (message.cockpit) paired = true;
-            document.querySelector<HTMLElement>('#pairing')!.hidden = paired;
-            relay.send(session.snapshot());
-         }
-      },
-      (connected, reason) => {
-         document.querySelector('#connection')!.textContent = reason;
-         if (connected) relay.send(session.snapshot());
-      },
-   );
+   controls.addEventListener('collapse-controls', () => showControls(false));
+   $('toggleControls').onclick = () => showControls(!controlsOpen);
+   $('quietView').onclick = () => {
+      quiet = true;
+      renderRoute();
+   };
+   $('revealTools').onclick = () => {
+      quiet = false;
+      renderRoute();
+   };
+   function navigate(route: string) {
+      location.hash = route;
+   }
+   function renderRoute() {
+      let route = location.hash.slice(1) || initial;
+      if (!['home', 'course', 'guide', 'story', 'play', 'pair'].includes(route)) route = 'home';
+      const onCourse = route === 'play' || route === 'pair';
+      document.body.dataset.route = route;
+      $('portal').hidden = onCourse;
+      $('displayTools').hidden = !onCourse || quiet;
+      $('revealTools').hidden = !onCourse || !quiet;
+      controls.hidden = !onCourse || !controlsOpen || route === 'pair';
+      document.body.classList.toggle('controls-open', onCourse && controlsOpen && route !== 'pair');
+      for (const page of document.querySelectorAll<HTMLElement>('[data-page]'))
+         page.hidden = page.dataset.page !== route;
+      for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-route-link]')) {
+         if (link.dataset.routeLink === route) link.setAttribute('aria-current', 'page');
+         else link.removeAttribute('aria-current');
+      }
+      if (route === 'pair' && !pairing.open) pairing.showModal();
+      else if (route !== 'pair' && pairing.open) pairing.close();
+      if (!onCourse && route !== previousPage) {
+         $('portal').scrollTop = 0;
+         const heading = document.querySelector<HTMLElement>(`[data-page="${route}"] h1`);
+         heading?.setAttribute('tabindex', '-1');
+         heading?.focus({ preventScroll: true });
+      }
+      previousPage = route;
+   }
+   for (const link of document.querySelectorAll('[data-open-controls]'))
+      link.addEventListener('click', () => {
+         quiet = false;
+         showControls(true);
+      });
+   $('playHere').onclick = () => {
+      quiet = false;
+      showControls(true);
+      navigate('play');
+   };
+   $('closePairing').onclick = () => navigate('play');
+   $('cockpitLink').onclick = async (event) => {
+      event.preventDefault();
+      const link = $<HTMLAnchorElement>('cockpitLink').href;
+      try {
+         await navigator.clipboard.writeText(link);
+         $('cockpitLink').textContent = 'Pairing link copied';
+      } catch {
+         const input = $<HTMLInputElement>('pairUrl');
+         input.value = link;
+         input.hidden = false;
+         input.focus();
+         input.select();
+      }
+   };
+   pairing.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      navigate('play');
+   });
+   window.addEventListener('hashchange', renderRoute);
+   renderRoute();
    let lastPublish = 0,
       previousRevision = -1;
    function frame(time: number) {
@@ -74,10 +132,76 @@ export async function startDisplay() {
       if (time - lastPublish > 300 || session.revision !== previousRevision) {
          lastPublish = time;
          previousRevision = session.revision;
-         relay.send(session.snapshot());
+         publish();
       }
       requestAnimationFrame(frame);
    }
    requestAnimationFrame(frame);
-   window.addEventListener('pagehide', () => relay.close(), { once: true });
+   try {
+      const response = await fetch('/api/session');
+      if (!response.ok) throw Error();
+      const { token, addresses, port } = (await response.json()) as {
+         token: string;
+         addresses: string[];
+         port: number;
+      };
+      const host = ['localhost', '127.0.0.1'].includes(location.hostname)
+         ? addresses[0] || location.hostname
+         : location.hostname;
+      const network = $<HTMLSelectElement>('network');
+      for (const address of new Set([host, ...addresses]))
+         network.add(new Option(address, address));
+      $('networkLabel').hidden = network.options.length < 2;
+      async function makeQR() {
+         const url = new URL(location.href);
+         url.hostname = network.value;
+         url.port = String(port);
+         url.hash = '';
+         url.search = '';
+         url.searchParams.set('mode', 'cockpit');
+         url.searchParams.set('token', token);
+         await QRCode.toCanvas($<HTMLCanvasElement>('qr'), url.href, {
+            width: 190,
+            margin: 2,
+            color: { dark: '#1c2c21', light: '#f0f2e8' },
+         });
+         $<HTMLAnchorElement>('cockpitLink').href = url.href;
+      }
+      network.onchange = () => void makeQR();
+      await makeQR();
+      relay = connectRelay(
+         'display',
+         token,
+         (message) => {
+            if (message.type === 'COMMAND') {
+               relay?.send(session.apply(message));
+               publish();
+            } else if (message.type === 'PEERS') {
+               const joined = message.cockpit && !phoneConnected;
+               phoneConnected = message.cockpit;
+               $('pairButton').textContent = phoneConnected
+                  ? 'Phone connected ●'
+                  : 'Connect phone ↗';
+               if (joined) {
+                  showControls(false);
+                  if (location.hash === '#pair' || (!location.hash && initial === 'pair'))
+                     navigate('play');
+               }
+               publish();
+            }
+         },
+         (connected, reason) => {
+            $('qr').hidden = !connected;
+            $('cockpitLink').hidden = !connected;
+            $('pairStatus').textContent = connected ? 'Ready to pair · same Wi-Fi' : reason;
+            if (connected) publish();
+         },
+      );
+   } catch {
+      $('qr').hidden = true;
+      $('cockpitLink').hidden = true;
+      $('pairStatus').textContent =
+         'Phone pairing needs the local server. Run npm run local, then open its address. You can still play on this screen.';
+   }
+   window.addEventListener('pagehide', () => relay?.close(), { once: true });
 }

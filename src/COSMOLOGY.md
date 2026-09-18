@@ -1,70 +1,80 @@
 # Application topology
 
-`main.ts` selects a surface by query parameter and imports its code and stylesheet
-on demand. Query routes keep this local proof of concept small and work with a
-plain static server; a general SPA router has no job here yet.
+`main.ts` chooses the application by query parameter. Purity is the default;
+preserving the original lab does not mean inheriting its entry journey.
 
 | Route | Owner | Behaviour |
 | --- | --- | --- |
-| `/` | `lab/play.js` | Original setup journey, desktop panels, original physics |
-| `/?mode=display` | `display/app.ts` | Temporary QR setup, then course canvas only |
-| `/?mode=cockpit&token=…` | `cockpit/app.ts` | Phone controls and returned readouts, no course canvas |
+| `/` | `display/app.ts` | Clubhouse, course selection, guidance, story and live course |
+| `/#play` | `display/app.ts` | Same session, with collapsible on-screen controls |
+| `/#pair` or `/?mode=display` | `display/app.ts` | QR pairing over the live course |
+| `/?mode=cockpit&token=…` | `cockpit/app.ts` | Phone controller, no course/physics bundle |
+| `/?mode=lab` | `lab/play.js` | Original setup journey and original physics |
 
-The existing HTML is the lab's markup. Display/cockpit entry points replace its
-body instead of initialising the lab and hiding panels. Dynamic imports keep the
-large course/simulation bundle out of the phone. Browser tests assert that the
-phone neither mounts a canvas nor requests the simulation/reference-renderer chunks.
+## Navigation is presentation state
 
-## Display
+Home, course, guide, story, play and pairing use native fragment history. In-page
+navigation never replaces `CockpitSession`, so choosing Home and returning to the
+course keeps ball, shot count, intent and conditions. Reloading or opening the
+separate original lab is a different lifetime and starts a new round on return.
+There is no persistence database. The original standalone HTML remains untouched.
 
-Creates `CockpitSession` and the course renderer, requests the ephemeral pairing
-token, generates the QR locally with `qrcode`, and connects to the relay. A LAN
-address is selected automatically, with a selector when several adapters exist.
-The display responds to commands with an acknowledgement and a fresh snapshot.
-It also publishes wind/phase updates periodically. Ball animation uses recorded
-trajectory samples; no server computation is involved.
+`display/markup.ts` owns the clubhouse and course shell. The story explains the
+single-file origin and two-screen direction without requiring a player to read
+implementation details. There is only one playable course, explicitly labelled as
+single-hole practice; the interface does not invent locked courses or fake progress.
+The course-card SVG is a decorative study, not simulation geometry.
 
-The pairing overlay is removed after the first cockpit joins. Losing the phone
-does not crash or cover the course. Reloading the display deliberately creates a
-new round; there is no round persistence service. Ball, cup and aim/launch marks
-are the explicit exceptions to a course-only display.
+Desktop navigation exposes Home, phone pairing and Controls. The controller can
+collapse without leaving the course, and navigation can hide for a quiet view.
+The canvas remains full viewport; its camera composition leaves room for the
+controller. Native dialogs manage pairing and settings, including Escape/back.
 
-The canvas fills the viewport. Mouse drag, cursor-anchored wheel zoom, double-click
-reframing and keyboard camera navigation are presentation inputs only. A shot
-automatically follows the recorded ball position; manual navigation takes over
-until the next shot. OS reduced-motion preference disables automatic following.
+## One session, interchangeable controllers
 
-## Cockpit
+`startCockpit(root, transport?)` mounts into either the phone body or a desktop
+overlay. Queries and datasets are scoped to that root. `ControlTransport` supplies
+the same send/receive/status interface for direct commands and WebSocket commands.
+The desktop never opens a second socket in the cockpit role. Local acknowledgements
+are delivered in a microtask so input bookkeeping completes before responses.
+Every accepted action publishes a snapshot to both controllers. Expected shot
+numbers and existing phase checks protect simultaneous play attempts.
 
-Owns controls and temporary input state, never physics state. Slider updates are
-coalesced to animation frames. A pending-input acknowledgement prevents older
-snapshots replacing newer local slider values. The Play command includes the
-current controls and expected shot number, so a stale slider snapshot cannot
-silently commit different intent. Reconnect restores authoritative state.
+The display computes physics and renders the recorded trajectory. The relay only
+delivers messages. QR pairing folds the desktop controller away on a new phone join;
+it can be reopened while the phone stays connected. Disconnecting a phone preserves
+the round. Pairing can be reopened from navigation. If the server is unavailable,
+local controls still work and pairing explains how to start the local server.
+Only one display and one phone may occupy the relay; a rejected display hides its
+QR/link rather than offering a link to somebody else's active display.
 
-The touchpad, arrow buttons and keyboard arrows move aim or inspection coordinates.
-Fine mode scales movement. Inspection is independent of aim. A phone can request
-whole-hole, ball and green camera views; conditions changes start a new hole.
-Renderer choice compares procedural and photographic views without changing physics.
-The balanced golfer is currently fixed in paired mode; the full player builder
-remains available only in the lab.
+## Controller destinations
 
-`cockpit/markup.ts` owns the phone structure; `cockpit/app.ts` owns its bindings.
-The sequence is aim, club/effort, play. Shape and flight are progressively disclosed.
-A fixed play dock keeps the current action reachable, while a native dialog holds
-course settings. Resolved shots replace editing cards with results and the next
-action; failed/holed outcomes offer a restart. The authoritative snapshot says
-whether a mulligan is available. Custom touchpad movement is gated like native
-controls when a shot is unavailable.
+- **Shot:** live lie/distance/wind, aim/read-ground pad, current club, effort,
+  optional shape/height, play/result/mulligan.
+- **My bag:** select a club and explicitly return to the shot.
+- **Round:** current shot/phase, hole information, camera destinations and settings.
 
-Rounded light surfaces and a native system sans stack keep the interface familiar
-on iOS without a font download or UI framework. Safe-area padding, visible keyboard
-focus, enlarged touch targets and reduced-motion CSS are part of the interaction.
+Phone tabs also use fragment history; desktop tabs stay local so they do not
+overwrite the clubhouse's route. The back button returns to Shot from another tab,
+collapses the desktop controller from Shot, or opens a phone menu with a clear
+leave-controller action. No separate window or embedded document is required.
 
-## Remaining boundaries
+Settings uses authoritative conditions when opened so changes from the other
+controller do not leave stale setup fields. Changing conditions starts a new hole.
+Shape/effort input acknowledgement handling prevents older snapshots overwriting
+pending local edits. The Play command carries current intent and expected shot.
 
-The original lab still has coupled DOM/session wiring. Extracting it preserved
-behaviour; it did not magically make every original control reusable on the phone.
-The new paired session is separate and imports reusable core modules. Further
-shared controls should be extracted when actually needed, not replaced by copies
-of the whole desktop page.
+## Visual and loading boundaries
+
+Dark forest controls are the default for indoor play. An ivory alternative is saved
+in localStorage; unavailable storage falls back safely. Native sans typography,
+consistent SVG icons, large actions, focus outlines, safe-area spacing and reduced
+motion are implemented without a UI library or font downloads.
+
+`cockpit.css` styles the shared controller. `experience.css` styles the clubhouse
+and desktop shell. `reference.css` belongs only to the original lab. Dynamic imports
+keep course data and physics out of the phone; that separation remains tested.
+The original index markup is retained for the lab and replaced by Purity surfaces.
+The paired and desktop Purity modes use the same experimental fundamentals engine;
+the balanced golfer is still fixed. The lab's player builder remains separate.

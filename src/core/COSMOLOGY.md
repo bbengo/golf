@@ -14,6 +14,12 @@ updates state and increments a revision. `snapshot()` sends only the phone's
 readouts, not the large course or trajectory. The renderer samples the recorded
 trajectory on the display and calls `finish()` at the end of animation.
 
+The direct desktop controller sends the same commands to `apply()` and receives
+the same snapshots as the phone. Its transport does not bypass validation or create
+another physics owner. `cameraAngle` is presentation metadata published by the
+renderer; controllers rotate screen-relative aim deltas back into world coordinates.
+That angle does not enter any physics equation or alter the course.
+
 Planning, animating and resolved are distinct states. A new Play requires planning
 and the expected shot number. Inputs that would change a committed shot are
 rejected while animating. A bounded cache retains 1,024 acknowledgements; duplicate
@@ -28,7 +34,7 @@ result; water, holed and unresolved shots can be restarted or undone.
 - `simulation/`: launch and trajectory calculation, independent of network/DOM.
 - `rendering/`: world-to-screen presentation; never modifies physical course data.
 - `network/`: client transport, bounded reconnect delays, no command replay queue.
-- `style/`: lab baseline CSS and the smaller paired-mode stylesheet.
+- `style/`: lab baseline, shared controller and Purity experience styles.
 
 The relay client accepts display snapshots from this trusted local application.
 Commands are strictly validated; snapshots do not yet have a complete runtime

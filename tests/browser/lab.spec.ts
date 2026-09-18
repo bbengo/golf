@@ -15,7 +15,7 @@ test('local lab completes setup, renders the course, and plays a shot', async ({
       }
    });
 
-   await page.goto('/');
+   await page.goto('/?mode=lab');
    await expect(page.locator('body')).toHaveAttribute('data-state', '0');
    await page.locator('#proceedProfile').click();
    await expect(page.locator('body')).toHaveAttribute('data-state', '1');

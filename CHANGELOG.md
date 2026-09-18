@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-09-18: Purity clubhouse and shared dark controller
+
+- Replaced the default legacy entry with Home, course selection, How to play and
+  The story. Native fragment navigation preserves the active round; the original
+  lab is explicitly available at `/?mode=lab`. The original HTML stays untouched.
+- Mounted the same controller inside a collapsible desktop overlay. Local commands
+  use the same authoritative session and validation as phone commands, without an
+  iframe, another window or another controller socket. Pairing folds the overlay
+  away; it can be reopened at any time. Local controls work without the relay.
+- Made dark forest controls the default, with a saved ivory option. Added distinct
+  Shot, My bag and Round destinations, back/menu actions, consistent SVG icons,
+  a settings sheet and refreshed authoritative conditions when opening settings.
+- Reframed wide-screen play diagonally with a north indicator, rotated pointer/aim
+  transforms and layout-aware camera offset. Added illustrated tonal ground layers,
+  stronger surface separation and a continuous creek shoreline. Physics geometry
+  and equations remain unchanged.
+- Used the owner's local visual references for direction without importing or
+  committing them. Preserved the owner's cosmology wording and ignore rules.
+- Documented navigation/session lifetime, shared transport, themes and composition.
+
+Verification: production build, TypeScript, six targeted camera/session checks and
+four browser flows (phone pairing, desktop journey, no-relay narrow screen, original
+lab) pass. Real iOS/Safari behaviour, visual preference and physical-device frame
+times still need a hands-on trial.
+
 ## 2026-09-18: modern cockpit, natural colour and interactive display
 
 - Rebuilt the phone layout around aim, club/effort and a persistent play action.

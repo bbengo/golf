@@ -1,7 +1,7 @@
 # Golf / Purity local cockpit
 
-One course, one display, one phone, on the same Wi-Fi. The display owns the
-simulation; the phone owns the controls. A local Node server serves the app and
+One course, with controls on your phone or folded over the display. The display
+owns the simulation. A local Node server serves the app and
 relays WebSocket messages. GitHub is for source-code sync; gameplay needs no
 internet service. `UCG50_R06_Play.html` is the unchanged reference.
 
@@ -14,14 +14,18 @@ npm ci
 npm run local
 ```
 
-Open `http://localhost:3000/?mode=display` on the big screen. Scan its QR code
-with your phone on the same Wi-Fi. The pairing overlay disappears after joining.
+Open `http://localhost:3000/` for the new Purity welcome. Choose **Play on this
+screen** for collapsible controls on the course, or **Connect a phone** for pairing.
+Scan its QR with your phone on the same Wi-Fi. The overlay closes after joining.
+The direct pairing route `/?mode=display` still works.
 If the machine has several network adapters, choose the Wi-Fi address on the
 pairing panel. Allow Node on your private network if Windows Firewall prompts.
 Guest Wi-Fi with client isolation prevents the devices from connecting.
 
-Use the touchpad or arrows to aim, switch to Read green for terrain readings, then
-choose club and effort. Expand Shape & flight for curve and height. The bottom play
+The controller opens in dark mode; Settings offers an ivory alternative. Use
+**Shot** for aim/effort, **My bag** to choose a club, and **Round** for camera views
+and conditions. Read ground shows terrain information. Expand Shape & flight
+for curve and height. The bottom play
 button stays within reach and changes to the next action after a shot. Settings
 holds conditions and appearance; applying conditions restarts the practice hole.
 Procedural graphics load no image assets.
@@ -30,14 +34,16 @@ On the display, drag to pan, scroll to zoom at the pointer, and double-click to
 see the whole hole. With the canvas focused, arrows pan, plus/minus zoom, and Home
 or Escape reframe. Shots follow automatically until you take over with the mouse
 or a phone camera button. Reduced-motion preference disables automatic following.
-The course fills the screen; gameplay controls stay on the phone.
+The course fills the screen. **Controls** opens or collapses the desktop overlay;
+the minus button hides navigation and **Menu & controls** brings it back.
+Home/course/guide navigation preserves the current round without reloading.
 
 Phone reconnection preserves the round.
 Reloading the display starts a fresh round. Restarting the server creates a new
 pairing token.
 
 Paired play uses experimental physics and a balanced baseline golfer. Custom
-player editing remains in the desktop lab at `/`, which uses the original model.
+player editing remains in the original lab at `/?mode=lab`, which uses the original model.
 This is a practice proof of concept, not tournament scoring.
 
 ## Development and checks
@@ -53,7 +59,8 @@ npm run test:e2e
 npm run build
 ```
 
-`npm run dev` serves the desktop lab with hot reload. `npm run local` builds and
+`npm run dev` serves Purity and local desktop controls with hot reload (phone
+pairing requires the local server). `npm run local` builds and
 serves both devices and the relay from one local origin. New code uses strict
 TypeScript; existing JavaScript is migrated gradually.
 

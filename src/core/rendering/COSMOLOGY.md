@@ -1,6 +1,6 @@
 # Course presentation
 
-The display is a full-viewport canvas after pairing. `simple-course.ts` coordinates
+The display is a full-viewport canvas behind the clubhouse and during play. `simple-course.ts` coordinates
 the camera, actual recorded shot trajectory, ground and ball/cup/intent marks.
 It writes no aim or physical terrain state. The original lab retains its renderer
 and the reference HTML remains unchanged.
@@ -13,15 +13,20 @@ quiet blue-green water and warm sand establish a value and temperature hierarchy
 These are deliberate sRGB art-direction choices, not measured spectral materials,
 HDR or physically based lighting.
 
-Mowing bands, seeded grain, broad meadow variation, water strokes and layered tree
+Mowing bands, seeded grain, illustrated tonal contours, meadow variation and layered tree
 crowns create detail without bitmap assets. Illumination comes from the simulation's
 slope field, clamped softly so sampled terrain seams do not dominate. Polygon
 edges remain the authored playable edges; decoration creates no obstacles and
-changes no material coefficients.
+changes no material coefficients. Deep-rough colour transitions are softened
+without changing the underlying physical polygons. The creek is drawn as a union
+of authored water quads, with an offset shoreline highlight; this avoids painting
+internal quad seams. Decorative background contours are tonal shapes, not claims
+of additional surveyed hills, hazards or colliders.
 
 The atlas rebuilds when the course object changes, not during camera motion. It
 uses two pixels per metre with a 350 m decorative surround (roughly 32 MB RGBA for
-this course, excluding browser/GPU copies). The surround does not expand playable
+this course, excluding browser/GPU copies and a similarly sized temporary water
+mask while rebuilding). The surround does not expand playable
 bounds. Extreme wide/distant views can reach the flat-colour fallback. This is a
 bounded cache, not a streaming world or close-range grass simulation. Display
 device pixel ratio is capped at two.
@@ -29,8 +34,17 @@ device pixel ratio is capped at two.
 ## Camera and animation
 
 `camera.ts` contains world/screen transforms, bounded zoom, panning and exponential
-time-based easing. North remains up so phone directions stay consistent. Initial
-framing fits the course plate; the world continues across the entire screen.
+time-based easing. Wide screens frame the hole diagonally (about 69 degrees from
+north-up); portrait screens stay north-up. Fit scale accounts for rotated bounds.
+A north indicator gives wind directions context. The controller receives the
+camera angle and transforms screen-relative aim deltas back into world coordinates,
+so right still moves right on the display. The ground atlas, photographic renderer,
+markers, pointer anchoring and panning share the same orientation.
+
+The welcome view offsets the composition to give the landscape space beside the
+copy. Opening desktop controls shifts the course into the remaining visual area;
+the canvas still fills the screen. Reduced-motion preference also snaps this offset.
+Initial framing uses the course plate, not invented multi-hole geometry.
 
 Drag pans; wheel zoom keeps its world anchor beneath the cursor. Double-click,
 Home or Escape fit the hole. Arrows pan and plus/minus zoom when the canvas has

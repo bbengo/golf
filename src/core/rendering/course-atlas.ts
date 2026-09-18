@@ -4,14 +4,14 @@ import type { Point } from '../contracts/cockpit';
 import type { CourseCamera } from './camera';
 
 const colors: Record<string, string> = {
-   rough: '#687d54',
-   'deep-rough': '#587151',
-   fairway: '#a1b779',
-   fringe: '#91ac70',
-   green: '#b4c88d',
+   rough: '#52794a',
+   'deep-rough': '#3d6645',
+   fairway: '#8fab62',
+   fringe: '#719754',
+   green: '#b0c67b',
    tee: '#a6bb7e',
    sand: '#e6d9b4',
-   water: '#537f7d',
+   water: '#76a7a2',
    path: '#b5ab90',
 };
 
@@ -29,13 +29,17 @@ export class CourseAtlas {
       ctx.fillStyle = colors.rough;
       ctx.fillRect(0, 0, camera.w, camera.h);
       const p = camera.world({ x: c.bounds.minX - this.margin, y: c.bounds.maxY + this.margin });
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(-camera.angle);
       ctx.drawImage(
          this.canvas,
-         p.x,
-         p.y,
+         0,
+         0,
          (this.canvas.width / this.scale) * camera.scale,
          (this.canvas.height / this.scale) * camera.scale,
       );
+      ctx.restore();
    }
    private build(c: CockpitSession['course']) {
       const bounds = {
@@ -67,10 +71,72 @@ export class CourseAtlas {
       };
       ctx.fillStyle = colors.rough;
       ctx.fillRect(0, 0, w, h);
+      // Illustrated tonal contours in the surrounding grass, not additional hazards.
+      for (let i = 0; i < 28; i++) {
+         const x = random() * w,
+            y = random() * h,
+            r = (35 + random() * 115) * s,
+            phase = random() * 6;
+         for (let layer = 0; layer < 3; layer++) {
+            ctx.beginPath();
+            for (let j = 0; j <= 100; j++) {
+               const a = (j / 100) * Math.PI * 2,
+                  rr =
+                     r *
+                     (1 - layer * 0.17) *
+                     (1 + 0.13 * Math.sin(a * 3 + phase) + 0.08 * Math.cos(a * 5 - phase));
+               const px = x + Math.cos(a) * rr * 1.6,
+                  py = y + Math.sin(a) * rr;
+               if (j === 0) ctx.moveTo(px, py);
+               else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fillStyle = ['#6e905930', '#385f422b', '#2e593823'][layer];
+            ctx.fill();
+            ctx.strokeStyle = '#9eb47312';
+            ctx.lineWidth = 0.6 * s;
+            ctx.stroke();
+         }
+      }
+      // A continuous water silhouette avoids seams between authored creek quads.
+      const water = new Path2D();
+      for (const surface of c.surfaces.filter(
+         (surface: { type: string }) => surface.type === 'water',
+      )) {
+         surface.polygon.forEach((p: Point, i: number) => {
+            const q = point(p);
+            if (i) water.lineTo(q.x, q.y);
+            else water.moveTo(q.x, q.y);
+         });
+         water.closePath();
+      }
+      const waterLayer = document.createElement('canvas');
+      waterLayer.width = w;
+      waterLayer.height = h;
+      const wc = waterLayer.getContext('2d')!;
+      wc.fillStyle = colors.water;
+      wc.fill(water);
+      wc.globalCompositeOperation = 'source-in';
+      wc.fillStyle = '#85b4ac';
+      wc.fillRect(0, 0, w, h);
       for (const surface of c.surfaces) {
+         if (surface.type === 'water') continue;
          path(surface.polygon);
          ctx.fillStyle = colors[surface.type] || colors.rough;
-         ctx.fill();
+         if (surface.type === 'deep-rough') {
+            ctx.save();
+            ctx.globalAlpha = 0.6;
+            ctx.filter = `blur(${3 * s}px)`;
+            ctx.fill();
+            ctx.restore();
+         } else {
+            if (surface.type === 'fairway' || surface.type === 'green') {
+               ctx.strokeStyle = surface.type === 'green' ? '#d7df9c66' : '#759650';
+               ctx.lineWidth = (surface.type === 'green' ? 1.8 : 5) * s;
+               ctx.stroke();
+            }
+            ctx.fill();
+         }
          ctx.save();
          ctx.clip();
          if (['fairway', 'green', 'tee'].includes(surface.type)) {
@@ -79,22 +145,6 @@ export class CourseAtlas {
             ctx.fillStyle = '#fff3c518';
             for (let x = -h - w; x < h + w; x += 14 * s)
                ctx.fillRect(x, -h - w, 7 * s, 2 * (h + w));
-         } else if (surface.type === 'water') {
-            const gradient = ctx.createLinearGradient(0, 0, w, h);
-            gradient.addColorStop(0, '#9cb1a040');
-            gradient.addColorStop(1, '#1e55594a');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, w, h);
-            ctx.strokeStyle = '#d4e5ce20';
-            ctx.lineWidth = 0.6 * s;
-            for (let i = 0; i < 1000; i++) {
-               const x = random() * w,
-                  y = random() * h;
-               ctx.beginPath();
-               ctx.moveTo(x, y);
-               ctx.lineTo(x + 3 + random() * 12, y);
-               ctx.stroke();
-            }
          } else if (surface.type === 'sand') {
             ctx.strokeStyle = '#9d906433';
             ctx.lineWidth = 3 * s;
@@ -102,6 +152,22 @@ export class CourseAtlas {
          }
          ctx.restore();
       }
+      ctx.save();
+      ctx.shadowColor = '#1e453d66';
+      ctx.shadowBlur = 3 * s;
+      ctx.shadowOffsetY = 2 * s;
+      ctx.drawImage(waterLayer, 0, 0);
+      ctx.restore();
+      // Inset shore highlight derives from the union mask, so quad joins stay invisible.
+      wc.globalCompositeOperation = 'source-in';
+      wc.fillStyle = '#d5e6c5';
+      wc.fillRect(0, 0, w, h);
+      wc.globalCompositeOperation = 'destination-out';
+      wc.translate(0, 1.6 * s);
+      wc.fill(water);
+      ctx.globalAlpha = 0.65;
+      ctx.drawImage(waterLayer, 0, 0);
+      ctx.globalAlpha = 1;
       // Broad tonal variation reads as meadow, not additional physical obstacles.
       for (let i = 0; i < 350; i++) {
          const x = random() * w,

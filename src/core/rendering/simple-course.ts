@@ -102,7 +102,18 @@ export class SimpleCourse {
       const rect = this.canvas.getBoundingClientRect(),
          dpr = Math.min(devicePixelRatio || 1, 2),
          c = session.course;
+      const desiredOffset =
+         rect.width > 900
+            ? document.body.dataset.route === 'home'
+               ? rect.width * 0.23
+               : document.body.classList.contains('controls-open')
+                 ? -175
+                 : 0
+            : 0;
+      this.camera.offsetX +=
+         (desiredOffset - this.camera.offsetX) * (this.reducedMotion.matches ? 1 : 0.08);
       this.camera.resize(rect.width, rect.height, c.plate.worldBounds);
+      session.cameraAngle = this.camera.angle;
       if (this.viewRevision !== session.viewRevision) {
          this.viewRevision = session.viewRevision;
          this.following = false;
@@ -161,8 +172,43 @@ export class SimpleCourse {
          });
       }
       if (session.renderer === 'photo' && this.photo?.ready())
-         this.photo.paint(ctx, c, this.camera, dpr);
+         this.photo.paint(
+            ctx,
+            c,
+            {
+               ...this.camera,
+               x:
+                  this.camera.x -
+                  (Math.cos(this.camera.angle) * this.camera.offsetX) / this.camera.scale,
+               y:
+                  this.camera.y +
+                  (Math.sin(this.camera.angle) * this.camera.offsetX) / this.camera.scale,
+            },
+            dpr,
+         );
       else this.atlas.paint(ctx, c, this.camera);
+      if (['play', 'pair'].includes(document.body.dataset.route || '')) {
+         ctx.save();
+         ctx.translate(48, rect.height - 48);
+         ctx.fillStyle = '#172c24b3';
+         ctx.beginPath();
+         ctx.arc(0, 0, 25, 0, Math.PI * 2);
+         ctx.fill();
+         ctx.rotate(-this.camera.angle);
+         ctx.strokeStyle = '#e6eed6';
+         ctx.lineWidth = 1.3;
+         ctx.beginPath();
+         ctx.moveTo(0, 10);
+         ctx.lineTo(0, -11);
+         ctx.moveTo(-4, -5);
+         ctx.lineTo(0, -11);
+         ctx.lineTo(4, -5);
+         ctx.stroke();
+         ctx.restore();
+         ctx.font = '10px system-ui, sans-serif';
+         ctx.fillStyle = '#eef2df';
+         ctx.fillText('N', 44, rect.height - 81);
+      }
       const pin = this.world(c.pin);
       ctx.fillStyle = '#263b31';
       ctx.beginPath();

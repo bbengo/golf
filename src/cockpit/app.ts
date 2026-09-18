@@ -1,14 +1,66 @@
+import type { ControlTransport } from './transport';
 import { cockpitMarkup } from './markup';
 import { type Command, type Intent, type Snapshot, type Setup } from '../core/contracts/cockpit';
 import { connectRelay } from '../core/network/relay-client';
 
-export function startCockpit() {
-   document.body.className = 'cockpit';
-   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#f4f6f2');
-   document.body.innerHTML = cockpitMarkup;
-   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+export function startCockpit(root: HTMLElement = document.body, transport?: ControlTransport) {
+   root.classList.add('cockpit');
+   root.innerHTML = cockpitMarkup;
+   const $ = <T extends HTMLElement>(id: string) => root.querySelector('#' + id) as T;
+   let latestSetup: Setup | undefined;
+   let theme = 'dark';
+   try {
+      theme = localStorage.getItem('purity-theme') || 'dark';
+   } catch {}
+   const setTheme = (value: string) => {
+      root.dataset.theme = value === 'light' ? 'light' : 'dark';
+      $<HTMLSelectElement>('theme').value = root.dataset.theme;
+      if (root === document.body)
+         document
+            .querySelector('meta[name="theme-color"]')
+            ?.setAttribute('content', root.dataset.theme === 'dark' ? '#131b17' : '#f3f4ec');
+      try {
+         localStorage.setItem('purity-theme', root.dataset.theme);
+      } catch {}
+   };
+   setTheme(theme);
+   $('theme').onchange = () => setTheme($<HTMLSelectElement>('theme').value);
+   const panels = ['shot', 'bag', 'round'];
+   function showPanel(name: string, record = true) {
+      const next = panels.includes(name) ? name : 'shot';
+      if (root === document.body && record && root.dataset.panel !== next)
+         history.pushState({ panel: next }, '', `#${next}`);
+      root.dataset.panel = next;
+      const backLabel =
+         next !== 'shot' ? 'Back to shot' : transport ? 'Collapse controls' : 'Controller menu';
+      $('controllerBack').setAttribute('aria-label', backLabel);
+      $('controllerBack').title = backLabel;
+      for (const button of root.querySelectorAll<HTMLButtonElement>('[data-panel]'))
+         button.setAttribute('aria-pressed', String(button.dataset.panel === next));
+      for (const panel of root.querySelectorAll<HTMLElement>('[data-control-panel]'))
+         panel.hidden = panel.dataset.controlPanel !== next;
+   }
+   for (const button of root.querySelectorAll<HTMLButtonElement>('[data-panel]'))
+      button.onclick = () => showPanel(button.dataset.panel!);
+   showPanel(root === document.body ? location.hash.slice(1) : 'shot', false);
+   if (root === document.body)
+      window.addEventListener('popstate', () => showPanel(location.hash.slice(1), false));
+   $('controllerBack').onclick = () => {
+      if (root.dataset.panel !== 'shot') showPanel('shot');
+      else if (transport) root.dispatchEvent(new CustomEvent('collapse-controls'));
+      else $<HTMLDialogElement>('controllerMenu').showModal();
+   };
+   $('closeControllerMenu').onclick = () => $<HTMLDialogElement>('controllerMenu').close();
+
    const settings = $<HTMLDialogElement>('courseSettings');
-   $('openSettings').onclick = () => settings.showModal();
+   $('openSettings').onclick = () => {
+      if (latestSetup) {
+         for (const key of ['tee', 'pin', 'moisture', 'towardDeg'] as const)
+            $<HTMLInputElement>(key).value = String(latestSetup[key]);
+         $<HTMLSelectElement>('windChoice').value = latestSetup.wind;
+      }
+      settings.showModal();
+   };
    $('closeSettings').onclick = () => settings.close();
    settings.addEventListener('click', (event) => {
       const box = settings.getBoundingClientRect();
@@ -22,7 +74,7 @@ export function startCockpit() {
          settings.close();
    });
    const token = new URLSearchParams(location.search).get('token');
-   if (!token) {
+   if (!token && !transport) {
       $('connection').textContent = 'Scan the QR code on the display to join.';
       return;
    }
@@ -91,11 +143,11 @@ export function startCockpit() {
       $<HTMLFieldSetElement>('controls').disabled = !connected || !display || !state;
       $<HTMLFieldSetElement>('settingsControls').disabled =
          !connected || !display || !state || state.phase === 'animating';
-      document.body.classList.toggle('is-connected', connected && display);
+      root.classList.toggle('is-connected', connected && display);
    }
-   const relay = connectRelay(
-      'cockpit',
-      token,
+   const connect: ControlTransport =
+      transport || ((receive, status) => connectRelay('cockpit', token!, receive, status));
+   const relay = connect(
       (message) => {
          if (message.type === 'PEERS') {
             display = message.display;
@@ -116,10 +168,18 @@ export function startCockpit() {
          if (message.type === 'STATE') {
             const first = !state;
             state = message;
-            document.body.dataset.phase = state.phase;
+            latestSetup = state.setup;
+            root.dataset.phase = state.phase;
             availability();
             $('distance').textContent = Math.round(state.distance / 0.9144).toString();
             $('shot').textContent = String(state.shot);
+            $('roundShot').textContent = String(state.shot);
+            $('roundStatus').textContent =
+               state.phase === 'plan'
+                  ? 'Ready to play'
+                  : state.phase === 'animating'
+                    ? 'Ball in motion'
+                    : 'Shot complete';
             $('lie').textContent = state.lie;
             $('wind').textContent = `${state.wind.strength} wind toward ${state.wind.direction}`;
             $<HTMLProgressElement>('windBar').value = state.wind.fraction;
@@ -129,7 +189,7 @@ export function startCockpit() {
             const recover = state.phase === 'resolved' && status !== 'settled';
             $('phaseTitle').textContent =
                state.phase === 'plan'
-                  ? 'Make it yours.'
+                  ? 'Your next shot.'
                   : state.phase === 'animating'
                     ? 'Watch it fly.'
                     : status === 'holed'
@@ -139,7 +199,7 @@ export function startCockpit() {
                         : 'Take it from here.';
             $('phaseHint').textContent =
                state.phase === 'plan'
-                  ? 'Pick your line. Choose your club. Take your shot.'
+                  ? 'Set your line, then make your move.'
                   : state.phase === 'animating'
                     ? 'Eyes on the course. We’ll follow the ball.'
                     : status === 'settled'
@@ -261,7 +321,15 @@ export function startCockpit() {
       )
          return;
       const factor = $<HTMLInputElement>('fine').checked ? 0.1 : 1;
-      send({ action: 'MOVE', target, dx: dx * factor, dy: dy * factor });
+      const angle = state.cameraAngle || 0,
+         co = Math.cos(angle),
+         si = Math.sin(angle);
+      send({
+         action: 'MOVE',
+         target,
+         dx: Math.max(-100, Math.min(100, (co * dx + si * dy) * factor)),
+         dy: Math.max(-100, Math.min(100, (-si * dx + co * dy) * factor)),
+      });
    }
    const touchpad = $('touchpad');
    touchpad.onpointerdown = (e) => {
@@ -301,9 +369,9 @@ export function startCockpit() {
          move(delta[0], delta[1]);
       }
    };
-   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-dx]'))
+   for (const button of root.querySelectorAll<HTMLButtonElement>('[data-dx]'))
       button.onclick = () => move(Number(button.dataset.dx), Number(button.dataset.dy));
-   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-view]'))
+   for (const button of root.querySelectorAll<HTMLButtonElement>('[data-view]'))
       button.onclick = () =>
          send({ action: 'VIEW', view: button.dataset.view as 'hole' | 'ball' | 'green' });
    $('renderer').onchange = () =>
@@ -324,6 +392,9 @@ export function startCockpit() {
       });
       settings.close();
    };
+   $('chooseClub').onclick = () => showPanel('bag');
+   $('backToShot').onclick = () => showPanel('shot');
+   $('roundSettings').onclick = () => $('openSettings').click();
    labels();
    window.addEventListener('pagehide', () => relay.close(), { once: true });
 }
