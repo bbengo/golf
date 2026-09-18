@@ -1,6 +1,10 @@
 # Next session: unfinished work
 
-## Physical-device trial
+## Physical-device follow-up
+
+The owner confirmed the initial paired concept works. The redesigned phone UI,
+procedural palette and camera now need the same physical-device trial; Chromium
+checks are not a substitute for iOS/Safari testing.
 
 - Run `npm run local`, scan the QR on a phone on the same Wi-Fi, and verify
   aiming, fine control, inspection and a complete sequence of shots.
@@ -30,5 +34,13 @@
 - Improve stale-token guidance after a local server restart if the physical trial
   shows the reconnect message is confusing.
 
-Visual work should remain limited to readability and course/physics agreement.
-No photorealism expansion or cloud hosting is implied by these follow-ups.
+## Presentation follow-up
+
+- Evaluate sunlight readability, colour on the actual display, and phone thumb
+  reach. Try landscape, larger text and an iPhone with a home indicator.
+- Assess shot-follow speed and manual handover with several clubs.
+- Profile atlas memory and frame times, including the optional photographic
+  renderer during pan/zoom. Extreme zoom exposes authored polygon/texture limits;
+  do not change playable geometry merely to hide them.
+- Physics calibration remains essential. Richer presentation does not close it.
+  No cloud hosting is implied by this visual redesign.

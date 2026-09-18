@@ -23,8 +23,12 @@ display to one phone. There is no signalling service, cloud session database,
 account system, multi-room platform, or server-side physics. GitHub is source
 history and synchronisation, not game networking or hosting. Tests also run locally.
 
-**Simple visuals, essential mechanics.** Visual restraint means basic surfaces,
-terrain shading and tree canopies instead of photorealism. It does not reduce the
+**Natural presentation, essential mechanics.** The successful paired trial led
+to an expanded presentation brief: rounded phone controls, sans typography,
+a full-viewport course and an interactive shot camera. Warm fairways, pale greens,
+cooler rough and muted blue-green water establish a readable colour hierarchy.
+Procedural detail gives the course character without image downloads or
+photorealism. This presentation work does not reduce the
 requirements for flight, contact, collision, cup behaviour or reliable controls.
 The procedural renderer is a small experiment. The photographic version is kept
 for comparison and loaded only when selected.

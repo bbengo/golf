@@ -1,74 +1,149 @@
+import { CourseAtlas } from './course-atlas';
+import { CourseCamera } from './camera';
 import { Course } from '../course/course.js';
 import { Shot } from '../simulation/shot.js';
 import type { CockpitSession } from '../session/cockpit-session';
 import type { Point } from '../contracts/cockpit';
 
-const palette: Record<string, string> = {
-   rough: '#65764b',
-   'deep-rough': '#3d5942',
-   fairway: '#91ad66',
-   green: '#b3c685',
-   fringe: '#9ab773',
-   tee: '#a8bd79',
-   sand: '#ded2ae',
-   water: '#507e85',
-   path: '#afa88c',
-};
 export class SimpleCourse {
    private canvas: HTMLCanvasElement;
    private ctx: CanvasRenderingContext2D;
-   private base = document.createElement('canvas');
-   private cache = '';
+   private atlas = new CourseAtlas();
+   private lastTime = 0;
+   private viewRevision = -1;
+   private shotStarted = -1;
+   private following = false;
+   private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
    private photo: { paint: Function; ready: Function } | null = null;
    private photoLoading = false;
    private previewRevision = -1;
    private preview: { x: number; y: number; z: number } | null = null;
-   camera = { x: 0, y: 0, w: 0, h: 0, scale: 1, angle: 0, zoom: 1 };
+   camera = new CourseCamera();
    constructor(canvas: HTMLCanvasElement) {
       this.canvas = canvas;
       this.ctx = canvas.getContext('2d')!;
+      let pointer: { x: number; y: number; id: number } | null = null;
+      const manual = () => {
+         this.following = false;
+         canvas.dataset.cameraMode = 'manual';
+      };
+      canvas.addEventListener('pointerdown', (e) => {
+         if (e.button !== 0) return;
+         manual();
+         pointer = { x: e.clientX, y: e.clientY, id: e.pointerId };
+         canvas.setPointerCapture(e.pointerId);
+         canvas.classList.add('is-dragging');
+         canvas.focus();
+      });
+      canvas.addEventListener('pointermove', (e) => {
+         if (!pointer || pointer.id !== e.pointerId) return;
+         this.camera.pan(e.clientX - pointer.x, e.clientY - pointer.y);
+         pointer = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      });
+      const release = () => {
+         pointer = null;
+         canvas.classList.remove('is-dragging');
+      };
+      canvas.addEventListener('pointerup', release);
+      canvas.addEventListener('pointercancel', release);
+      canvas.addEventListener('lostpointercapture', release);
+      canvas.addEventListener(
+         'wheel',
+         (e) => {
+            e.preventDefault();
+            manual();
+            const r = canvas.getBoundingClientRect();
+            const delta = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? r.height : 1);
+            this.camera.zoomAt(
+               { x: e.clientX - r.left, y: e.clientY - r.top },
+               Math.exp(-Math.max(-400, Math.min(400, delta)) * 0.002),
+            );
+         },
+         { passive: false },
+      );
+      canvas.addEventListener('dblclick', () => {
+         manual();
+         this.camera.fit();
+      });
+      canvas.addEventListener('keydown', (e) => {
+         if (
+            ![
+               'ArrowLeft',
+               'ArrowRight',
+               'ArrowUp',
+               'ArrowDown',
+               '+',
+               '=',
+               '-',
+               'Home',
+               'Escape',
+            ].includes(e.key)
+         )
+            return;
+         e.preventDefault();
+         manual();
+         if (e.key === 'Home' || e.key === 'Escape') this.camera.fit();
+         else if (['+', '=', '-'].includes(e.key))
+            this.camera.zoomAt(
+               { x: this.camera.w / 2, y: this.camera.h / 2 },
+               e.key === '-' ? 0.8 : 1.25,
+            );
+         else
+            this.camera.pan(
+               e.key === 'ArrowLeft' ? 60 : e.key === 'ArrowRight' ? -60 : 0,
+               e.key === 'ArrowUp' ? 60 : e.key === 'ArrowDown' ? -60 : 0,
+            );
+      });
    }
    private world(p: Point) {
-      return {
-         x: (p.x - this.camera.x) * this.camera.scale + this.camera.w / 2,
-         y: this.camera.h / 2 - (p.y - this.camera.y) * this.camera.scale,
-      };
-   }
-   private path(ctx: CanvasRenderingContext2D, points: Point[]) {
-      ctx.beginPath();
-      points.forEach((p, i) => {
-         const q = this.world(p);
-         if (i) ctx.lineTo(q.x, q.y);
-         else ctx.moveTo(q.x, q.y);
-      });
-      ctx.closePath();
+      return this.camera.world(p);
    }
    draw(session: CockpitSession, time: number) {
       const rect = this.canvas.getBoundingClientRect(),
          dpr = Math.min(devicePixelRatio || 1, 2),
          c = session.course;
-      const bounds = c.plate.worldBounds;
-      // A fixed overhead camera keeps the touchpad axes intuitive. Camera changes are phone commands.
-      const center =
-         session.view === 'ball'
-            ? session.ball
-            : session.view === 'green'
-              ? c.greenCenter
-              : { x: (bounds.minX + bounds.maxX) / 2, y: (bounds.minY + bounds.maxY) / 2 };
-      const zoom = session.view === 'hole' ? 1 : session.view === 'green' ? 5 : 3;
-      this.camera = {
-         x: center.x,
-         y: center.y,
-         w: rect.width,
-         h: rect.height,
-         angle: 0,
-         zoom,
-         scale:
-            Math.min(
-               (rect.width - 50) / (bounds.maxX - bounds.minX),
-               (rect.height - 50) / (bounds.maxY - bounds.minY),
-            ) * zoom,
-      };
+      this.camera.resize(rect.width, rect.height, c.plate.worldBounds);
+      if (this.viewRevision !== session.viewRevision) {
+         this.viewRevision = session.viewRevision;
+         this.following = false;
+         this.canvas.dataset.cameraMode = 'framed';
+         if (session.view === 'hole') this.camera.fit();
+         else
+            this.camera.go(
+               session.view === 'ball' ? session.ball : c.greenCenter,
+               session.view === 'ball' ? 3 : 5,
+            );
+      }
+      let ball = session.ball;
+      if (session.phase === 'animating' && session.last) {
+         if (this.shotStarted !== session.animationStarted) {
+            this.shotStarted = session.animationStarted;
+            this.following = !this.reducedMotion.matches;
+         }
+         const trace = session.last.result.trajectory,
+            elapsed = ((time - session.animationStarted) / 1000) * 3;
+         if (elapsed >= session.last.result.duration) {
+            session.finish();
+            ball = session.ball;
+         } else {
+            let i = 1;
+            while (i < trace.length - 1 && trace[i].t < elapsed) i++;
+            const a = trace[i - 1],
+               b = trace[i],
+               f = Math.max(0, Math.min(1, (elapsed - a.t) / (b.t - a.t || 1)));
+            ball = { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f };
+         }
+      }
+      if (this.following && !this.reducedMotion.matches) {
+         const height = Math.max(0, (ball.z ?? 0) - Course.heightAt(c, ball));
+         this.camera.go(ball, Math.max(1.65, 3 - height * 0.025));
+         this.canvas.dataset.cameraMode = 'follow';
+         if (session.phase !== 'animating') this.following = false;
+      }
+      this.camera.tick(this.lastTime ? time - this.lastTime : 16, this.reducedMotion.matches);
+      this.lastTime = time;
+      this.canvas.dataset.cameraZoom = this.camera.zoom.toFixed(3);
+      this.canvas.dataset.cameraX = this.camera.x.toFixed(2);
       if (
          this.canvas.width !== Math.round(rect.width * dpr) ||
          this.canvas.height !== Math.round(rect.height * dpr)
@@ -87,28 +162,7 @@ export class SimpleCourse {
       }
       if (session.renderer === 'photo' && this.photo?.ready())
          this.photo.paint(ctx, c, this.camera, dpr);
-      else {
-         const key = JSON.stringify([this.camera, c.revision, session.setup]);
-         if (key !== this.cache) {
-            this.cache = key;
-            this.base.width = this.canvas.width;
-            this.base.height = this.canvas.height;
-            const b = this.base.getContext('2d')!;
-            b.setTransform(dpr, 0, 0, dpr, 0, 0);
-            this.paintGround(b, c);
-         }
-         ctx.drawImage(
-            this.base,
-            0,
-            0,
-            this.canvas.width,
-            this.canvas.height,
-            0,
-            0,
-            rect.width,
-            rect.height,
-         );
-      }
+      else this.atlas.paint(ctx, c, this.camera);
       const pin = this.world(c.pin);
       ctx.fillStyle = '#263b31';
       ctx.beginPath();
@@ -126,22 +180,6 @@ export class SimpleCourse {
       ctx.lineTo(pin.x + 15, pin.y - 19);
       ctx.lineTo(pin.x, pin.y - 15);
       ctx.fill();
-      let ball = session.ball;
-      if (session.phase === 'animating' && session.last) {
-         const trace = session.last.result.trajectory,
-            elapsed = ((time - session.animationStarted) / 1000) * 3;
-         if (elapsed >= session.last.result.duration) {
-            session.finish();
-            ball = session.ball;
-         } else {
-            let i = 1;
-            while (i < trace.length - 1 && trace[i].t < elapsed) i++;
-            const a = trace[i - 1],
-               b = trace[i],
-               f = Math.min(1, (elapsed - a.t) / (b.t - a.t || 1));
-            ball = { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f };
-         }
-      }
       if (session.phase === 'plan') {
          const a = this.world(ball),
             p = this.world(session.aim);
@@ -202,78 +240,6 @@ export class SimpleCourse {
             Math.PI * 2,
          );
          ctx.fill();
-      }
-   }
-   private paintGround(ctx: CanvasRenderingContext2D, c: CockpitSession['course']) {
-      ctx.fillStyle = palette.rough;
-      ctx.fillRect(0, 0, this.camera.w, this.camera.h);
-      for (const s of c.surfaces) {
-         this.path(ctx, s.polygon);
-         ctx.fillStyle = palette[s.type] || palette.rough;
-         ctx.fill();
-         if (['fairway', 'green', 'tee'].includes(s.type)) {
-            ctx.save();
-            ctx.clip();
-            ctx.fillStyle = '#f6efc710';
-            for (let x = 0; x < this.camera.w; x += 26) ctx.fillRect(x, 0, 13, this.camera.h);
-            ctx.restore();
-         }
-      }
-      // Coarse terrain illumination from the same height field used by the ball.
-      const light = document.createElement('canvas');
-      light.width = Math.ceil(this.camera.w / 12);
-      light.height = Math.ceil(this.camera.h / 12);
-      const lighting = light.getContext('2d')!,
-         pixels = lighting.createImageData(light.width, light.height);
-      for (let x = 0; x < light.width; x++)
-         for (let y = 0; y < light.height; y++) {
-            const p = {
-               x: this.camera.x + (x * 12 - this.camera.w / 2) / this.camera.scale,
-               y: this.camera.y - (y * 12 - this.camera.h / 2) / this.camera.scale,
-            };
-            if (!Course.inBounds(c, p)) continue;
-            const s = Course.slopeAt(c, p),
-               shade = Math.max(-0.1, Math.min(0.1, (s.x - s.y) * 0.25)),
-               i = (y * light.width + x) * 4;
-            pixels.data.set(
-               shade > 0
-                  ? [255, 249, 219, Math.round(shade * 255)]
-                  : [16, 36, 28, Math.round(-shade * 255)],
-               i,
-            );
-         }
-      lighting.putImageData(pixels, 0, 0);
-      ctx.save();
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(light, 0, 0, this.camera.w, this.camera.h);
-      ctx.restore();
-      for (const o of c.objects) {
-         if (o.kind === 'tree') {
-            const p = this.world(o),
-               r = Math.max(2, o.canopyRadius * this.camera.scale);
-            ctx.fillStyle = '#20372d38';
-            ctx.beginPath();
-            ctx.arc(p.x + r * 0.25, p.y + r * 0.35, r, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#365841';
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#66825a';
-            ctx.beginPath();
-            ctx.arc(p.x - r * 0.2, p.y - r * 0.2, r * 0.65, 0, Math.PI * 2);
-            ctx.fill();
-         } else if (o.kind === 'bridge') {
-            const p = this.world({ x: o.minX, y: o.maxY });
-            ctx.fillStyle = '#c4b58d';
-            ctx.fillRect(
-               p.x,
-               p.y,
-               (o.maxX - o.minX) * this.camera.scale,
-               (o.maxY - o.minY) * this.camera.scale,
-            );
-         }
       }
    }
 }

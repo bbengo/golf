@@ -32,6 +32,7 @@ export class CockpitSession {
    phase: Snapshot['phase'] = 'plan';
    renderer: Snapshot['renderer'] = 'procedural';
    view: 'hole' | 'ball' | 'green' = 'hole';
+   viewRevision = 0;
    shot = 1;
    revision = 0;
    records: ReturnType<typeof Shot.run>[] = [];
@@ -66,6 +67,8 @@ export class CockpitSession {
       this.weatherStarted = performance.now();
       this.intent = { club: 'D', effort: 1, shape: 0, height: 0 };
       this.revision++;
+      this.view = 'hole';
+      this.viewRevision++;
    }
    snapshot(): Snapshot {
       const wind = Wind.presentation(Wind.atDay(this.day(), 0));
@@ -73,6 +76,7 @@ export class CockpitSession {
          type: 'STATE',
          revision: this.revision,
          phase: this.phase,
+         canMulligan: this.undoAvailable && this.phase !== 'animating',
          shot: this.shot,
          intent: { ...this.intent },
          ball: { ...this.ball },
@@ -183,6 +187,8 @@ export class CockpitSession {
                this.shot = this.lastShotNumber;
                this.phase = 'plan';
                this.undoAvailable = false;
+               this.view = 'ball';
+               this.viewRevision++;
                break;
             case 'SKIP':
                this.finish();
@@ -196,6 +202,7 @@ export class CockpitSession {
                break;
             case 'VIEW':
                this.view = command.view;
+               this.viewRevision++;
                break;
             case 'RENDERER':
                this.renderer = command.renderer;

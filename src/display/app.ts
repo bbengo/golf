@@ -6,7 +6,7 @@ import type { Command } from '../core/contracts/cockpit';
 
 export async function startDisplay() {
    document.body.className = 'display';
-   document.body.innerHTML = `<canvas id="course" aria-label="Golf course"></canvas>
+   document.body.innerHTML = `<canvas id="course" tabindex="0" aria-label="Golf course. Drag to explore, scroll to zoom, double click or press Home to see the whole hole."></canvas>
     <section id="pairing" class="pairing"><p class="eyebrow">PURITY · LOCAL PLAY</p><h1>The course is here.<br>The controls are in your hand.</h1>
     <p>Scan with your phone on the same Wi-Fi.</p><canvas id="qr" aria-label="Scan to open the cockpit"></canvas>
     <a id="cockpitLink" target="_blank" rel="noopener">Open cockpit on this device</a>

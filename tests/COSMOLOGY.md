@@ -16,12 +16,17 @@ Tests run locally; no hosted workflow is required by this proof of concept.
   timestep convergence, swept trunk collision and free-fall cup clearance.
 - `cockpit-session.test.mjs` checks malformed inputs, duplicate/replayed shots,
   phase gating, one-shot mulligan and independent inspection/setup state.
+- `camera.test.mjs` checks coordinate round trips, cursor anchoring across wheel
+  inputs, time-based easing, zoom limits and reduced-motion snap.
 - `browser/lab.spec.ts` exercises the original setup journey, renderer readiness
   and a completed shot, asserting no page errors or external network requests.
 - `browser/cockpit.spec.ts` uses separate display and phone contexts. It exercises
   pairing, intent/aim changes, phone reload, shot resolution, appearance switching,
   and phone disconnect. It checks the phone has no course canvas/heavy engine
   request and the procedural display requests no reference images.
+  It also checks viewport coverage, phone overflow, mouse pan/zoom without aim
+  changes, phone reframing, automatic follow/manual interruption, reduced-motion
+  framing, results/mulligan and the settings dialog.
 
 Screenshots and traces are disposable test evidence under ignored `test-results/`.
 The browser check uses a desktop Chromium mobile viewport, not an actual iPhone

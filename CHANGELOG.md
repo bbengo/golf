@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-09-18: modern cockpit, natural colour and interactive display
+
+- Rebuilt the phone layout around aim, club/effort and a persistent play action.
+  Added rounded light surfaces, native sans typography, progressive shape/height
+  controls, a settings sheet, larger touch targets and focused result/recovery states.
+- Made the course canvas fill the display with mouse pan, cursor-anchored zoom,
+  keyboard navigation and repeatable phone framing commands. Shots follow the
+  recorded ball with smooth zoom; manual input takes over. Reduced-motion
+  preference disables automatic following and camera easing.
+- Added a cached world-space procedural atlas: natural surface colour hierarchy,
+  mowing stripes, meadow variation, fine seeded texture, gentle terrain shading,
+  layered tree canopies, water detail and bridge planks. No image downloads are
+  required. Physical surfaces, shot equations and original HTML are unchanged.
+- Exposed authoritative mulligan availability and clearer restart actions for
+  finished/failed holes. Updated cosmologies, usage instructions and handoff.
+- Added camera mathematics tests and expanded paired browser coverage for display
+  size, camera/aim isolation, manual follow interruption, reduced motion and results.
+
+Validation: 21 reference/mechanics/session/camera checks, both browser flows,
+TypeScript, formatting and production build pass. Physical-device colour,
+Safari behaviour and display frame-time measurements remain follow-up work.
+
 ## 2026-09-18: local paired-play proof of concept
 
 - Added display and cockpit entry routes with separate module loading. The phone

@@ -29,6 +29,11 @@ does not crash or cover the course. Reloading the display deliberately creates a
 new round; there is no round persistence service. Ball, cup and aim/launch marks
 are the explicit exceptions to a course-only display.
 
+The canvas fills the viewport. Mouse drag, cursor-anchored wheel zoom, double-click
+reframing and keyboard camera navigation are presentation inputs only. A shot
+automatically follows the recorded ball position; manual navigation takes over
+until the next shot. OS reduced-motion preference disables automatic following.
+
 ## Cockpit
 
 Owns controls and temporary input state, never physics state. Slider updates are
@@ -43,6 +48,18 @@ whole-hole, ball and green camera views; conditions changes start a new hole.
 Renderer choice compares procedural and photographic views without changing physics.
 The balanced golfer is currently fixed in paired mode; the full player builder
 remains available only in the lab.
+
+`cockpit/markup.ts` owns the phone structure; `cockpit/app.ts` owns its bindings.
+The sequence is aim, club/effort, play. Shape and flight are progressively disclosed.
+A fixed play dock keeps the current action reachable, while a native dialog holds
+course settings. Resolved shots replace editing cards with results and the next
+action; failed/holed outcomes offer a restart. The authoritative snapshot says
+whether a mulligan is available. Custom touchpad movement is gated like native
+controls when a shot is unavailable.
+
+Rounded light surfaces and a native system sans stack keep the interface familiar
+on iOS without a font download or UI framework. Safe-area padding, visible keyboard
+focus, enlarged touch targets and reduced-motion CSS are part of the interaction.
 
 ## Remaining boundaries
 

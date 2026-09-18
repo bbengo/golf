@@ -32,9 +32,14 @@ test('one committed shot survives duplicate commands and can be replayed', () =>
    assert.deepEqual(Shot.replay(s.last), s.last.result);
    s.finish();
    assert.equal(s.phase, 'resolved');
+   assert.equal(s.snapshot().canMulligan, true);
+   const viewRevision = s.viewRevision;
    assert.equal(s.apply({ type: 'COMMAND', id: 'undo', action: 'MULLIGAN' }).ok, true);
    assert.equal(s.shot, 1);
    assert.equal(s.phase, 'plan');
+   assert.equal(s.snapshot().canMulligan, false);
+   assert.equal(s.view, 'ball');
+   assert.ok(s.viewRevision > viewRevision);
    assert.equal(s.records.length, 1);
    assert.equal(s.apply({ type: 'COMMAND', id: 'undo2', action: 'MULLIGAN' }).ok, false);
 });

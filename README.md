@@ -20,10 +20,19 @@ If the machine has several network adapters, choose the Wi-Fi address on the
 pairing panel. Allow Node on your private network if Windows Firewall prompts.
 Guest Wi-Fi with client isolation prevents the devices from connecting.
 
-Use the touchpad or arrow buttons to aim, switch to Inspect for terrain readings,
-and adjust club, effort, shape and height. Course setup restarts the practice hole.
-The simple course renderer loads no image assets; the photographic reference is
-available under Course setup & appearance. Phone reconnection preserves the round.
+Use the touchpad or arrows to aim, switch to Read green for terrain readings, then
+choose club and effort. Expand Shape & flight for curve and height. The bottom play
+button stays within reach and changes to the next action after a shot. Settings
+holds conditions and appearance; applying conditions restarts the practice hole.
+Procedural graphics load no image assets.
+
+On the display, drag to pan, scroll to zoom at the pointer, and double-click to
+see the whole hole. With the canvas focused, arrows pan, plus/minus zoom, and Home
+or Escape reframe. Shots follow automatically until you take over with the mouse
+or a phone camera button. Reduced-motion preference disables automatic following.
+The course fills the screen; gameplay controls stay on the phone.
+
+Phone reconnection preserves the round.
 Reloading the display starts a fresh round. Restarting the server creates a new
 pairing token.
 

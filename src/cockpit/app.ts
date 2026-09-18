@@ -1,39 +1,26 @@
-import {
-   CLUBS,
-   type Command,
-   type Intent,
-   type Snapshot,
-   type Setup,
-} from '../core/contracts/cockpit';
+import { cockpitMarkup } from './markup';
+import { type Command, type Intent, type Snapshot, type Setup } from '../core/contracts/cockpit';
 import { connectRelay } from '../core/network/relay-client';
 
 export function startCockpit() {
    document.body.className = 'cockpit';
-   document.body.innerHTML = `<main class="cockpit-shell"><header><p class="eyebrow">PURITY · COCKPIT</p><h1>Your next shot.</h1><p id="connection" role="status">Connecting…</p></header>
-    <div class="readings"><div><span id="distance">—</span><small>yards to aim</small></div><div><span id="shot">1</span><small>shot</small></div><div><span id="lie">—</span><small>lie</small></div></div>
-    <p id="wind" class="wind">Waiting for the display</p><progress id="windBar" max="1" value="0" aria-label="Wind strength"></progress>
-    <fieldset id="controls" disabled><label>Club<select id="club">${CLUBS.map((c) => `<option value="${c}">${c === 'D' ? 'Driver' : c === 'PUTT' ? 'Putter' : c === 'CHIP' ? 'Chip' : c}</option>`).join('')}</select></label>
-    <label>Effort <output id="effortValue">100%</output><input id="effort" type="range" min="15" max="110" step="0.5" value="100"></label>
-    <label>Shape <output id="shapeValue">Straight</output><input id="shape" type="range" min="-100" max="100" value="0"></label>
-    <label>Height <output id="heightValue">Stock</output><input id="height" type="range" min="-100" max="100" value="0"></label>
-    <div class="segmented"><button type="button" id="aimMode" aria-pressed="true">Aim</button><button type="button" id="inspectMode" aria-pressed="false">Inspect</button></div>
-    <div id="touchpad" role="group" tabindex="0" aria-label="Drag or use arrow keys to move the aim point"><span>Drag to aim</span><small>Up is toward the top of the course</small></div>
-    <label class="fine"><input id="fine" type="checkbox">Fine adjustment</label>
-    <div class="nudges" aria-label="Move target"><button type="button" data-dx="-1" data-dy="0" aria-label="Move left">←</button><button type="button" data-dx="0" data-dy="1" aria-label="Move up">↑</button><button type="button" data-dx="0" data-dy="-1" aria-label="Move down">↓</button><button type="button" data-dx="1" data-dy="0" aria-label="Move right">→</button></div>
-    <p id="terrain" class="terrain">Terrain readings appear here</p>
-    <div class="views"><button type="button" data-view="hole">Whole hole</button><button type="button" data-view="ball">Ball</button><button type="button" data-view="green">Green</button></div>
-    <button type="button" id="play" class="primary">Play this shot</button>
-    <p id="result" role="status"></p><div class="actions"><button type="button" id="mulligan">Mulligan</button><button type="button" id="reset">Restart hole</button></div>
-    <details><summary>Course setup & appearance</summary>
-    <label>Tee<select id="tee"><option>red</option><option selected>white</option><option>blue</option></select></label>
-    <label>Pin<select id="pin"><option>easy</option><option selected>moderate</option><option>challenging</option></select></label>
-    <label>Wind<select id="windChoice"><option>calm</option><option>light</option><option selected>moderate</option><option>strong</option></select></label>
-    <label>Wind toward (degrees)<input id="towardDeg" type="number" min="0" max="359" value="0"></label>
-    <label>Ground<select id="moisture"><option>dry</option><option selected>moderate</option><option>wet</option></select></label>
-    <button type="button" id="applySetup">Start with these conditions</button>
-    <label>Course appearance<select id="renderer"><option value="procedural">Simple terrain</option><option value="photo">Photographic reference</option></select></label>
-    </details></fieldset><p id="notice" role="alert"></p><footer>One course · one phone · one local session</footer></main>`;
+   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#f4f6f2');
+   document.body.innerHTML = cockpitMarkup;
    const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+   const settings = $<HTMLDialogElement>('courseSettings');
+   $('openSettings').onclick = () => settings.showModal();
+   $('closeSettings').onclick = () => settings.close();
+   settings.addEventListener('click', (event) => {
+      const box = settings.getBoundingClientRect();
+      if (
+         event.target === settings &&
+         (event.clientX < box.left ||
+            event.clientX > box.right ||
+            event.clientY < box.top ||
+            event.clientY > box.bottom)
+      )
+         settings.close();
+   });
    const token = new URLSearchParams(location.search).get('token');
    if (!token) {
       $('connection').textContent = 'Scan the QR code on the display to join.';
@@ -76,6 +63,11 @@ export function startCockpit() {
    }
    function labels() {
       const i = intent();
+      const select = $<HTMLSelectElement>('club');
+      $('clubName').textContent = select.selectedOptions[0]?.textContent || i.club;
+      if (!state || state.phase === 'plan')
+         $('dockHint').textContent =
+            `${select.selectedOptions[0]?.textContent || i.club} \u00b7 ${Math.round(i.effort * 100)}% effort`;
       $('effortValue').textContent = `${Math.round(i.effort * 1000) / 10}%`;
       $('shapeValue').textContent =
          i.shape === 0
@@ -85,9 +77,21 @@ export function startCockpit() {
          i.height === 0
             ? 'Stock'
             : `${Math.abs(Math.round(i.height * 100))}% ${i.height > 0 ? 'higher' : 'lower'}`;
+      $('tuningSummary').textContent =
+         `${i.shape === 0 ? 'Straight' : i.shape > 0 ? 'Draw' : 'Fade'} · ${i.height === 0 ? 'stock height' : i.height > 0 ? 'high flight' : 'low flight'}`;
+      for (const id of ['effort', 'shape', 'height']) {
+         const slider = $<HTMLInputElement>(id);
+         slider.style.setProperty(
+            '--fill',
+            `${((Number(slider.value) - Number(slider.min)) / (Number(slider.max) - Number(slider.min))) * 100}%`,
+         );
+      }
    }
    function availability() {
       $<HTMLFieldSetElement>('controls').disabled = !connected || !display || !state;
+      $<HTMLFieldSetElement>('settingsControls').disabled =
+         !connected || !display || !state || state.phase === 'animating';
+      document.body.classList.toggle('is-connected', connected && display);
    }
    const relay = connectRelay(
       'cockpit',
@@ -106,12 +110,13 @@ export function startCockpit() {
             if (message.id === latestInput) dirty = false;
             if (!message.ok) $('notice').textContent = message.error || 'Command rejected';
             else if (started !== undefined)
-               $('connection').textContent =
-                  `Connected · ${Math.round(performance.now() - started)} ms command round trip`;
+               $('latency').textContent =
+                  `${Math.round(performance.now() - started)} ms command round trip. Both devices are connected locally.`;
          }
          if (message.type === 'STATE') {
             const first = !state;
             state = message;
+            document.body.dataset.phase = state.phase;
             availability();
             $('distance').textContent = Math.round(state.distance / 0.9144).toString();
             $('shot').textContent = String(state.shot);
@@ -119,17 +124,49 @@ export function startCockpit() {
             $('wind').textContent = `${state.wind.strength} wind toward ${state.wind.direction}`;
             $<HTMLProgressElement>('windBar').value = state.wind.fraction;
             $('terrain').textContent =
-               `Inspection: ${state.terrain.surface} · ${(state.terrain.z / 0.3048).toFixed(1)} ft · ${state.terrain.gradePercent.toFixed(1)}% slope · downhill ${state.terrain.downhillLabel}`;
+               `${state.terrain.surface} · ${state.terrain.gradePercent.toFixed(1)}% slope · falls ${state.terrain.downhillLabel} · ${(state.terrain.z / 0.3048).toFixed(0)} ft elevation`;
+            const status = state.result?.status;
+            const recover = state.phase === 'resolved' && status !== 'settled';
+            $('phaseTitle').textContent =
+               state.phase === 'plan'
+                  ? 'Make it yours.'
+                  : state.phase === 'animating'
+                    ? 'Watch it fly.'
+                    : status === 'holed'
+                      ? 'That’s the hole.'
+                      : status === 'water'
+                        ? 'A little too wet.'
+                        : 'Take it from here.';
+            $('phaseHint').textContent =
+               state.phase === 'plan'
+                  ? 'Pick your line. Choose your club. Take your shot.'
+                  : state.phase === 'animating'
+                    ? 'Eyes on the course. We’ll follow the ball.'
+                    : status === 'settled'
+                      ? 'Your ball is down. Ready for the next one?'
+                      : 'Try a mulligan, or start a fresh hole.';
             $('play').textContent =
                state.phase === 'animating'
                   ? 'Show result'
                   : state.phase === 'resolved'
-                    ? 'Next shot'
+                    ? recover
+                       ? status === 'holed'
+                          ? 'Play again'
+                          : 'Restart hole'
+                       : 'Next shot'
                     : 'Play this shot';
-            $<HTMLButtonElement>('play').disabled =
-               state.phase === 'resolved' && state.result?.status !== 'settled';
+            $<HTMLButtonElement>('mulligan').disabled = !state.canMulligan;
+            $('dockHint').textContent =
+               state.phase === 'plan'
+                  ? `${$<HTMLSelectElement>('club').selectedOptions[0]?.textContent || state.intent.club} · ${Math.round(state.intent.effort * 100)}% effort`
+                  : state.phase === 'animating'
+                    ? 'Shot in progress'
+                    : recover
+                      ? 'A fresh start is one tap away.'
+                      : 'On to the next shot.';
+            $('resultCard').hidden = state.phase !== 'resolved';
             $('result').textContent = state.result
-               ? `${state.result.status} · carry ${(state.result.carry / 0.9144).toFixed(0)} yd · total ${(state.result.total / 0.9144).toFixed(0)} yd · ${state.result.surface}`
+               ? `${(state.result.carry / 0.9144).toFixed(0)} yd carry · ${(state.result.total / 0.9144).toFixed(0)} yd total · ${state.result.surface}`
                : '';
             for (const id of ['club', 'effort', 'shape', 'height'])
                $<HTMLInputElement>(id).disabled = state.phase !== 'plan';
@@ -157,7 +194,7 @@ export function startCockpit() {
             dirty = false;
             pendingInput = false;
          }
-         $('connection').textContent = reason;
+         $('connection').textContent = ok ? 'Connected to your course' : reason;
          availability();
       },
    );
@@ -179,27 +216,65 @@ export function startCockpit() {
       send(
          state.phase === 'plan'
             ? { action: 'PLAY', shot: state.shot, intent: intent() }
-            : { action: state.phase === 'animating' ? 'SKIP' : 'NEXT' },
+            : {
+                 action:
+                    state.phase === 'animating'
+                       ? 'SKIP'
+                       : state.result?.status === 'settled'
+                         ? 'NEXT'
+                         : 'RESET',
+              },
       );
    };
    $('mulligan').onclick = () => send({ action: 'MULLIGAN' });
-   $('reset').onclick = () => send({ action: 'RESET' });
+   $('reset').onclick = () => {
+      send({ action: 'RESET' });
+      settings.close();
+   };
    const mode = (next: 'aim' | 'probe') => {
       target = next;
       $('aimMode').setAttribute('aria-pressed', String(next === 'aim'));
       $('inspectMode').setAttribute('aria-pressed', String(next === 'probe'));
-      $('touchpad').firstElementChild!.textContent =
-         next === 'aim' ? 'Drag to aim' : 'Drag to inspect';
+      $('padTitle').textContent =
+         next === 'aim' ? 'Drag here. Watch the course.' : 'Explore the ground.';
+      $('padHelp').textContent =
+         next === 'aim'
+            ? 'Your aim moves with your finger.'
+            : 'Move the pad. Read the slope below.';
+      $('terrain').hidden = next === 'aim';
+      $('touchpad').setAttribute(
+         'aria-label',
+         next === 'aim'
+            ? 'Drag or use arrow keys to move the aim point'
+            : 'Drag or use arrow keys to inspect terrain',
+      );
    };
    $('aimMode').onclick = () => mode('aim');
    $('inspectMode').onclick = () => mode('probe');
    function move(dx: number, dy: number) {
+      if (
+         !connected ||
+         !display ||
+         !state ||
+         state.phase === 'animating' ||
+         (target === 'aim' && state.phase !== 'plan')
+      )
+         return;
       const factor = $<HTMLInputElement>('fine').checked ? 0.1 : 1;
       send({ action: 'MOVE', target, dx: dx * factor, dy: dy * factor });
    }
    const touchpad = $('touchpad');
    touchpad.onpointerdown = (e) => {
+      if (
+         !connected ||
+         !display ||
+         !state ||
+         state.phase === 'animating' ||
+         (target === 'aim' && state.phase !== 'plan')
+      )
+         return;
       pointer = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      touchpad.classList.add('is-dragging');
       touchpad.setPointerCapture(e.pointerId);
    };
    touchpad.onpointermove = (e) => {
@@ -212,6 +287,7 @@ export function startCockpit() {
    };
    touchpad.onpointerup = touchpad.onpointercancel = () => {
       pointer = null;
+      touchpad.classList.remove('is-dragging');
    };
    touchpad.onkeydown = (e) => {
       const delta = (
@@ -235,7 +311,7 @@ export function startCockpit() {
          action: 'RENDERER',
          renderer: $<HTMLSelectElement>('renderer').value as 'procedural' | 'photo',
       });
-   $('applySetup').onclick = () =>
+   $('applySetup').onclick = () => {
       send({
          action: 'SETUP',
          setup: {
@@ -246,5 +322,8 @@ export function startCockpit() {
             towardDeg: Number($<HTMLInputElement>('towardDeg').value),
          },
       });
+      settings.close();
+   };
+   labels();
    window.addEventListener('pagehide', () => relay.close(), { once: true });
 }
