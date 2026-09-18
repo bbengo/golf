@@ -1,19 +1,26 @@
 # Physics development track
 
-The existing point-mass implementation is an initial reference, not a permanent
-constraint. Physics development follows the study gate described in Reagan's
-email to Bill. Source extraction does not change the current equations.
+The original point-mass model remains the desktop reference. Paired play now uses
+an experimental mechanics path with coupled spin integration, friction impulses,
+sliding contact, cylindrical trunks and conservative free-fall cup capture.
+Implementation, sources, assumptions and limitations live in the
+[simulation cosmology](../src/core/simulation/COSMOLOGY.md). The owner authorised
+implementation after the original study-gate email. This does not imply empirical
+validation of the resulting model.
 
-## Research directions
+## Remaining essential research
 
-- Flight: investigate three-dimensional spin-axis evolution and empirically
-  supported aerodynamic lift and drag, documenting units and validity ranges.
-- Contact: investigate friction-based spin-to-surface impulses, with explicit
-  material and moisture assumptions and measured rebound/roll comparisons.
-- Environment: improve canopy/structure collision representation and validate
-  cup capture as a physical event rather than a proximity decision.
+- Flight: select measured lift/drag curves, preserve their provenance and validity
+  ranges, and validate trajectories independently. Spin is now three-dimensional;
+  the aerodynamic coefficient family still needs empirical replacement.
+- Contact: fit material and moisture behaviour against measured velocity/spin
+  before and after contact, then evaluate compliant turf beyond a rigid impulse.
+- Environment: add rim impact/lip-out dynamics and validate cup behaviour against
+  measured captures. Refine object geometry where actual course objects require it.
+- Numerics: establish full-shot convergence across flight, bounce, slide and roll;
+  resolve remaining contact-time fractions and repeated impacts within a step.
 
-These are research objectives, not claims of validated behavior. Select source
+These are research objectives, not claims of validated behaviour. Select source
 data and validation cases before committing to a model. Establish appropriate
 numerical convergence and physical consistency checks for each change, alongside
 comparison against independent measurements where available.

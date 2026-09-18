@@ -1,5 +1,11 @@
 # Architecture and migration
 
+> Historical extraction checkpoint. Current ownership and decisions are maintained
+> in [the root cosmology](../COSMOLOGY.md), [application topology](../src/COSMOLOGY.md),
+> [shared core](../src/core/COSMOLOGY.md) and [relay](../server/COSMOLOGY.md).
+> The next milestones below describe the original extraction plan; paired play and
+> the first experimental mechanics implementation are now present.
+
 ## Current milestone
 
 The Vite starter is replaced by the combined desktop lab. The original standalone

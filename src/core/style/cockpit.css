@@ -1,0 +1,259 @@
+:root {
+   font-family: system-ui, sans-serif;
+   color: #f1eddf;
+   background: #112b24;
+   color-scheme: dark;
+   font-synthesis: none;
+}
+* {
+   box-sizing: border-box;
+}
+body {
+   margin: 0;
+}
+button,
+input,
+select {
+   font: inherit;
+}
+button,
+select,
+input[type='number'] {
+   border: 1px solid #648171;
+   background: #1e3c31;
+   color: inherit;
+   border-radius: 6px;
+   padding: 12px;
+}
+button {
+   cursor: pointer;
+   min-height: 44px;
+}
+button:hover {
+   background: #315341;
+}
+button:disabled,
+fieldset:disabled {
+   opacity: 0.5;
+   cursor: default;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+   outline: 3px solid #e6ba77;
+   outline-offset: 3px;
+}
+a {
+   color: #e4c798;
+}
+.eyebrow {
+   font-size: 11px;
+   letter-spacing: 0.2em;
+   color: #bdcaba;
+}
+h1 {
+   font:
+      normal 34px/1.16 Georgia,
+      serif;
+   margin: 12px 0;
+}
+p {
+   line-height: 1.5;
+}
+small {
+   display: block;
+   color: #b5c4b6;
+   font-size: 12px;
+}
+.display {
+   height: 100dvh;
+   overflow: hidden;
+   background: #65764b;
+}
+.display > #course {
+   display: block;
+   width: 100vw;
+   height: 100dvh;
+}
+.pairing {
+   position: absolute;
+   left: 50%;
+   top: 50%;
+   transform: translate(-50%, -50%);
+   width: min(460px, 94vw);
+   max-height: 96dvh;
+   overflow: auto;
+   text-align: center;
+   padding: 28px;
+   background: #112b24f5;
+   border: 1px solid #b4c09966;
+   border-radius: 12px;
+   box-shadow: 0 20px 80px #0006;
+}
+.pairing[hidden] {
+   display: none;
+}
+.pairing canvas {
+   display: block;
+   margin: 22px auto;
+}
+.pairing a {
+   display: block;
+   margin: 14px 0;
+}
+.pairing label {
+   display: block;
+   margin-top: 16px;
+}
+.pairing label[hidden] {
+   display: none;
+}
+.cockpit-shell {
+   max-width: 480px;
+   margin: auto;
+   padding: 24px 22px max(24px, env(safe-area-inset-bottom));
+}
+header {
+   border-bottom: 1px solid #46634e;
+   margin-bottom: 22px;
+}
+#connection {
+   font-size: 12px;
+   color: #bbd1bf;
+}
+.readings {
+   display: flex;
+   gap: 24px;
+   justify-content: space-between;
+}
+.readings span {
+   font:
+      26px Georgia,
+      serif;
+}
+.readings #lie {
+   text-transform: capitalize;
+   font-size: 22px;
+}
+.wind {
+   margin: 22px 0 6px;
+}
+progress {
+   width: 100%;
+   height: 5px;
+   accent-color: #9bbc80;
+}
+fieldset {
+   padding: 0;
+   margin: 22px 0;
+   border: 0;
+}
+label {
+   display: block;
+   margin: 20px 0;
+   font-size: 14px;
+}
+label select,
+label input[type='number'] {
+   display: block;
+   width: 100%;
+   margin-top: 8px;
+}
+output {
+   float: right;
+   color: #d3d6bc;
+   font-size: 12px;
+}
+input[type='range'] {
+   display: block;
+   width: 100%;
+   margin: 18px 0;
+   accent-color: #bbcf99;
+   height: 20px;
+}
+input[type='checkbox'] {
+   accent-color: #bbcf99;
+}
+.segmented,
+.views,
+.actions,
+.nudges {
+   display: flex;
+   gap: 8px;
+}
+.segmented button,
+.actions button,
+.nudges button {
+   flex: 1;
+}
+.segmented button[aria-pressed='true'] {
+   background: #74976c;
+   color: #0d241e;
+}
+.views button {
+   flex: 1;
+   font-size: 12px;
+   padding: 8px;
+}
+.fine {
+   font-size: 12px;
+}
+.terrain {
+   font-size: 12px;
+   color: #c1cdb9;
+   min-height: 42px;
+}
+#touchpad {
+   height: 128px;
+   border: 1px dashed #7d9577;
+   border-radius: 8px;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   margin-top: 12px;
+   touch-action: none;
+   user-select: none;
+   background: radial-gradient(circle, #53734d55, #173329);
+}
+#touchpad small {
+   margin-top: 12px;
+   font-size: 10px;
+}
+.primary {
+   width: 100%;
+   margin-top: 24px;
+   background: #83a16f;
+   color: #112b24;
+   font:
+      22px Georgia,
+      serif;
+   min-height: 54px;
+}
+.actions {
+   margin-bottom: 24px;
+}
+#result {
+   font-size: 13px;
+   min-height: 20px;
+}
+#notice {
+   color: #f0bb92;
+   font-size: 13px;
+}
+details {
+   border-top: 1px solid #46634e;
+   padding-top: 18px;
+}
+summary {
+   cursor: pointer;
+   font-size: 13px;
+}
+footer {
+   font-size: 11px;
+   color: #90a58f;
+   text-align: center;
+   margin-top: 30px;
+}

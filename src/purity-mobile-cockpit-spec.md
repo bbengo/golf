@@ -2,6 +2,12 @@
 
 ## Concept
 
+> Implementation note (2026-09-18): this is the original proposal. The owner's
+> later instructions explicitly retain physics development as essential and limit
+> only visual realism. The unchanged-physics constraint below is superseded by
+> [the current cosmology](../COSMOLOGY.md). Pairing now uses `mode=cockpit` and a
+> random session token. GitHub is source sync; runtime remains local.
+
 Split the UCG-50 golf interface into two physically separate surfaces on the same local network:
 
 - **Big screen (Display Mode):** shows the course only. No sidebar, no controls, no HUD. It exists purely as a visual field, in line with Purity's no-interface doctrine — the screen is the course, not a dashboard.

@@ -2,6 +2,7 @@ import { Contract } from '../contracts/contract.js';
 import { Course } from '../course/course.js';
 import { Player } from './player.js';
 import { Wind } from '../course/wind.js';
+import * as Fundamentals from './fundamentals.ts';
 
 /* Research point-mass flight + simplified contact/rolling adapter.
 * NOT calibrated Aero, NOT 6-DOF, NOT validated TOUR or equipment data.
@@ -151,7 +152,7 @@ import { Wind } from '../course/wind.js';
             }
             if (!normal || lo < 0 || lo > 1) return null; return { t: lo, p: add(a, mul(d, lo)), normal };
          }
-         function objectHit(course, a, b, ignored = new Set()) {
+         function objectHit(course, a, b, ignored = new Set(), experimental = false) {
             const hits = []; for (const o of course.objects) {
                if (ignored.has(o.id)) continue;
                if (o.kind === 'bridge') { const h = boxHit(a, b, { ...o, minZ: o.deckZ - o.thickness, maxZ: o.deckZ }); if (h) hits.push({ ...h, id: o.id, kind: 'bridge', restitution: 0.45, tangent: 0.8 }); }
@@ -159,7 +160,7 @@ import { Wind } from '../course/wind.js';
                   const ground = Q.heightAt(course, o); let hit = sphereHit(a, b, { x: o.x, y: o.y, z: ground + (o.height + o.canopyBase) / 2 }, { x: o.canopyRadius + R, y: o.canopyRadius + R, z: (o.height - o.canopyBase) / 2 + R });
                   if (hit) hits.push({ ...hit, id: o.id, kind: 'canopy', restitution: 0.09, tangent: 0.36 });
                   // A narrow cylinder approximated by a tight rectangular trunk collider, declared in docs.
-                  hit = boxHit(a, b, { minX: o.x - o.trunkRadius, maxX: o.x + o.trunkRadius, minY: o.y - o.trunkRadius, maxY: o.y + o.trunkRadius, minZ: ground, maxZ: ground + o.height });
+                  hit = experimental ? Fundamentals.cylinderHit(a, b, o, o.trunkRadius, ground, ground + o.height) : boxHit(a, b, { minX: o.x - o.trunkRadius, maxX: o.x + o.trunkRadius, minY: o.y - o.trunkRadius, maxY: o.y + o.trunkRadius, minZ: ground, maxZ: ground + o.height });
                   if (hit) hits.push({ ...hit, id: o.id, kind: 'trunk', restitution: 0.42, tangent: 0.66 });
                }
             } hits.sort((a, b) => a.t - b.t); return hits[0] || null;
@@ -195,6 +196,7 @@ import { Wind } from '../course/wind.js';
             };
          }
          function simulate(course, day, launch, options = {}) {
+            const experimental = options.model === 'fundamentals';
             if (day.windProgram) W.validateProgram(day.windProgram);
             let state = { p: C.clone(launch.position), v: C.clone(launch.velocity) }, spin = C.clone(launch.spin), mode = launch.mode || 'flight', t = 0, carry = null, firstContact = null, status = 'unresolved-time-limit', pathLength = 0;
             const start = C.clone(state.p), trajectory = [{ t: 0, ...state.p, mode }], events = [], cooldown = {}, dt = options.dt || 0.015, maxSeconds = options.maxSeconds || 60;
@@ -205,8 +207,9 @@ import { Wind } from '../course/wind.js';
             for (let step = 0; t < maxSeconds; step++) {
                const old = C.clone(state.p); t += dt;
                if (mode === 'flight') {
-                  let next = stepFlight(state, spin, dt, day, options, t - dt); const ignored = new Set(Object.keys(cooldown).filter(k => cooldown[k] > t));
-                  const oh = objectHit(course, state.p, next.p, ignored), gh = groundHit(course, state.p, next.p); const h = oh && (!gh || oh.t < gh.t) ? oh : gh;
+                  let next = experimental ? Fundamentals.flightStep(state, spin, dt, seconds => day.windProgram ? W.vector(W.atDay(day, seconds)) : day.wind, day.airDensity, t - dt, options.vacuum) : stepFlight(state, spin, dt, day, options, t - dt); const ignored = new Set(Object.keys(cooldown).filter(k => cooldown[k] > t));
+                  const oh = objectHit(course, state.p, next.p, ignored, experimental), gh = groundHit(course, state.p, next.p); const h = oh && (!gh || oh.t < gh.t) ? oh : gh;
+                  if (experimental) spin = h ? add(spin, mul(sub(next.spin, spin), h.t)) : next.spin;
                   if (h) {
                      state.p = h.p; state.v = add(state.v, mul(sub(next.v, state.v), h.t));
                      if (h.kind === 'water') { if (carry === null) { carry = C.hypot(start, state.p); firstContact = C.clone(state.p); } recordEvent('water', state.p); status = 'water'; save(); break; }
@@ -214,30 +217,35 @@ import { Wind } from '../course/wind.js';
                         const ground = Q.groundAt(course, state.p, day); if (carry === null) { carry = C.hypot(start, state.p); firstContact = C.clone(state.p); recordEvent('landing', state.p, { surface: ground.type, zone: ground.zone }); }
                         if (options.stopAtFirstContact) { status = 'reference-landing'; save(); break; }
                         const incoming = C.clone(state.v), incomingSpin = C.clone(spin);
-                        state.v = contactVelocity(state.v, h.normal, ground.bounce, ground.tangent); spin = mul(spin, 0.55); state.p = add(state.p, mul(h.normal, 0.003));
-                        recordEvent('bounce', state.p, { surface: ground.type, zone: ground.zone, normal: h.normal, incomingVelocityMps: incoming, outgoingVelocityMps: C.clone(state.v), incomingSpinRadps: incomingSpin, outgoingSpinRadps: C.clone(spin), contactModel: 'legacy restitution/tangent damping; spin-to-turf calibration pending' });
-                        if (dot(state.v, h.normal) < 1.05) { mode = 'roll'; state.v = sub(state.v, mul(h.normal, dot(state.v, h.normal))); }
+                        if (experimental) { const hit = Fundamentals.contact(state.v, spin, h.normal, ground.bounce, Fundamentals.friction(ground.type)); state.v = hit.velocity; spin = hit.spin; }
+                        else { state.v = contactVelocity(state.v, h.normal, ground.bounce, ground.tangent); spin = mul(spin, 0.55); }
+                        state.p = add(state.p, mul(h.normal, 0.003));
+                        recordEvent('bounce', state.p, { surface: ground.type, zone: ground.zone, normal: h.normal, incomingVelocityMps: incoming, outgoingVelocityMps: C.clone(state.v), incomingSpinRadps: incomingSpin, outgoingSpinRadps: C.clone(spin), contactModel: experimental ? 'Coulomb rigid-sphere impulse; trial turf coefficients' : 'legacy restitution/tangent damping; spin-to-turf calibration pending' });
+                        if (dot(state.v, h.normal) < (experimental ? .2 : 1.05)) { mode = experimental ? 'slide' : 'roll'; state.v = sub(state.v, mul(h.normal, dot(state.v, h.normal))); }
                      } else {
                         recordEvent(h.kind, state.p, { objectId: h.id }); state.v = contactVelocity(state.v, h.normal, h.restitution, h.tangent); state.p = add(state.p, mul(h.normal, 0.01)); cooldown[h.id] = t + 0.18; spin = mul(spin, 0.5);
                         if (h.kind === 'bridge' && h.normal.z > 0.5 && state.v.z < 1.05) { mode = 'roll'; state.p.z = course.objects.find(o => o.id === h.id).deckZ + R; state.v.z = 0; }
                      }
                   } else state = next;
-                  if (!options.vacuum) spin = mul(spin, Math.exp(-0.035 * dt));
+                  if (!experimental && !options.vacuum) spin = mul(spin, Math.exp(-0.035 * dt));
                } else {
                   const support = supportAt(course, state.p), g = Q.groundAt(course, state.p, day), s = support.bridge ? { x: 0, y: 0 } : g.slope;
                   if (g.type === 'water' && !support.bridge) { state.p.z = Q.surfaceAt(course, state.p).waterHeight + R; recordEvent('water', state.p); status = 'water'; save(); break; }
                   const forces = rollingForces(course, state.p, state.v, g, !!support.bridge), speed = forces.speed;
-                  if (speed < 0.025 && forces.canRest) { state.v = { x: 0, y: 0, z: 0 }; status = Q.inBounds(course, state.p) ? 'settled' : 'out-of-bounds'; recordEvent(status, state.p); save(); break; }
+                  if (mode !== 'slide' && speed < 0.025 && forces.canRest) { state.v = { x: 0, y: 0, z: 0 }; status = Q.inBounds(course, state.p) ? 'settled' : 'out-of-bounds'; recordEvent(status, state.p); save(); break; }
                   let vx = state.v.x + forces.x * dt, vy = state.v.y + forces.y * dt;
-                  if (speed > 0 && vx * state.v.x + vy * state.v.y < 0 && forces.canRest) { vx = 0; vy = 0; }
+                  if (experimental && mode === 'slide') { const sliding = Fundamentals.sliding(state.v, spin, unit({ x: -s.x, y: -s.y, z: 1 }), Fundamentals.friction(g.type), dt); vx = sliding.velocity.x; vy = sliding.velocity.y; spin = sliding.spin; if (sliding.rolling) { mode = 'roll'; recordEvent('rolling-contact', state.p); } }
+                  else if (speed > 0 && vx * state.v.x + vy * state.v.y < 0 && forces.canRest) { vx = 0; vy = 0; }
                   const np = { x: state.p.x + (state.v.x + vx) * dt / 2, y: state.p.y + (state.v.y + vy) * dt / 2, z: state.p.z };
                   const ns = supportAt(course, np); if (support.bridge && !ns.bridge) { mode = 'flight'; state.p = np; state.v = { x: vx, y: vy, z: 0 }; recordEvent('bridge-exit', np); } else {
-                     np.z = ns.z + R; const hit = objectHit(course, state.p, np, new Set());
+                     np.z = ns.z + R; const hit = objectHit(course, state.p, np, new Set(), experimental);
                      if (hit && hit.kind === 'trunk') { state.p = add(hit.p, mul(hit.normal, 0.01)); state.v = contactVelocity({ x: vx, y: vy, z: 0 }, hit.normal, hit.restitution, hit.tangent); recordEvent('trunk', state.p, { objectId: hit.id }); }
                      else { state.p = np; const endSlope = ns.bridge ? { x: 0, y: 0 } : Q.slopeAt(course, np); state.v = { x: vx, y: vy, z: endSlope.x * vx + endSlope.y * vy }; }
                   }
                   const cup = C.project(course.pin, old, state.p);
-                  if (g.type === 'green' && cup.distance < 0.054 && Math.hypot(vx, vy) < 0.8) { state.p = { ...course.pin, z: Q.heightAt(course, course.pin) }; state.v = { x: 0, y: 0, z: 0 }; recordEvent('cup-capture-heuristic', state.p); status = 'holed'; save(); break; }
+                  const entry = experimental && g.type === 'green' && !support.bridge ? Fundamentals.cupEntry(old, state.p, course.pin, state.v, Q.slopeAt(course, course.pin)) : null;
+                  if (entry) recordEvent(entry.captured ? 'cup-free-fall' : 'cup-pass', state.p, entry);
+                  if (experimental ? entry?.captured : (g.type === 'green' && cup.distance < 0.054 && Math.hypot(vx, vy) < 0.8)) { state.p = { ...course.pin, z: Q.heightAt(course, course.pin) - (experimental ? .06 : 0) }; state.v = { x: 0, y: 0, z: 0 }; if (!experimental) recordEvent('cup-capture-heuristic', state.p); status = 'holed'; save(); break; }
                }
                if (course.boundaryPolicy === 'source-coverage-limit-not-OB' && !Q.inBounds(course, state.p)) { status = 'outside-survey'; recordEvent('source-coverage-limit', state.p); save(); break; }
                pathLength += C.hypot(old, state.p); apex = Math.max(apex, state.p.z);
@@ -247,15 +255,15 @@ import { Wind } from '../course/wind.js';
             }
             if (!trajectory.length || trajectory[trajectory.length - 1].t !== Number(t.toFixed(5))) save();
             return {
-               engineVersion: VERSION, status, start, finish: C.clone(state.p), carry: carry ?? 0, firstContact, total: C.hypot(start, state.p), pathLength, apexAboveLaunch: apex - start.z, duration: t, finalSurface: Q.surfaceAt(course, state.p).type, events, trajectory,
-               limits: ['uncalibrated point-mass drag/lift', 'simplified restitution and rolling friction; no spin-to-ground impulse model', 'simplified solid canopy and bridge; no individual branches/piers', 'cup capture is a heuristic, not validated lip physics']
+               engineVersion: experimental ? Fundamentals.VERSION : VERSION, status, start, finish: C.clone(state.p), carry: carry ?? 0, firstContact, total: C.hypot(start, state.p), pathLength, apexAboveLaunch: apex - start.z, duration: t, finalSurface: Q.surfaceAt(course, state.p).type, events, trajectory,
+               limits: experimental ? ['uncalibrated drag/lift; empirical spin-down law', 'rigid-sphere contact with trial turf coefficients; no turf deformation', 'ellipsoid canopy, cylindrical trunk and box bridge; no branches/piers', 'conservative free-fall cup capture; rim rebounds/lip-outs not implemented'] : ['uncalibrated point-mass drag/lift', 'simplified restitution and rolling friction; no spin-to-ground impulse model', 'simplified solid canopy and bridge; no individual branches/piers', 'cup capture is a heuristic, not validated lip physics']
             };
          }
-         function run(course, day, golfer, intent, seed) {
-            const gate = Q.validate(course); if (!gate.passed) throw Error('Course contract rejected: ' + gate.errors.join(', ')); const launch = buildLaunch(course, day, golfer, intent, seed), result = simulate(course, day, launch);
-            return { schema: 'shot-record/0.3.0', version: VERSION, seed, course: C.clone(Q.physicsSnapshot(course)), day: C.clone(day), golfer: C.clone(golfer), intent: C.clone(intent), launch, result, provenance: { kind: 'simulation', quality: 'experimental_uncalibrated', notPhysicalGolferMeasurement: true } };
+         function run(course, day, golfer, intent, seed, options = {}) {
+            const gate = Q.validate(course); if (!gate.passed) throw Error('Course contract rejected: ' + gate.errors.join(', ')); const launch = buildLaunch(course, day, golfer, intent, seed), result = simulate(course, day, launch, options);
+            return { schema: 'shot-record/0.3.0', version: options.model === 'fundamentals' ? Fundamentals.VERSION : VERSION, seed, course: C.clone(Q.physicsSnapshot(course)), day: C.clone(day), golfer: C.clone(golfer), intent: C.clone(intent), launch, result, provenance: { kind: 'simulation', quality: 'experimental_uncalibrated', notPhysicalGolferMeasurement: true } };
          }
-         function replay(record) { if (record.version !== VERSION) throw Error('Engine version mismatch'); return simulate(record.course, record.day, record.launch); }
+         function replay(record) { if (![VERSION, Fundamentals.VERSION].includes(record.version)) throw Error('Engine version mismatch'); return simulate(record.course, record.day, record.launch, { model: record.version === Fundamentals.VERSION ? 'fundamentals' : 'baseline' }); }
          function apparentRadius(clearance, zoom) { return C.clamp(3.5 + Math.sqrt(Math.max(0, clearance)) * 1.35, 3.5, 16) * C.clamp(Math.sqrt(zoom), 0.8, 1.3); }
          function learning(records) {
             const eligible = records.filter(r => r.provenance?.kind === 'simulation'); const n = eligible.length; if (n < 5) return { n, status: 'insufficient_sample', text: `${n} simulated decisions recorded. No tendency inferred before five shots.`, scope: 'game_decisions_only' };
