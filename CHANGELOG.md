@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-09-18: woodland course, Onest and uninterrupted play
+
+- Added a deterministic Purity woodland layout: connected creek banks, three
+  shaped bunkers and tree clusters shared by rendering and physics. Kept the
+  original in the lab. This changes hazards, not simulation equations.
+- Refined the atlas with warmer mowing bands, water depth colour, shoreline
+  highlights, raked sand, varied leaf crowns and softly blended rough transitions.
+- Bundled Onest and its OFL license locally. Refined headline weight, navigation
+  sizing, numeric typography and small readout labels.
+- Made gameplay collapse into one menu button; desktop controls fold away when
+  a shot starts. The menu restores controls, pairing, home and view actions.
+- Made north-up the default. Added Shift/right-drag rotation, bracket shortcuts,
+  N reset and menu rotation/reset controls. Rotation survives viewport resizing.
+- Kept photography in the original lab because its imagery no longer matches the
+  woodland geometry. Reference inspiration stays ignored.
+
+Validation: production build, TypeScript, formatting, nine targeted course/camera/
+session tests and all four browser flows pass. Whole-hole, green and controller
+screenshots were inspected. The original HTML and ignored references are unchanged.
+Deep-zoom texture resolution and physical-device performance remain limitations;
+the baseline large terrain chunk warning remains. See docs/NEXT-SESSION.md.
+
 ## 2026-09-18: Purity clubhouse and shared dark controller
 
 - Replaced the default legacy entry with Home, course selection, How to play and

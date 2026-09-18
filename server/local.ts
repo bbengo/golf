@@ -18,6 +18,7 @@ const types: Record<string, string> = {
    '.jpg': 'image/jpeg',
    '.svg': 'image/svg+xml',
    '.json': 'application/json',
+   '.ttf': 'font/ttf',
 };
 const addresses = Object.values(os.networkInterfaces())
    .flat()

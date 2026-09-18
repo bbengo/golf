@@ -1,7 +1,6 @@
-import { Contract } from '../contracts/contract.js';
 import { Course } from '../course/course.js';
 import { Conditions } from '../course/conditions.js';
-import { HoleVisual } from '../course/hole.js';
+import { createPurityCourse } from '../course/purity-course';
 import { Terrain } from '../course/terrain.js';
 import { Wind } from '../course/wind.js';
 import { Shot } from '../simulation/shot.js';
@@ -17,7 +16,7 @@ import {
 } from '../contracts/cockpit';
 
 export class CockpitSession {
-   course = Contract.clone(HoleVisual.course);
+   course = createPurityCourse();
    setup: Setup = {
       tee: 'white',
       pin: 'moderate',
@@ -56,7 +55,7 @@ export class CockpitSession {
       );
    }
    reset() {
-      this.course = Course.selectSetup(Contract.clone(HoleVisual.course), this.setup);
+      this.course = Course.selectSetup(createPurityCourse(), this.setup);
       this.ball = { ...this.course.tee };
       this.aim = Course.defaultAim(this.course, this.ball).point;
       this.probe = { ...this.aim };
@@ -207,6 +206,8 @@ export class CockpitSession {
                this.viewRevision++;
                break;
             case 'RENDERER':
+               if (command.renderer === 'photo')
+                  throw Error('The photographic study is available in the original lab.');
                this.renderer = command.renderer;
                break;
          }

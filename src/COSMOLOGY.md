@@ -68,9 +68,16 @@ pending local edits. The Play command carries current intent and expected shot.
 ## Visual and loading boundaries
 
 Dark forest controls are the default for indoor play. An ivory alternative is saved
-in localStorage; unavailable storage falls back safely. Native sans typography,
+in localStorage; unavailable storage falls back safely. Locally bundled Onest typography,
 consistent SVG icons, large actions, focus outlines, safe-area spacing and reduced
-motion are implemented without a UI library or font downloads.
+motion are implemented without a UI library or external font requests. The full
+variable font and OFL license live in public/assets/fonts/onest. Display headlines
+use a stronger weight; numerical readouts use tabular figures to avoid shifting.
+
+The gameplay menu begins folded into one icon. Opening shot controls closes the
+menu; launching a shot folds the desktop controller away. Escape toggles the menu
+or dismisses controls, while native dialogs retain their own Escape handling.
+The menu provides home, guide, pairing, controls, rotation and north-up reset.
 
 `cockpit.css` styles the shared controller. `experience.css` styles the clubhouse
 and desktop shell. `reference.css` belongs only to the original lab. Dynamic imports

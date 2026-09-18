@@ -1,6 +1,13 @@
+@font-face {
+   font-family: 'Onest';
+   src: url('/assets/fonts/onest/Onest-Variable.ttf') format('truetype');
+   font-weight: 100 900;
+   font-style: normal;
+   font-display: swap;
+}
 :root {
    font-family:
-      Inter,
+      'Onest',
       ui-sans-serif,
       system-ui,
       -apple-system,
@@ -8,6 +15,7 @@
       'Segoe UI',
       sans-serif;
    font-synthesis: none;
+   text-rendering: optimizeLegibility;
    color: #f0f2e9;
    background: #131b17;
    color-scheme: dark;
@@ -76,6 +84,21 @@ h2,
 h3,
 p {
    margin: 0;
+}
+h1,
+h2,
+h3 {
+   text-wrap: balance;
+}
+p {
+   text-wrap: pretty;
+}
+.readings,
+.effort-value,
+#effortValue,
+#shot,
+#result {
+   font-variant-numeric: tabular-nums lining-nums;
 }
 fieldset {
    border: 0;
@@ -289,7 +312,7 @@ h3 {
    line-height: 1;
 }
 .readings small {
-   font-size: 8px;
+   font-size: 10px;
    letter-spacing: 0.1em;
    margin-top: 10px;
    display: block;

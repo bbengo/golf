@@ -19,7 +19,6 @@ export class CourseCamera {
       this.w = w;
       this.h = h;
       this.bounds = bounds;
-      this.angle = w / h > 1.15 ? -Math.PI / 2.6 : 0;
       const co = Math.abs(Math.cos(this.angle)),
          si = Math.abs(Math.sin(this.angle));
       const bw = bounds.maxX - bounds.minX,
@@ -44,6 +43,12 @@ export class CourseCamera {
          },
          1,
       );
+   }
+   rotate(delta: number) {
+      this.angle = Math.atan2(Math.sin(this.angle + delta), Math.cos(this.angle + delta));
+   }
+   north() {
+      this.angle = 0;
    }
    go(p: Point, zoom = this.target.zoom) {
       this.target = { x: p.x, y: p.y, zoom: Math.max(0.65, Math.min(zoom, 10)) };

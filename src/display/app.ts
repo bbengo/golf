@@ -19,7 +19,7 @@ export async function startDisplay() {
    let relay: ReturnType<typeof connectRelay> | undefined;
    let controlsOpen = false,
       phoneConnected = false,
-      quiet = false;
+      quiet = true;
    const initial = new URLSearchParams(location.search).get('mode') === 'display' ? 'pair' : 'home';
    let previousPage = 'home';
    function publish() {
@@ -51,20 +51,45 @@ export async function startDisplay() {
    });
    function showControls(open: boolean) {
       controlsOpen = open;
-      controls.hidden = !open;
+      quiet = true;
       $('toggleControls').setAttribute('aria-expanded', String(open));
-      document.body.classList.toggle('controls-open', open);
+      renderRoute();
    }
-   controls.addEventListener('collapse-controls', () => showControls(false));
+   controls.addEventListener('collapse-controls', () => {
+      showControls(false);
+      $('revealTools').focus();
+   });
    $('toggleControls').onclick = () => showControls(!controlsOpen);
    $('quietView').onclick = () => {
-      quiet = true;
-      renderRoute();
+      showControls(false);
+      $('revealTools').focus();
    };
    $('revealTools').onclick = () => {
-      quiet = false;
+      controlsOpen = false;
+      quiet = !quiet;
       renderRoute();
    };
+   for (const [id, action] of [
+      ['rotateLeft', 'left'],
+      ['rotateRight', 'right'],
+      ['northView', 'north'],
+      ['fitView', 'fit'],
+   ] as const)
+      $(id).onclick = () => renderer.setView(action);
+   document.addEventListener('keydown', (event) => {
+      if (
+         event.key !== 'Escape' ||
+         document.querySelector('dialog[open]') ||
+         !['play', 'pair'].includes(document.body.dataset.route || '')
+      )
+         return;
+      if (controlsOpen || !quiet) showControls(false);
+      else {
+         quiet = false;
+         renderRoute();
+      }
+      $('revealTools').focus();
+   });
    function navigate(route: string) {
       location.hash = route;
    }
@@ -73,9 +98,12 @@ export async function startDisplay() {
       if (!['home', 'course', 'guide', 'story', 'play', 'pair'].includes(route)) route = 'home';
       const onCourse = route === 'play' || route === 'pair';
       document.body.dataset.route = route;
+      document.body.dataset.quiet = String(quiet && !controlsOpen);
       $('portal').hidden = onCourse;
       $('displayTools').hidden = !onCourse || quiet;
-      $('revealTools').hidden = !onCourse || !quiet;
+      $('revealTools').hidden = !onCourse || route === 'pair';
+      $('revealTools').setAttribute('aria-expanded', String(!quiet));
+      $('revealTools').setAttribute('aria-label', quiet ? 'Open course menu' : 'Close course menu');
       controls.hidden = !onCourse || !controlsOpen || route === 'pair';
       document.body.classList.toggle('controls-open', onCourse && controlsOpen && route !== 'pair');
       for (const page of document.querySelectorAll<HTMLElement>('[data-page]'))
@@ -127,7 +155,10 @@ export async function startDisplay() {
    renderRoute();
    let lastPublish = 0,
       previousRevision = -1;
+   let previousPhase = session.phase;
    function frame(time: number) {
+      if (session.phase === 'animating' && previousPhase !== 'animating') showControls(false);
+      previousPhase = session.phase;
       renderer.draw(session, time);
       if (time - lastPublish > 300 || session.revision !== previousRevision) {
          lastPublish = time;

@@ -12,6 +12,8 @@ function camera() {
 
 test('camera coordinates round-trip after zoom, pan and viewport resize', () => {
    const c = camera();
+   assert.equal(c.angle, 0);
+   c.rotate(0.7);
    c.go({ x: 170, y: 400 }, 4);
    c.tick(16, true);
    c.pan(70, -45);
@@ -21,6 +23,18 @@ test('camera coordinates round-trip after zoom, pan and viewport resize', () => 
       result = c.inverse(c.world(p));
    close(result.x, p.x);
    close(result.y, p.y);
+});
+test('manual rotation survives resizing and north reset restores the cardinal axes', () => {
+   const c = camera();
+   c.rotate(-1.1);
+   c.resize(390, 844, bounds);
+   close(c.angle, -1.1);
+   c.north();
+   close(c.angle, 0);
+   const center = c.world({ x: c.x, y: c.y }),
+      north = c.world({ x: c.x, y: c.y + 10 });
+   close(center.x, north.x);
+   assert.ok(north.y < center.y);
 });
 test('zoom keeps the world point under the cursor, including accumulated wheel input', () => {
    const c = camera(),

@@ -22,23 +22,29 @@ export class SimpleCourse {
    constructor(canvas: HTMLCanvasElement) {
       this.canvas = canvas;
       this.ctx = canvas.getContext('2d')!;
-      let pointer: { x: number; y: number; id: number } | null = null;
+      let pointer: { x: number; y: number; id: number; rotate: boolean } | null = null;
       const manual = () => {
          this.following = false;
          canvas.dataset.cameraMode = 'manual';
       };
       canvas.addEventListener('pointerdown', (e) => {
-         if (e.button !== 0) return;
+         if (e.button !== 0 && e.button !== 2) return;
          manual();
-         pointer = { x: e.clientX, y: e.clientY, id: e.pointerId };
+         pointer = {
+            x: e.clientX,
+            y: e.clientY,
+            id: e.pointerId,
+            rotate: e.button === 2 || e.shiftKey,
+         };
          canvas.setPointerCapture(e.pointerId);
          canvas.classList.add('is-dragging');
          canvas.focus();
       });
       canvas.addEventListener('pointermove', (e) => {
          if (!pointer || pointer.id !== e.pointerId) return;
-         this.camera.pan(e.clientX - pointer.x, e.clientY - pointer.y);
-         pointer = { x: e.clientX, y: e.clientY, id: e.pointerId };
+         if (pointer.rotate) this.camera.rotate(-(e.clientX - pointer.x) * 0.006);
+         else this.camera.pan(e.clientX - pointer.x, e.clientY - pointer.y);
+         pointer = { ...pointer, x: e.clientX, y: e.clientY };
       });
       const release = () => {
          pointer = null;
@@ -47,6 +53,7 @@ export class SimpleCourse {
       canvas.addEventListener('pointerup', release);
       canvas.addEventListener('pointercancel', release);
       canvas.addEventListener('lostpointercapture', release);
+      canvas.addEventListener('contextmenu', (e) => e.preventDefault());
       canvas.addEventListener(
          'wheel',
          (e) => {
@@ -77,12 +84,21 @@ export class SimpleCourse {
                '-',
                'Home',
                'Escape',
+               'n',
+               'N',
+               '[',
+               ']',
             ].includes(e.key)
          )
             return;
          e.preventDefault();
          manual();
-         if (e.key === 'Home' || e.key === 'Escape') this.camera.fit();
+         if (e.key.toLowerCase() === 'n') this.camera.north();
+         else if (e.key === '[' || e.key === ']') this.camera.rotate(e.key === '[' ? 0.15 : -0.15);
+         else if (e.key === 'Home') {
+            this.camera.north();
+            this.camera.fit();
+         } else if (e.key === 'Escape') return;
          else if (['+', '=', '-'].includes(e.key))
             this.camera.zoomAt(
                { x: this.camera.w / 2, y: this.camera.h / 2 },
@@ -97,6 +113,15 @@ export class SimpleCourse {
    }
    private world(p: Point) {
       return this.camera.world(p);
+   }
+   setView(action: 'north' | 'fit' | 'left' | 'right') {
+      this.following = false;
+      this.canvas.dataset.cameraMode = 'manual';
+      if (action === 'north') this.camera.north();
+      else if (action === 'fit') {
+         this.camera.north();
+         this.camera.fit();
+      } else this.camera.rotate(action === 'left' ? Math.PI / 12 : -Math.PI / 12);
    }
    draw(session: CockpitSession, time: number) {
       const rect = this.canvas.getBoundingClientRect(),
@@ -155,6 +180,7 @@ export class SimpleCourse {
       this.lastTime = time;
       this.canvas.dataset.cameraZoom = this.camera.zoom.toFixed(3);
       this.canvas.dataset.cameraX = this.camera.x.toFixed(2);
+      this.canvas.dataset.cameraAngle = this.camera.angle.toFixed(4);
       if (
          this.canvas.width !== Math.round(rect.width * dpr) ||
          this.canvas.height !== Math.round(rect.height * dpr)
@@ -187,7 +213,10 @@ export class SimpleCourse {
             dpr,
          );
       else this.atlas.paint(ctx, c, this.camera);
-      if (['play', 'pair'].includes(document.body.dataset.route || '')) {
+      if (
+         ['play', 'pair'].includes(document.body.dataset.route || '') &&
+         document.body.dataset.quiet !== 'true'
+      ) {
          ctx.save();
          ctx.translate(48, rect.height - 48);
          ctx.fillStyle = '#172c24b3';

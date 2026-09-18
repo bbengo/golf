@@ -48,8 +48,16 @@ cooler rough and muted blue-green water establish a readable colour hierarchy.
 Procedural detail gives the course character without image downloads or
 photorealism. This presentation work does not reduce the
 requirements for flight, contact, collision, cup behaviour or reliable controls.
-The procedural renderer is a small experiment. The photographic version is kept
-for comparison and loaded only when selected.
+The procedural renderer is a small experiment. Purity has a versioned woodland
+course with shared visual and physical hazards. The photographic version remains
+in the original lab because it depicts the original layout.
+
+**Quiet, intentional presentation.** Onest is bundled locally with its OFL license,
+so typography works without Google Fonts requests. Variable weights distinguish
+headlines, actions and supporting information; numeric readouts use tabular figures.
+The course starts north-up and supports manual rotation. During uninterrupted play,
+one menu button is the only interface overlay. Desktop shot controls fold away on
+launch and remain available from that menu; phone controls remain in the player's hand.
 
 **Two physics versions.** The desktop lab preserves the original engine. Paired
 play uses the experimental fundamentals model. Versioned shot evidence makes the

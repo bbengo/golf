@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('QR pairing, live controls, shot, phone reconnect, and display isolation', async ({
    browser,
 }) => {
-   test.setTimeout(90000);
+   test.setTimeout(120000);
    const displayContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
    const phoneContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -57,9 +57,15 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await phone.locator('#effort').fill('85');
    await expect(phone.locator('#effortValue')).toHaveText('85%');
    const before = await phone.locator('#distance').textContent();
-   await phone.locator('[aria-label="Move right"]').click();
+   await phone.locator('[aria-label="Move up"]').click();
    await expect(phone.locator('#distance')).not.toHaveText(before!);
    await screen.screenshot({ path: 'test-results/procedural-course.png' });
+   await phone.locator('[data-panel="round"]').click();
+   await phone.locator('[data-view="green"]').click();
+   await expect(course).toHaveAttribute('data-camera-zoom', '5.000');
+   await screen.screenshot({ path: 'test-results/purity-green.png' });
+   await phone.locator('[data-view="hole"]').click();
+   await phone.locator('[data-panel="shot"]').click();
    await phone.screenshot({ path: 'test-results/cockpit-phone.png', fullPage: true });
    await phone.reload();
    await expect(phone.locator('#controls')).toBeEnabled();
@@ -91,11 +97,10 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    expect(images).toEqual([]);
    await phone.getByRole('button', { name: 'Course settings', exact: true }).click();
    await expect(phone.getByRole('dialog')).toBeVisible();
-   await phone.locator('#renderer').selectOption('photo');
-   await expect
-      .poll(() => images.filter((url) => url.includes('/assets/reference/')).length)
-      .toBeGreaterThan(0);
-   await phone.locator('#renderer').selectOption('procedural');
+   await expect(phone.locator('#renderer option[value="photo"]')).toHaveJSProperty(
+      'disabled',
+      true,
+   );
    await phone.close();
    await expect(screen.locator('#course')).toBeVisible();
    await expect(screen.locator('#pairing')).toBeHidden();

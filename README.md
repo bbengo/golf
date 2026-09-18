@@ -27,15 +27,16 @@ The controller opens in dark mode; Settings offers an ivory alternative. Use
 and conditions. Read ground shows terrain information. Expand Shape & flight
 for curve and height. The bottom play
 button stays within reach and changes to the next action after a shot. Settings
-holds conditions and appearance; applying conditions restarts the practice hole.
+holds conditions and theme; applying conditions restarts the practice hole.
 Procedural graphics load no image assets.
 
 On the display, drag to pan, scroll to zoom at the pointer, and double-click to
 see the whole hole. With the canvas focused, arrows pan, plus/minus zoom, and Home
-or Escape reframe. Shots follow automatically until you take over with the mouse
+reframes north-up. Shift-drag or right-drag rotates; N restores north and brackets
+rotate with the keyboard. Escape toggles the course menu. Shots follow until you use the mouse
 or a phone camera button. Reduced-motion preference disables automatic following.
-The course fills the screen. **Controls** opens or collapses the desktop overlay;
-the minus button hides navigation and **Menu & controls** brings it back.
+The course fills the screen. The single menu icon opens navigation, view actions
+and **Shot controls**. Desktop controls fold away automatically when a shot starts.
 Home/course/guide navigation preserves the current round without reloading.
 
 Phone reconnection preserves the round.
@@ -78,8 +79,8 @@ The extraction comparison tests execute the original simulation separately and
 compare complete seeded shot records. They verify preserved behavior, not
 physical accuracy. Mechanics checks cover energy, spin transfer, sliding,
 vacuum flight, convergence, swept collision and analytical cup thresholds.
-Browser tests cover the lab and paired play, including reconnection and appearance
-switching. Real phone/Wi-Fi latency remains to be measured; command round trip is
+Browser tests cover the lab and paired play, including reconnection, shared controls
+and menu navigation. Real phone/Wi-Fi latency remains to be measured; command round trip is
 not input-to-visible-response latency.
 The baseline build still reports a large JavaScript chunk because sampled terrain
 data is embedded in the course module; separating that data is follow-up work.

@@ -13,15 +13,16 @@ quiet blue-green water and warm sand establish a value and temperature hierarchy
 These are deliberate sRGB art-direction choices, not measured spectral materials,
 HDR or physically based lighting.
 
-Mowing bands, seeded grain, illustrated tonal contours, meadow variation and layered tree
+Mowing bands, seeded grain, meadow variation and layered tree
 crowns create detail without bitmap assets. Illumination comes from the simulation's
 slope field, clamped softly so sampled terrain seams do not dominate. Polygon
 edges remain the authored playable edges; decoration creates no obstacles and
 changes no material coefficients. Deep-rough colour transitions are softened
 without changing the underlying physical polygons. The creek is drawn as a union
 of authored water quads, with an offset shoreline highlight; this avoids painting
-internal quad seams. Decorative background contours are tonal shapes, not claims
-of additional surveyed hills, hazards or colliders.
+internal quad seams. Meadow variation and daylight grading are colour treatments,
+not surveyed hills. Purity uses its own versioned woodland course; added creek
+segments, bunkers and trees belong to physical geometry, not decoration.
 
 The atlas rebuilds when the course object changes, not during camera motion. It
 uses two pixels per metre with a 350 m decorative surround (roughly 32 MB RGBA for
@@ -34,9 +35,9 @@ device pixel ratio is capped at two.
 ## Camera and animation
 
 `camera.ts` contains world/screen transforms, bounded zoom, panning and exponential
-time-based easing. Wide screens frame the hole diagonally (about 69 degrees from
-north-up); portrait screens stay north-up. Fit scale accounts for rotated bounds.
-A north indicator gives wind directions context. The controller receives the
+time-based easing. All screens begin north-up. Shift-drag or right-drag rotates;
+rotation survives viewport resizing. Fit scale accounts for rotated bounds.
+A north indicator appears while controls or the menu are open. The controller receives the
 camera angle and transforms screen-relative aim deltas back into world coordinates,
 so right still moves right on the display. The ground atlas, photographic renderer,
 markers, pointer anchoring and panning share the same orientation.
@@ -47,7 +48,8 @@ the canvas still fills the screen. Reduced-motion preference also snaps this off
 Initial framing uses the course plate, not invented multi-hole geometry.
 
 Drag pans; wheel zoom keeps its world anchor beneath the cursor. Double-click,
-Home or Escape fit the hole. Arrows pan and plus/minus zoom when the canvas has
+Home fits north-up. N restores north; brackets rotate. Escape opens or closes the
+course menu. Arrows pan and plus/minus zoom when the canvas has
 focus. Phone hole/ball/green commands reframe even when choosing the same view
 twice: `viewRevision` distinguishes a new request from unchanged current state.
 Mulligans reframe the restored ball; a fresh hole returns to whole-hole framing.
@@ -62,7 +64,6 @@ The launch indicator uses deterministic launch velocity and a symbolic curve cue
 It is not a predicted landing point or optimiser. Ball motion comes from the actual
 trajectory at three times simulation speed; cosmetic lift distinguishes flight.
 
-The photographic renderer still loads only when selected, using local reference
-images. Its viewport cache can cost more during camera motion than the procedural
-atlas; profile it separately. Appearance changes neither geometry nor physics.
+The photographic study remains in the original lab. Purity rejects photographic
+mode because the reference image no longer matches its woodland geometry.
 The retained `plate-renderer.js` is not the active procedural renderer.

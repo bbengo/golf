@@ -4,14 +4,14 @@ import type { Point } from '../contracts/cockpit';
 import type { CourseCamera } from './camera';
 
 const colors: Record<string, string> = {
-   rough: '#52794a',
-   'deep-rough': '#3d6645',
-   fairway: '#8fab62',
+   rough: '#54794b',
+   'deep-rough': '#365d42',
+   fairway: '#91b171',
    fringe: '#719754',
-   green: '#b0c67b',
+   green: '#b7cb86',
    tee: '#a6bb7e',
    sand: '#e6d9b4',
-   water: '#76a7a2',
+   water: '#527f78',
    path: '#b5ab90',
 };
 
@@ -71,32 +71,16 @@ export class CourseAtlas {
       };
       ctx.fillStyle = colors.rough;
       ctx.fillRect(0, 0, w, h);
-      // Illustrated tonal contours in the surrounding grass, not additional hazards.
-      for (let i = 0; i < 28; i++) {
+      // Quiet meadow variation, kept subordinate to the authored hole.
+      for (let i = 0; i < 220; i++) {
          const x = random() * w,
             y = random() * h,
-            r = (35 + random() * 115) * s,
-            phase = random() * 6;
-         for (let layer = 0; layer < 3; layer++) {
-            ctx.beginPath();
-            for (let j = 0; j <= 100; j++) {
-               const a = (j / 100) * Math.PI * 2,
-                  rr =
-                     r *
-                     (1 - layer * 0.17) *
-                     (1 + 0.13 * Math.sin(a * 3 + phase) + 0.08 * Math.cos(a * 5 - phase));
-               const px = x + Math.cos(a) * rr * 1.6,
-                  py = y + Math.sin(a) * rr;
-               if (j === 0) ctx.moveTo(px, py);
-               else ctx.lineTo(px, py);
-            }
-            ctx.closePath();
-            ctx.fillStyle = ['#6e905930', '#385f422b', '#2e593823'][layer];
-            ctx.fill();
-            ctx.strokeStyle = '#9eb47312';
-            ctx.lineWidth = 0.6 * s;
-            ctx.stroke();
-         }
+            r = (18 + random() * 85) * s;
+         const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+         g.addColorStop(0, i % 2 ? '#90a85b18' : '#203f3016');
+         g.addColorStop(1, '#52794a00');
+         ctx.fillStyle = g;
+         ctx.fillRect(x - r, y - r, r * 2, r * 2);
       }
       // A continuous water silhouette avoids seams between authored creek quads.
       const water = new Path2D();
@@ -117,7 +101,11 @@ export class CourseAtlas {
       wc.fillStyle = colors.water;
       wc.fill(water);
       wc.globalCompositeOperation = 'source-in';
-      wc.fillStyle = '#85b4ac';
+      const depth = wc.createLinearGradient(0, 0, w, h);
+      depth.addColorStop(0, '#72988b');
+      depth.addColorStop(0.5, '#48786e');
+      depth.addColorStop(1, '#6a9c8e');
+      wc.fillStyle = depth;
       wc.fillRect(0, 0, w, h);
       for (const surface of c.surfaces) {
          if (surface.type === 'water') continue;
@@ -125,7 +113,7 @@ export class CourseAtlas {
          ctx.fillStyle = colors[surface.type] || colors.rough;
          if (surface.type === 'deep-rough') {
             ctx.save();
-            ctx.globalAlpha = 0.6;
+            ctx.globalAlpha = 0.3;
             ctx.filter = `blur(${3 * s}px)`;
             ctx.fill();
             ctx.restore();
@@ -140,15 +128,38 @@ export class CourseAtlas {
          ctx.save();
          ctx.clip();
          if (['fairway', 'green', 'tee'].includes(surface.type)) {
+            const wash = ctx.createLinearGradient(0, 0, w, h);
+            wash.addColorStop(0, '#f1e2a81f');
+            wash.addColorStop(1, '#1d523b18');
+            ctx.fillStyle = wash;
+            ctx.fillRect(0, 0, w, h);
             ctx.translate(w / 2, h / 2);
             ctx.rotate(-0.38);
-            ctx.fillStyle = '#fff3c518';
+            ctx.fillStyle = '#fff3c510';
             for (let x = -h - w; x < h + w; x += 14 * s)
                ctx.fillRect(x, -h - w, 7 * s, 2 * (h + w));
          } else if (surface.type === 'sand') {
-            ctx.strokeStyle = '#9d906433';
+            ctx.fillStyle = '#e3d7b0';
+            ctx.fill();
+            ctx.strokeStyle = '#687b4055';
             ctx.lineWidth = 3 * s;
             ctx.stroke();
+            ctx.strokeStyle = '#faf0d24a';
+            ctx.lineWidth = 0.4 * s;
+            for (let y = 0; y < h; y += 2.3 * s) {
+               ctx.beginPath();
+               ctx.moveTo(0, y);
+               ctx.lineTo(w, y + 40 * s);
+               ctx.stroke();
+            }
+            ctx.shadowColor = '#74683f55';
+            ctx.shadowBlur = 2 * s;
+            ctx.shadowOffsetY = 2 * s;
+            ctx.strokeStyle = '#b3a77a';
+            ctx.lineWidth = 0.7 * s;
+            path(surface.polygon);
+            ctx.stroke();
+            ctx.shadowColor = 'transparent';
          }
          ctx.restore();
       }
@@ -158,9 +169,22 @@ export class CourseAtlas {
       ctx.shadowOffsetY = 2 * s;
       ctx.drawImage(waterLayer, 0, 0);
       ctx.restore();
+      ctx.save();
+      ctx.clip(water);
+      ctx.strokeStyle = '#dfebc92b';
+      ctx.lineWidth = 0.45 * s;
+      for (let i = 0; i < 2200; i++) {
+         const x = random() * w,
+            y = random() * h;
+         ctx.beginPath();
+         ctx.moveTo(x, y);
+         ctx.quadraticCurveTo(x + 3 * s, y + s, x + 7 * s, y);
+         ctx.stroke();
+      }
+      ctx.restore();
       // Inset shore highlight derives from the union mask, so quad joins stay invisible.
       wc.globalCompositeOperation = 'source-in';
-      wc.fillStyle = '#d5e6c5';
+      wc.fillStyle = '#d8d7a4';
       wc.fillRect(0, 0, w, h);
       wc.globalCompositeOperation = 'destination-out';
       wc.translate(0, 1.6 * s);
@@ -168,17 +192,6 @@ export class CourseAtlas {
       ctx.globalAlpha = 0.65;
       ctx.drawImage(waterLayer, 0, 0);
       ctx.globalAlpha = 1;
-      // Broad tonal variation reads as meadow, not additional physical obstacles.
-      for (let i = 0; i < 350; i++) {
-         const x = random() * w,
-            y = random() * h,
-            r = (20 + random() * 85) * s;
-         const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-         g.addColorStop(0, i % 2 ? '#dacb8420' : '#204b3e18');
-         g.addColorStop(1, '#687d5400');
-         ctx.fillStyle = g;
-         ctx.fillRect(x - r, y - r, r * 2, r * 2);
-      }
       // Soft illumination uses the simulation's height field; it changes no geometry.
       const light = document.createElement('canvas');
       light.width = Math.ceil(w / 18);
@@ -210,24 +223,42 @@ export class CourseAtlas {
          if (object.kind === 'tree') {
             const p = point(object),
                r = object.canopyRadius * s;
-            ctx.fillStyle = '#173e3833';
+            ctx.save();
+            ctx.fillStyle = '#152f2c40';
             ctx.beginPath();
-            ctx.ellipse(p.x + r * 0.6, p.y + r * 0.7, r * 1.15, r * 0.9, 0.5, 0, Math.PI * 2);
+            ctx.ellipse(p.x + r * 0.65, p.y + r * 0.85, r * 1.1, r * 0.8, 0.55, 0, Math.PI * 2);
             ctx.fill();
-            for (let i = 0; i < 10; i++) {
-               const a = i * 2.4,
-                  rad = i === 0 ? 0 : r * 0.5,
-                  x = p.x + Math.cos(a) * rad,
-                  y = p.y + Math.sin(a) * rad;
-               const g = ctx.createRadialGradient(x - r * 0.22, y - r * 0.3, 0, x, y, r * 0.65);
-               g.addColorStop(0, i % 2 ? '#7e975e' : '#6c8957');
-               g.addColorStop(0.55, '#4f724e');
-               g.addColorStop(1, '#325a47');
-               ctx.fillStyle = g;
+            const phase = random() * 6.28;
+            ctx.beginPath();
+            for (let k = 0; k <= 64; k++) {
+               const a = (k / 64) * Math.PI * 2,
+                  rr = r * (0.88 + 0.065 * Math.sin(5 * a + phase) + 0.045 * Math.sin(9 * a));
+               const x = p.x + Math.cos(a) * rr,
+                  y = p.y + Math.sin(a) * rr;
+               if (k) ctx.lineTo(x, y);
+               else ctx.moveTo(x, y);
+            }
+            ctx.closePath();
+            const g = ctx.createRadialGradient(p.x - r * 0.35, p.y - r * 0.4, 0, p.x, p.y, r);
+            const warm = random() > 0.55;
+            g.addColorStop(0, warm ? '#91a466' : '#7d9b68');
+            g.addColorStop(0.55, warm ? '#57794d' : '#416e4f');
+            g.addColorStop(1, '#284f3d');
+            ctx.fillStyle = g;
+            ctx.fill();
+            ctx.clip();
+            for (let k = 0; k < 60; k++) {
+               const a = random() * Math.PI * 2,
+                  rr = Math.sqrt(random()) * r,
+                  x = p.x + Math.cos(a) * rr,
+                  y = p.y + Math.sin(a) * rr;
+               const size = (0.09 + random() * 0.14) * r;
+               ctx.fillStyle = k % 3 === 0 ? '#d2d58a28' : k % 3 === 1 ? '#133f343d' : '#97b17630';
                ctx.beginPath();
-               ctx.arc(x, y, r * 0.65, 0, Math.PI * 2);
+               ctx.ellipse(x, y, size, size * 0.6, -0.5, 0, Math.PI * 2);
                ctx.fill();
             }
+            ctx.restore();
          } else if (object.kind === 'bridge') {
             const p = point({ x: object.minX, y: object.maxY }),
                bw = (object.maxX - object.minX) * s,
@@ -244,5 +275,12 @@ export class CourseAtlas {
             }
          }
       }
+      // A restrained warm-to-cool daylight grade unifies grass, sand and crowns.
+      const daylight = ctx.createLinearGradient(0, 0, w, h);
+      daylight.addColorStop(0, '#f8d3940b');
+      daylight.addColorStop(0.55, '#ebedb200');
+      daylight.addColorStop(1, '#123b3620');
+      ctx.fillStyle = daylight;
+      ctx.fillRect(0, 0, w, h);
    }
 }

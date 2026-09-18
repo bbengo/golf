@@ -59,7 +59,7 @@
 .site-header nav {
    display: flex;
    gap: 32px;
-   font-size: 12px;
+   font-size: 14px;
    color: #bfcbba;
 }
 .site-header nav a {
@@ -116,9 +116,9 @@
 }
 .hero-copy h1 {
    font-size: clamp(55px, 6.8vw, 103px);
-   font-weight: 450;
+   font-weight: 520;
    line-height: 1.03;
-   letter-spacing: -0.06em;
+   letter-spacing: -0.055em;
    margin: 28px 0;
 }
 .hero-description {
@@ -135,7 +135,7 @@
    margin-top: 30px;
 }
 .hero-actions .primary {
-   font-size: 12px;
+   font-size: 14px;
    min-height: 50px;
    gap: 25px;
 }
@@ -420,74 +420,6 @@
    font-size: 10px;
    line-height: 1.7;
    margin-top: 15px;
-}
-.display-tools {
-   position: fixed;
-   top: 24px;
-   left: 28px;
-   right: 28px;
-   display: flex;
-   align-items: center;
-   gap: 25px;
-   padding: 14px 18px;
-   background: #132219de;
-   backdrop-filter: blur(15px);
-   border: 1px solid #c9dfb533;
-   border-radius: 100px;
-   z-index: 3;
-}
-.display-tools .brand {
-   font-size: 25px;
-}
-.course-nav-label {
-   font-size: 9px;
-   letter-spacing: 0.12em;
-   color: #d4dfc6;
-}
-.course-nav-label small {
-   display: block;
-   font-size: 8px;
-   color: #9fb58b;
-   margin-top: 4px;
-}
-.display-tools > div {
-   margin-left: auto;
-   display: flex;
-   gap: 10px;
-   align-items: center;
-}
-.display-tools button,
-.display-tools > div > a {
-   font-size: 11px;
-   padding: 10px 17px;
-   min-height: 40px;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   border: 1px solid #b4c79a3b;
-   border-radius: 100px;
-   background: transparent;
-}
-.display-tools #toggleControls {
-   background: #d0ee96;
-   color: #23351b;
-}
-.display-tools #quietView {
-   padding: 8px;
-   width: 40px;
-   font-size: 18px;
-}
-.reveal-tools {
-   position: fixed;
-   left: 25px;
-   bottom: 25px;
-   z-index: 4;
-   border-radius: 100px;
-   background: #18281de0;
-   color: #d5e3c1;
-   font-size: 11px;
-   padding: 12px 18px;
-   border: 1px solid #a6bc8966;
 }
 .desktop-controls {
    position: fixed;
@@ -857,5 +789,187 @@
    }
    .pairing h1 {
       font-size: 33px;
+   }
+}
+
+/* One deliberate point of entry while playing. */
+.experience .display-tools {
+   position: fixed;
+   left: 24px;
+   bottom: 86px;
+   top: auto;
+   right: auto;
+   width: 320px;
+   max-height: calc(100dvh - 112px);
+   overflow: auto;
+   padding: 23px;
+   background: #14211af5;
+   border: 1px solid #83996e45;
+   border-radius: 25px;
+   box-shadow: 0 20px 75px #0b180c50;
+   backdrop-filter: blur(22px);
+   z-index: 6;
+   display: block;
+}
+.display-tools header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   margin-bottom: 22px;
+   gap: 12px;
+}
+.display-tools header .eyebrow {
+   font-size: 8px;
+}
+.display-tools header h2 {
+   font-size: 25px;
+   margin-top: 9px;
+   font-weight: 450;
+   letter-spacing: -1px;
+}
+.experience .display-tools .menu-action {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 15px;
+   width: 100%;
+   text-align: left;
+   min-height: 57px;
+   padding: 14px 17px;
+   margin-top: 9px;
+   border: 1px solid #76905e3d;
+   border-radius: 15px;
+   background: #26392a;
+   color: #e8efdb;
+   font-size: 13px;
+}
+.display-tools .menu-action small {
+   display: block;
+   color: #c0cdad;
+   font-size: 10px;
+   margin-top: 5px;
+}
+.experience .display-tools #toggleControls {
+   background: #c6dc9c;
+   color: #1b2c19;
+}
+.display-tools #toggleControls small {
+   color: #4a603b;
+}
+.experience .display-tools #quietView {
+   display: grid;
+   width: 36px;
+   height: 36px;
+   min-height: 36px;
+   place-items: center;
+   padding: 0;
+   background: #ffffff08;
+   color: #dce6cc;
+   border: 1px solid #a9ba8e30;
+   font-size: 20px;
+}
+.experience .display-tools .camera-menu {
+   display: block;
+   margin: 22px 0;
+   padding: 20px 0;
+   border-top: 1px solid #81996730;
+   border-bottom: 1px solid #81996730;
+}
+.camera-menu > div {
+   display: flex;
+   gap: 8px;
+   margin: 12px 0;
+}
+.camera-menu button {
+   min-height: 44px;
+   border: 1px solid #8fa67535;
+   background: #213425;
+   border-radius: 12px;
+   color: #d4e4bd;
+   font-size: 13px;
+   padding: 10px 14px;
+}
+.camera-menu #northView {
+   flex: 1;
+}
+.camera-menu #northView span {
+   margin-left: 8px;
+   font-size: 11px;
+}
+.camera-menu #fitView {
+   width: 100%;
+   font-size: 11px;
+   background: transparent;
+}
+.camera-menu > p:last-child {
+   font-size: 10px;
+   line-height: 1.8;
+   color: #a1b18e;
+   margin-top: 13px;
+}
+.experience .display-tools .menu-links {
+   display: flex;
+   justify-content: space-between;
+   gap: 14px;
+   margin: 0;
+}
+.menu-links a {
+   font-size: 11px;
+   color: #c2d2ad;
+   padding: 5px 0;
+}
+.experience .reveal-tools {
+   position: fixed;
+   left: 24px;
+   bottom: 24px;
+   z-index: 7;
+   width: 46px;
+   height: 46px;
+   min-height: 46px;
+   border: 1px solid #d4e6bd30;
+   border-radius: 50%;
+   display: grid;
+   place-items: center;
+   padding: 0;
+   background: #18291cbb;
+   color: #e8efdd;
+   backdrop-filter: blur(12px);
+   box-shadow: 0 4px 24px #0e200d22;
+}
+.reveal-tools svg {
+   width: 22px;
+   height: 22px;
+   fill: none;
+   stroke: currentColor;
+   stroke-width: 1.5;
+   stroke-linecap: round;
+}
+.reveal-tools[aria-expanded='true'] {
+   background: #c6dc9c;
+   color: #20301d;
+}
+.experience .desktop-controls {
+   top: 24px;
+}
+.experience .desktop-controls .settings-sheet {
+   max-height: calc(100dvh - 48px);
+}
+@media (max-width: 600px) {
+   .experience .display-tools {
+      left: 14px;
+      bottom: 78px;
+      width: min(330px, calc(100vw - 28px));
+   }
+   .experience .reveal-tools {
+      left: 16px;
+      bottom: max(18px, env(safe-area-inset-bottom));
+   }
+   .experience .desktop-controls {
+      top: 12px;
+      bottom: 76px;
+   }
+   .experience .desktop-controls .settings-sheet {
+      max-height: calc(100dvh - 100px);
+      bottom: 76px;
    }
 }

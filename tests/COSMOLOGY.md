@@ -4,6 +4,13 @@
 `npm run test:e2e` builds the app and starts the actual local relay for Playwright.
 Tests run locally; no hosted workflow is required by this proof of concept.
 
+The woodland checks cover deterministic construction, preservation of the original,
+finite connected creek banks, bunker lies, tee clearance and replay geometry.
+Camera checks include north-up defaults, rotation and resize preservation. Browser
+flows exercise menu collapse, reopening after a shot, local Onest loading, view
+reset and original-lab isolation. Screenshots include a whole-hole and green view;
+they are inspection artifacts, not visual-regression baselines or proof of realism.
+
 ## Independent checks
 
 - `reference-parity.test.mjs` executes the first original HTML simulation scripts
@@ -21,7 +28,7 @@ Tests run locally; no hosted workflow is required by this proof of concept.
 - `browser/lab.spec.ts` exercises the original setup journey, renderer readiness
   and a completed shot, asserting no page errors or external network requests.
 - `browser/cockpit.spec.ts` uses separate display and phone contexts. It exercises
-  pairing, intent/aim changes, phone reload, shot resolution, appearance switching,
+  pairing, intent/aim changes, phone reload, shot resolution, renderer availability,
   and phone disconnect. It checks the phone has no course canvas/heavy engine
   request and the procedural display requests no reference images.
   It also checks viewport coverage, phone overflow, mouse pan/zoom without aim

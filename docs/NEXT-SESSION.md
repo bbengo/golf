@@ -1,5 +1,18 @@
 # Next session: unfinished work
 
+## Woodland presentation pass
+
+Purity uses `purity-woodland/0.1.0`, a separate deterministic layout with shared
+rendering/collision geometry. The original remains in the lab. Onest loads locally.
+The play menu is a single button; controls fold away on launch. Rotate with
+Shift-drag/right-drag or brackets, restore north with N, or use the course menu.
+
+Review the full-hole composition and green close-up on the actual display. Browser
+screenshots establish what rendered, not whether the art meets the owner's quality
+bar. Continue refining creek transitions, vegetation variety and terrain depth.
+Profile added tree/water collision cost before expanding the layout further.
+The experimental physics calibration roadmap remains essential and unfinished.
+
 ## Physical-device follow-up
 
 The owner confirmed the initial paired concept works. The redesigned phone UI,
@@ -40,14 +53,14 @@ checks are not a substitute for iOS/Safari testing.
   and display. Check the Shot/My bag/Round navigation, controller collapse, phone
   handoff and the optional ivory theme. Reloading or leaving for the original lab
   ends the in-memory round; in-app navigation preserves it.
-- Assess the diagonal course composition and screen-relative aiming. Check aiming
+- Assess north-up composition, free rotation and screen-relative aiming. Check aiming
   during a display resize/orientation change, including the 300 ms snapshot interval.
 
 - Evaluate sunlight readability, colour on the actual display, and phone thumb
   reach. Try landscape, larger text and an iPhone with a home indicator.
 - Assess shot-follow speed and manual handover with several clubs.
-- Profile atlas memory and frame times, including the optional photographic
-  renderer during pan/zoom. Extreme zoom exposes authored polygon/texture limits;
+- Profile atlas memory and frame times during pan/zoom and course setup changes.
+  Extreme zoom exposes authored polygon/texture limits;
   do not change playable geometry merely to hide them.
 - Physics calibration remains essential. Richer presentation does not close it.
   No cloud hosting is implied by this visual redesign.
