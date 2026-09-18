@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-18: compass/menu overlap correction
+
+- Moved the compass beside the menu button and placed its north label inside
+  its disc, keeping both clear of the menu panel. Quiet-play behaviour is unchanged.
+
 ## 2026-09-18: woodland course, Onest and uninterrupted play
 
 - Added a deterministic Purity woodland layout: connected creek banks, three

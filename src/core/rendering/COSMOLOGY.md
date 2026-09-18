@@ -42,6 +42,9 @@ camera angle and transforms screen-relative aim deltas back into world coordinat
 so right still moves right on the display. The ground atlas, photographic renderer,
 markers, pointer anchoring and panning share the same orientation.
 
+The compass sits beside the bottom-left menu button, with its label inside its
+own disc, so neither the button nor the open menu covers it. Quiet play hides it.
+
 The welcome view offsets the composition to give the landscape space beside the
 copy. Opening desktop controls shifts the course into the remaining visual area;
 the canvas still fills the screen. Reduced-motion preference also snaps this offset.

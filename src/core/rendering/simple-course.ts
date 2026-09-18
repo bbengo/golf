@@ -218,11 +218,17 @@ export class SimpleCourse {
          document.body.dataset.quiet !== 'true'
       ) {
          ctx.save();
-         ctx.translate(48, rect.height - 48);
+         // Reserve the bottom-left corner for the menu; keep the compass beside it.
+         ctx.translate(112, rect.height - 48);
          ctx.fillStyle = '#172c24b3';
          ctx.beginPath();
          ctx.arc(0, 0, 25, 0, Math.PI * 2);
          ctx.fill();
+         ctx.font = '9px Onest, sans-serif';
+         ctx.textAlign = 'center';
+         ctx.fillStyle = '#eef2df';
+         ctx.fillText('N', 0, -14);
+         ctx.translate(0, 4);
          ctx.rotate(-this.camera.angle);
          ctx.strokeStyle = '#e6eed6';
          ctx.lineWidth = 1.3;
@@ -234,9 +240,6 @@ export class SimpleCourse {
          ctx.lineTo(4, -5);
          ctx.stroke();
          ctx.restore();
-         ctx.font = '10px system-ui, sans-serif';
-         ctx.fillStyle = '#eef2df';
-         ctx.fillText('N', 44, rect.height - 81);
       }
       const pin = this.world(c.pin);
       ctx.fillStyle = '#263b31';
