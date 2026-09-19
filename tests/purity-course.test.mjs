@@ -12,7 +12,7 @@ test('woodland geometry is deterministic and leaves the original course unchange
    assert.equal(JSON.stringify(HoleVisual.course), baseline);
    assert.equal(a.revision, PURITY_COURSE_REVISION);
    assert.ok(a.objects.length > 100);
-   assert.equal(a.surfaces.filter((s) => s.type === 'sand').length, 3);
+   assert.equal(a.surfaces.filter((s) => s.type === 'sand').length, 5);
    for (const p of [
       { x: 72, y: 267 },
       { x: 111, y: 355 },
@@ -27,7 +27,7 @@ test('woodland geometry is deterministic and leaves the original course unchange
 });
 test('refined creek has finite connected banks and belongs to the physical snapshot', () => {
    const c = createPurityCourse(),
-      water = c.surfaces.filter((s) => s.type === 'water');
+      water = c.surfaces.filter((s) => s.id.startsWith('woodland-creek-'));
    for (let i = 0; i < water.length; i++) {
       for (const p of water[i].polygon) assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y));
       if (i) {
@@ -38,4 +38,20 @@ test('refined creek has finite connected banks and belongs to the physical snaps
    const snapshot = Course.physicsSnapshot(c);
    assert.equal(snapshot.objects.length, c.objects.length);
    assert.deepEqual(snapshot.surfaces, c.surfaces);
+});
+
+test('estate lakes and practice lawns participate in physical lie queries', () => {
+   const c = createPurityCourse();
+   for (const p of [
+      { x: -76, y: 434 },
+      { x: 354, y: 507 },
+   ])
+      assert.equal(Course.surfaceAt(c, p).type, 'water');
+   for (const p of [
+      { x: -82, y: 95 },
+      { x: 298, y: 220 },
+   ])
+      assert.equal(Course.surfaceAt(c, p).type, 'fairway');
+   assert.deepEqual(c.pin, HoleVisual.course.pin);
+   assert.deepEqual(c.pins, HoleVisual.course.pins);
 });

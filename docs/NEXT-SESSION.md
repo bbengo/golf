@@ -96,3 +96,7 @@ checks are not a substitute for iOS/Safari testing.
   do not change playable geometry merely to hide them.
 - Physics calibration remains essential. Richer presentation does not close it.
   No cloud hosting is implied by this visual redesign.
+
+## Estate refinement follow-up
+
+The new surroundings are physical surfaces in woodland revision 0.2.0. Visually inspect the expanded layout on the target display; retain the single-hole framing and assess loading time on older hardware. Lake depth is colour treatment, not excavated terrain. Future terrain/shoreline relief needs shared geometry and collision work, not only visual displacement. The atlas remains at two pixels/metre.

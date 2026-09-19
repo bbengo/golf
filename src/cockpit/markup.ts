@@ -3,7 +3,7 @@ import { icon } from './icons';
 
 export const cockpitMarkup = `
 <main class="cockpit-shell">
- <header class="app-header"><button id="controllerBack" class="icon-button" aria-label="Back or controller menu">${icon('back')}</button><div class="controller-brand">purity<span> / PLAY</span></div><button id="openSettings" class="icon-button" aria-label="Course settings">${icon('settings')}</button></header>
+ <header class="app-header"><button id="controllerBack" class="icon-button" aria-label="Back or controller menu">${icon('back')}</button><div class="controller-brand"><svg class="purity-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 51V13c15-10 20 13 34 3v23c-14 10-19-13-34-3" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><circle cx="43" cy="52" r="5" fill="currentColor"/></svg>purity<span> / PLAY</span></div><button id="openSettings" class="icon-button" aria-label="Course settings">${icon('settings')}</button></header>
  <div class="connection-row"><span id="connection" role="status">Connecting…</span><span class="live-dot">LOCAL PLAY</span></div>
  <fieldset id="controls" disabled>
   <div data-control-panel="shot">

@@ -18,12 +18,17 @@
       body[data-booting] { margin: 0; background: #101d16; color: #e5edda; overflow: hidden; }
       body[data-booting] > :not(#bootScreen):not(noscript) { display: none; }
       #bootScreen { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; font: 500 48px system-ui, sans-serif; letter-spacing: -2px; }
+      @font-face { font-family: Onest; src: url(/assets/fonts/onest/Onest-Variable.ttf); font-display: swap; }
+      #bootScreen { font-family: Onest, system-ui, sans-serif; background: radial-gradient(ellipse at 50% 30%, #274b37, #091a17 70%); }
+      #bootScreen svg { width: 76px; height: 76px; color: #eeef53; margin: 0 auto 24px; animation: breathe 1.8s ease-in-out infinite alternate; }
+      @keyframes breathe { to { opacity: .45; transform: translateY(-5px); } }
+      @media (prefers-reduced-motion: reduce) { #bootScreen svg { animation: none; } }
       #bootScreen small { margin-top: 18px; font-size: 12px; letter-spacing: .05em; color: #a9baa1; }
    </style>
 </head>
 
 <body data-state="0" data-booting>
-   <div id="bootScreen" role="status">purity<small>Preparing your course</small></div>
+   <div id="bootScreen" role="status"><svg class="purity-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 51V13c15-10 20 13 34 3v23c-14 10-19-13-34-3" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><circle cx="43" cy="52" r="5" fill="currentColor"/></svg>purity<small>Preparing your course</small></div>
    <section id="welcomeScreen" class="welcome-screen" aria-labelledby="welcomeTitle">
       <div class="welcome-content">
          <h1 id="welcomeTitle" tabindex="-1">UCG-50</h1>

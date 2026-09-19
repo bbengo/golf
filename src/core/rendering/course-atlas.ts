@@ -4,15 +4,15 @@ import type { Point } from '../contracts/cockpit';
 import type { CourseCamera } from './camera';
 
 const colors: Record<string, string> = {
-   rough: '#54794b',
-   'deep-rough': '#365d42',
-   fairway: '#91b171',
-   fringe: '#719754',
-   green: '#b7cb86',
-   tee: '#a6bb7e',
-   sand: '#e6d9b4',
-   water: '#527f78',
-   path: '#b5ab90',
+   rough: '#57843c',
+   'deep-rough': '#2d5b36',
+   fairway: '#9ebf58',
+   fringe: '#779c40',
+   green: '#c2d57d',
+   tee: '#b5cb69',
+   sand: '#f0dbad',
+   water: '#238d8d',
+   path: '#cbb58b',
 };
 
 /** World-anchored colour and texture, cached independently of the camera. */
@@ -102,11 +102,43 @@ export class CourseAtlas {
       wc.fill(water);
       wc.globalCompositeOperation = 'source-in';
       const depth = wc.createLinearGradient(0, 0, w, h);
-      depth.addColorStop(0, '#72988b');
-      depth.addColorStop(0.5, '#48786e');
-      depth.addColorStop(1, '#6a9c8e');
+      depth.addColorStop(0, '#409f9a');
+      depth.addColorStop(0.5, '#197c82');
+      depth.addColorStop(1, '#3bb2a4');
       wc.fillStyle = depth;
       wc.fillRect(0, 0, w, h);
+      for (const lake of c.surfaces.filter((surface: { id: string }) =>
+         surface.id.startsWith('estate-lake-'),
+      )) {
+         const ps = lake.polygon.map(point);
+         const minX = Math.min(...ps.map((p: Point) => p.x)),
+            maxX = Math.max(...ps.map((p: Point) => p.x));
+         const minY = Math.min(...ps.map((p: Point) => p.y)),
+            maxY = Math.max(...ps.map((p: Point) => p.y));
+         const x = (minX + maxX) / 2,
+            y = (minY + maxY) / 2,
+            radius = Math.max(maxX - minX, maxY - minY) / 2;
+         wc.save();
+         wc.beginPath();
+         ps.forEach((p: Point, i: number) => (i ? wc.lineTo(p.x, p.y) : wc.moveTo(p.x, p.y)));
+         wc.closePath();
+         wc.clip();
+         const waterDepth = wc.createRadialGradient(
+            x - radius * 0.15,
+            y + radius * 0.12,
+            0,
+            x,
+            y,
+            radius,
+         );
+         waterDepth.addColorStop(0, '#07515e');
+         waterDepth.addColorStop(0.55, '#087d89');
+         waterDepth.addColorStop(0.84, '#299e98');
+         waterDepth.addColorStop(1, '#6bb7a0');
+         wc.fillStyle = waterDepth;
+         wc.fillRect(minX, minY, maxX - minX, maxY - minY);
+         wc.restore();
+      }
       for (const surface of c.surfaces) {
          if (surface.type === 'water') continue;
          path(surface.polygon);
@@ -118,6 +150,11 @@ export class CourseAtlas {
             ctx.fill();
             ctx.restore();
          } else {
+            if (surface.type === 'path') {
+               ctx.strokeStyle = '#3b603949';
+               ctx.lineWidth = 3 * s;
+               ctx.stroke();
+            }
             if (surface.type === 'fairway' || surface.type === 'green') {
                ctx.strokeStyle = surface.type === 'green' ? '#d7df9c66' : '#759650';
                ctx.lineWidth = (surface.type === 'green' ? 1.8 : 5) * s;
@@ -135,11 +172,11 @@ export class CourseAtlas {
             ctx.fillRect(0, 0, w, h);
             ctx.translate(w / 2, h / 2);
             ctx.rotate(-0.38);
-            ctx.fillStyle = '#fff3c510';
+            ctx.fillStyle = '#f3f6bc24';
             for (let x = -h - w; x < h + w; x += 14 * s)
                ctx.fillRect(x, -h - w, 7 * s, 2 * (h + w));
          } else if (surface.type === 'sand') {
-            ctx.fillStyle = '#e3d7b0';
+            ctx.fillStyle = '#f0dbad';
             ctx.fill();
             ctx.strokeStyle = '#687b4055';
             ctx.lineWidth = 3 * s;
@@ -162,6 +199,18 @@ export class CourseAtlas {
             ctx.shadowColor = 'transparent';
          }
          ctx.restore();
+      }
+      // Broad, warm banks make the estate lakes readable without changing their footprint.
+      for (const lake of c.surfaces.filter((surface: { id: string }) =>
+         surface.id.startsWith('estate-lake-'),
+      )) {
+         path(lake.polygon);
+         ctx.strokeStyle = '#365933';
+         ctx.lineWidth = 11 * s;
+         ctx.stroke();
+         ctx.strokeStyle = '#d5c294';
+         ctx.lineWidth = 6 * s;
+         ctx.stroke();
       }
       ctx.save();
       ctx.shadowColor = '#1e453d66';
@@ -224,7 +273,7 @@ export class CourseAtlas {
             const p = point(object),
                r = object.canopyRadius * s;
             ctx.save();
-            ctx.fillStyle = '#152f2c40';
+            ctx.fillStyle = '#16372660';
             ctx.beginPath();
             ctx.ellipse(p.x + r * 0.65, p.y + r * 0.85, r * 1.1, r * 0.8, 0.55, 0, Math.PI * 2);
             ctx.fill();
@@ -241,9 +290,9 @@ export class CourseAtlas {
             ctx.closePath();
             const g = ctx.createRadialGradient(p.x - r * 0.35, p.y - r * 0.4, 0, p.x, p.y, r);
             const warm = random() > 0.55;
-            g.addColorStop(0, warm ? '#91a466' : '#7d9b68');
-            g.addColorStop(0.55, warm ? '#57794d' : '#416e4f');
-            g.addColorStop(1, '#284f3d');
+            g.addColorStop(0, warm ? '#c1bd5a' : '#9dbf62');
+            g.addColorStop(0.55, warm ? '#719342' : '#447a40');
+            g.addColorStop(1, '#245233');
             ctx.fillStyle = g;
             ctx.fill();
             ctx.clip();

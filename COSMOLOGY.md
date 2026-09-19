@@ -100,3 +100,7 @@ policy. Record shipped changes in the changelog and unfinished work in the hando
 Documentation stays outside `public/`, so the local static server does not serve
 it. The original Markdown spec is historical input; its unchanged-physics rule is
 superseded by the owner's instruction and these implementation documents.
+
+## Estate and identity refinement
+
+The landscape references informed a broader golf estate around the single practice hole: lawns, water and a connecting path give the course context. New surfaces participate in physical lie queries rather than existing only as painted scenery. Colour hierarchy now connects the original Purity mark, loading screen and distinct desktop/phone layouts. Inspiration images remain ignored and are not shipped as course artwork. See course, rendering and display cosmologies for geometry and rendering limitations.

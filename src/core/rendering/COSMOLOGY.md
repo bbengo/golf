@@ -78,3 +78,7 @@ trajectory at three times simulation speed; cosmetic lift distinguishes flight.
 The photographic study remains in the original lab. Purity rejects photographic
 mode because the reference image no longer matches its woodland geometry.
 The retained `plate-renderer.js` is not the active procedural renderer.
+
+## Estate colour direction
+
+Warmer mown greens and pale sand contrast with turquoise lakes and cooler tree shadows. Lake colour gradients suggest depth artistically, not measured bathymetry; shoreline strokes are decorative banks around the physical water polygon. The cache remains two pixels per metre to limit rebuild cost and memory. Lawns use rounded ribbon ends and denser spline sampling, with identical geometry in the renderer and simulation. This remains a procedural overhead Canvas renderer, not a 3D landscape.

@@ -42,3 +42,7 @@ offset and fit scale. World/screen transforms and cursor-anchored zoom share tha
 offset. This keeps whole-hole framing above the controls without resizing the canvas
 or changing aim. The north indicator belongs to the camera toolbar, not the menu's
 corner. Camera-follow can be disabled; reduced motion takes precedence.
+
+## Estate identity and control hierarchy
+
+An original flag-and-ball SVG mark connects loading, title, lobby and phone. Citron identifies the main shot/entry action, mint identifies selected control modes, ivory carries distance readouts, and dark green anchors controls. This separates information from decisions without changing the desktop/phone interaction contracts. Boot animation respects reduced motion and does not invent a progress percentage. Onest is served locally, including during loading.

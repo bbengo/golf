@@ -149,3 +149,11 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Extracted 19 JavaScript ES modules, styles and local image files.
 - Introduced strict TypeScript for new code with gradual JavaScript migration.
 - Added seeded original-versus-extracted comparisons and a browser setup/shot check.
+
+## 2026-09-19 ? Estate surroundings and Purity identity
+
+- Added physical estate lakes, practice lawns, sand areas and perimeter path; retained the single playable hole and original UCG-50 implementation.
+- Refined mowing contrast, tree lighting, turquoise water and warm banks; rounded the new lawn outlines.
+- Added a flag-and-ball Purity mark across loading, title, lobby and phone, plus brighter citron actions, mint selections and ivory readouts.
+- Kept procedural assets, local Onest, reduced-motion support, desktop/phone controls and player-selected UI modes.
+- Validation: TypeScript and production build pass; 26 unit tests pass, followed by all 3 course tests after outline refinement; all 5 browser flows pass. Inspected desktop and phone screenshots. Existing legacy bundle-size warning remains.

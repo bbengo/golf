@@ -717,7 +717,7 @@ html:has(body.experience) {
    background: #e0e9cf12;
 }
 .display-tools .resume-action {
-   background: #d7e7b5;
+   background: #edee58;
    color: #172218;
    font-weight: 550;
 }
@@ -853,7 +853,7 @@ html:has(body.experience) {
 }
 .aim-switch button[aria-pressed='true'],
 #desktopTune[aria-expanded='true'] {
-   background: #d7e7b5;
+   background: #edee58;
    color: #172218;
 }
 .desktop-hint {
@@ -900,12 +900,12 @@ html:has(body.experience) {
    display: block;
    width: 100%;
    margin: 12px 0 0;
-   accent-color: #d7e7b5;
+   accent-color: #55e9a0;
    height: 24px;
    cursor: pointer;
 }
 .desktop-play {
-   background: #d7e7b5;
+   background: #edee58;
    color: #172218;
    border-radius: 12px;
    min-height: 48px;
@@ -914,7 +914,7 @@ html:has(body.experience) {
    font-weight: 550;
 }
 .desktop-play:hover {
-   background: #e6f1cf;
+   background: #f6f795;
 }
 .shot-dock footer {
    display: flex;
@@ -954,7 +954,7 @@ html:has(body.experience) {
 }
 .desktop-tuning input {
    width: 100%;
-   accent-color: #d7e7b5;
+   accent-color: #55e9a0;
 }
 .desktop-tuning button {
    grid-column: 1 / -1;
@@ -1068,7 +1068,7 @@ html:has(body.experience) {
    border-color: #d7e7b5;
 }
 .display-choices input {
-   accent-color: #d7e7b5;
+   accent-color: #55e9a0;
    width: 18px;
    height: 18px;
    flex-shrink: 0;
@@ -1117,7 +1117,7 @@ html:has(body.experience) {
 .option-row input {
    width: 22px;
    height: 22px;
-   accent-color: #d7e7b5;
+   accent-color: #55e9a0;
    flex-shrink: 0;
 }
 #optionsGuide {
@@ -1229,5 +1229,108 @@ html:has(body.experience) {
    }
    .game-options > footer {
       padding: 14px 20px;
+   }
+}
+
+/* Estate identity: citron commits, mint selects, ivory reports. */
+.purity-mark {
+   width: 36px;
+   height: 36px;
+   flex: none;
+}
+.title-screen > .purity-mark {
+   width: 64px;
+   height: 64px;
+   color: #edee58;
+   margin-bottom: 20px;
+}
+.game-wordmark {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+}
+.game-wordmark .purity-mark {
+   color: #edee58;
+}
+.begin-button {
+   background: #edee58;
+   color: #18251c;
+   border-color: #edee58;
+   font-weight: 650;
+   box-shadow: 0 8px 32px #10221a40;
+}
+.begin-button:hover {
+   background: #f7f798;
+   transform: translateY(-2px);
+}
+.course-info {
+   background: #f5f4e9f5;
+   color: #203b2d;
+   border-color: #ffffff80;
+   border-radius: 22px;
+}
+.course-info .hud-eyebrow,
+.course-info .hud-distance > span,
+.course-info .hud-weather,
+.course-info #desktopProbe {
+   color: #45604c;
+}
+.course-info .hud-weather {
+   border-color: #203b2d20;
+}
+.course-info .hud-eyebrow > span {
+   background: #203b2d;
+   color: #edee58;
+   padding: 4px 7px;
+   border-radius: 6px;
+}
+.hud-distance strong {
+   font-size: 52px;
+   font-weight: 550;
+}
+.shot-dock {
+   border-radius: 24px;
+   background: #0d211ef5;
+   box-shadow: 0 12px 48px #071d1855;
+}
+.aim-switch button[aria-pressed='true'],
+#desktopTune[aria-expanded='true'] {
+   background: #55e9a0;
+   color: #102c21;
+}
+.desktop-play {
+   border-radius: 16px;
+   min-height: 58px;
+   font-weight: 650;
+   box-shadow: 0 3px 0 #a6ac27;
+}
+.desktop-play:active {
+   transform: translateY(2px);
+   box-shadow: none;
+}
+.desktop-club {
+   padding-right: 16px;
+   border-right: 1px solid #d8eee026;
+}
+.desktop-effort output {
+   color: #edee58;
+   font-size: 20px;
+   font-variant-numeric: tabular-nums;
+}
+.view-toolbar {
+   border-radius: 100px;
+}
+.view-toolbar button {
+   border-radius: 100px;
+}
+#desktopNorth {
+   background: #edee58;
+   color: #18251c;
+}
+@media (max-height: 540px) {
+   .title-screen > .purity-mark {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 8px;
    }
 }

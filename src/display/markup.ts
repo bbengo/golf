@@ -2,7 +2,7 @@ export const displayMarkup = `
 <canvas id="course" tabindex="0" aria-label="Golf course. Drag to explore, scroll to zoom, Shift-drag to rotate."></canvas>
 <section id="portal" aria-label="Game menus">
  <section class="title-screen" data-page="title">
-  <p class="title-kicker">A LITTLE ROOM TO PLAY</p>
+  <svg class="purity-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 51V13c15-10 20 13 34 3v23c-14 10-19-13-34-3" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><circle cx="43" cy="52" r="5" fill="currentColor"/></svg><p class="title-kicker">A LITTLE ROOM TO PLAY</p>
   <h1>purity</h1><p class="title-subtitle">THE GOLF EXPERIMENT</p>
   <a href="#editions" class="begin-button">Enter the course <span aria-hidden="true">↗</span></a>
   <p class="title-location">CREEK & SHOULDER <span>01 / WOODLAND</span></p>
@@ -23,7 +23,7 @@ export const displayMarkup = `
   </div><p class="edition-note">Opening UCG-50 leaves your current Purity round. You can return to this selection from the original experience.</p>
  </section>
  <section class="game-lobby" data-page="home" hidden>
-  <header class="game-heading"><a href="#title" class="game-wordmark" aria-label="Return to title">purity</a><span>YOUR PRACTICE GROUND</span></header>
+  <header class="game-heading"><a href="#title" class="game-wordmark" aria-label="Return to title"><svg class="purity-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 51V13c15-10 20 13 34 3v23c-14 10-19-13-34-3" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><circle cx="43" cy="52" r="5" fill="currentColor"/></svg>purity</a><span>YOUR PRACTICE GROUND</span></header>
   <div class="lobby-body"><p class="eyebrow">CREEK & SHOULDER / 01</p><h1>Find your<br>own rhythm.</h1>
    <nav class="game-actions" aria-label="Game menu">
     <a href="#play" data-open-controls class="selected-action"><span id="enterRoundLabel">Play</span><small>Controls on this screen</small><b aria-hidden="true">↗</b></a>

@@ -873,3 +873,44 @@ input[type='range']::-moz-range-thumb {
       scroll-behavior: auto !important;
    }
 }
+
+/* Shared identity, with touch-sized controls and a distinct phone layout. */
+.cockpit .controller-brand {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+}
+.cockpit .controller-brand .purity-mark {
+   width: 28px;
+   height: 28px;
+   stroke: none;
+   color: #c4cc38;
+}
+.cockpit[data-theme='dark'] .controller-brand .purity-mark {
+   color: #edee58;
+}
+.cockpit .play-dock .primary {
+   background: #edee58;
+   color: #18251c;
+   font-weight: 650;
+   box-shadow: 0 4px 0 #9da426;
+   border-radius: 20px;
+}
+.cockpit .shot-ticket {
+   background: #f1f2df;
+   color: #213e30;
+   border-radius: 24px;
+}
+.cockpit .shot-ticket small,
+.cockpit .shot-ticket .weather {
+   color: #43624e;
+}
+.cockpit .controller-nav button[aria-pressed='true'] {
+   color: var(--ink);
+}
+.cockpit .controller-nav button[aria-pressed='true'] > span {
+   color: #102c21;
+   background: #55e9a0;
+   padding: 5px 20px;
+   border-radius: 100px;
+}

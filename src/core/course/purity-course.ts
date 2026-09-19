@@ -3,7 +3,7 @@ import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.1.0';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.2.0';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -40,6 +40,36 @@ function bunker(x: number, y: number, rx: number, ry: number, phase: number) {
          r = 1 + 0.14 * Math.sin(a * 3 + phase) + 0.06 * Math.cos(a * 5);
       return { x: x + Math.cos(a) * rx * r, y: y + Math.sin(a) * ry * r };
    });
+}
+function ribbon(points: Point[], width: number) {
+   const line = smooth(smooth(points));
+   const banks = line.map((p, i) => {
+      const a = line[Math.max(0, i - 1)],
+         b = line[Math.min(line.length - 1, i + 1)];
+      const length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const nx = (-(b.y - a.y) / length) * width,
+         ny = ((b.x - a.x) / length) * width;
+      return [
+         { x: p.x + nx, y: p.y + ny },
+         { x: p.x - nx, y: p.y - ny },
+      ];
+   });
+   const cap = (end: number, neighbour: number) => {
+      const p = line[end],
+         q = line[neighbour];
+      const heading = Math.atan2(p.y - q.y, p.x - q.x);
+      return Array.from({ length: 17 }, (_, i) => {
+         const a = heading + Math.PI / 2 - (i * Math.PI) / 16;
+         return { x: p.x + Math.cos(a) * width, y: p.y + Math.sin(a) * width };
+      });
+   };
+   const closed = points[0].x === points.at(-1)!.x && points[0].y === points.at(-1)!.y;
+   return [
+      ...banks.map((b) => b[0]),
+      ...(closed ? [] : cap(line.length - 1, line.length - 2)),
+      ...banks.map((b) => b[1]).reverse(),
+      ...(closed ? [] : cap(0, 1)),
+   ];
 }
 
 /** A versioned Purity layout. All authored features enter both rendering and simulation. */
@@ -95,6 +125,76 @@ export function createPurityCourse() {
          polygon: bunker(x, y, rx, ry, phase),
       });
    }
+   // The neighbouring practice lawns and estate hazards are real surfaces, not extra holes.
+   for (const [id, points, width] of [
+      [
+         'west',
+         [
+            [-55, 20],
+            [-82, 95],
+            [-43, 175],
+            [-59, 260],
+         ],
+         26,
+      ],
+      [
+         'east',
+         [
+            [292, 50],
+            [334, 135],
+            [298, 220],
+            [328, 315],
+            [301, 391],
+         ],
+         34,
+      ],
+   ] as const) {
+      c.surfaces.push({
+         id: `estate-lawn-${id}`,
+         type: 'fairway',
+         polygon: ribbon(
+            points.map(([x, y]) => ({ x, y })),
+            width,
+         ),
+         provenance: 'Purity estate practice lawn; no additional playable cup',
+      });
+   }
+   for (const [id, x, y, rx, ry] of [
+      ['west', -76, 434, 55, 78],
+      ['east', 354, 507, 43, 63],
+   ] as const) {
+      c.surfaces.push({
+         id: `estate-lake-${id}`,
+         type: 'water',
+         polygon: bunker(x, y, rx, ry, 1.4),
+         waterHeight: Course.heightAt(c, { x, y }),
+         provenance: 'Authored estate lake; water elevation sampled at centre',
+      });
+   }
+   for (const [id, x, y, rx, ry] of [
+      ['west', -18, 217, 11, 21],
+      ['east', 364, 324, 12, 23],
+   ] as const)
+      c.surfaces.push({ id: `estate-sand-${id}`, type: 'sand', polygon: bunker(x, y, rx, ry, 2) });
+   const estatePath = [
+      [-145, -65],
+      [-157, 140],
+      [-149, 470],
+      [-40, 602],
+      [185, 624],
+      [393, 555],
+      [410, 320],
+      [386, 57],
+      [242, -74],
+      [10, -99],
+      [-145, -65],
+   ].map(([x, y]) => ({ x, y }));
+   c.surfaces.push({
+      id: 'estate-walk',
+      type: 'path',
+      polygon: ribbon(estatePath, 3.2),
+      provenance: 'Shared visual and physical estate path',
+   });
    let seed = 90417;
    const random = () => {
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
