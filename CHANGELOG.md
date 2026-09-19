@@ -165,3 +165,10 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Added purpose labels, selection indicators, keyboard dismissal and phase-aware desktop picker availability.
 - Browser coverage now selects through the visible caddy and checks selection, illustration, Escape and focus restoration.
 - Validation: TypeScript and production build pass; all five browser flows pass, including visible desktop/phone caddy selection, keyboard focus return, sync and gameplay. Inspected caddy and HUD screenshots.
+
+## 2026-09-19 ? Consistent loading and arrival
+
+- Matched loading/title typography and mark scale, introduced restrained contour artwork and shared sage/forest tokens, and removed remaining bright lime UI accents.
+- Kept loading visible through the first rendered course frame; added a short reduced-motion-aware reveal without delaying for phone pairing.
+- Added startup import-error retry and browser checks for slow startup, small-screen overflow and recovery.
+- Validation: TypeScript and production build pass; all seven browser tests pass. Inspected desktop and phone loading screenshots. Existing legacy bundle-size warning remains.

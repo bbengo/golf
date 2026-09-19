@@ -14,21 +14,34 @@
       content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ws://localhost:* ws://127.0.0.1:*; font-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'" />
    
    
+   <link rel="preload" href="/assets/fonts/onest/Onest-Variable.ttf" as="font" type="font/ttf" crossorigin />
    <style>
-      body[data-booting] { margin: 0; background: #101d16; color: #e5edda; overflow: hidden; }
+      :root { --purity-ink: #edf0e5; --purity-muted: #bac7b5; --purity-accent: #d9dfc2; --purity-ground: #14231f; --purity-line: #bbcbaa30; }
+      @font-face { font-family: Onest; src: url(/assets/fonts/onest/Onest-Variable.ttf); font-weight: 100 900; font-display: swap; }
+      body[data-booting] { margin: 0; background: var(--purity-ground); overflow: hidden; }
       body[data-booting] > :not(#bootScreen):not(noscript) { display: none; }
-      #bootScreen { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; font: 500 48px system-ui, sans-serif; letter-spacing: -2px; }
-      @font-face { font-family: Onest; src: url(/assets/fonts/onest/Onest-Variable.ttf); font-display: swap; }
-      #bootScreen { font-family: Onest, system-ui, sans-serif; background: radial-gradient(ellipse at 50% 30%, #274b37, #091a17 70%); }
-      #bootScreen svg { width: 76px; height: 76px; color: #d9dfc2; margin: 0 auto 24px; animation: breathe 1.8s ease-in-out infinite alternate; }
-      @keyframes breathe { to { opacity: .45; transform: translateY(-5px); } }
-      @media (prefers-reduced-motion: reduce) { #bootScreen svg { animation: none; } }
-      #bootScreen small { margin-top: 18px; font-size: 12px; letter-spacing: .05em; color: #a9baa1; }
+      #bootScreen { position: fixed; inset: 0; z-index: 10000; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 28px; text-align: center; color: var(--purity-ink); font-family: Onest, system-ui, sans-serif; background: radial-gradient(ellipse at 65% 25%, #2c4034, var(--purity-ground) 65%); transition: opacity 380ms ease; }
+      #bootScreen.leaving { opacity: 0; pointer-events: none; }
+      #bootScreen .boot-contours { position: absolute; width: 100%; height: 100%; inset: 0; opacity: .12; pointer-events: none; }
+      #bootScreen .purity-mark { width: 54px; height: 54px; color: var(--purity-accent); margin-bottom: 20px; }
+      #bootScreen h1 { font-size: clamp(80px, 12vw, 160px); font-weight: 550; letter-spacing: -.075em; line-height: 1.05; margin: 14px 0; }
+      #bootScreen .boot-kicker, #bootScreen .boot-subtitle { font-size: 10px; letter-spacing: .22em; color: var(--purity-muted); margin: 0; }
+      #bootScreen .boot-status { position: absolute; bottom: max(38px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--purity-muted); }
+      #bootScreen .boot-indicator { width: 16px; height: 16px; border: 1px solid #bac7b530; border-top-color: var(--purity-accent); border-radius: 50%; animation: boot-turn 1.6s linear infinite; }
+      #bootRetry { color: var(--purity-ink); border: 1px solid var(--purity-line); border-radius: 100px; padding: 10px 20px; text-decoration: none; }
+      #bootScreen [hidden] { display: none; }
+      @keyframes boot-turn { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { #bootScreen { transition: none; } #bootScreen .boot-indicator { animation: none; } }
+      @media (max-height: 450px) { #bootScreen .purity-mark { width: 32px; height: 32px; margin-bottom: 4px; } #bootScreen h1 { font-size: 72px; } #bootScreen .boot-status { bottom: 20px; } }
    </style>
 </head>
 
 <body data-state="0" data-booting>
-   <div id="bootScreen" role="status"><svg class="purity-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 51V13c15-10 20 13 34 3v23c-14 10-19-13-34-3" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><circle cx="43" cy="52" r="5" fill="currentColor"/></svg>purity<small>Preparing your course</small></div>
+   <div id="bootScreen" aria-label="Loading Purity">
+      <svg class="boot-contours" viewBox="0 0 1440 1000" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><path d="M900-100C500 200 1300 250 960 620S1100 950 750 1150M940-100C540 200 1340 250 1000 620S1140 950 790 1150M980-100C580 200 1380 250 1040 620S1180 950 830 1150M1020-100C620 200 1420 250 1080 620S1220 950 870 1150M1060-100C660 200 1460 250 1120 620S1260 950 910 1150"/></svg>
+      <svg class="purity-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M17 51V13c15-10 20 13 34 3v23c-14 10-19-13-34-3" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><circle cx="43" cy="52" r="5" fill="currentColor"/></svg><p class="boot-kicker">A LITTLE ROOM TO PLAY</p><h1>purity</h1><p class="boot-subtitle">THE GOLF EXPERIMENT</p>
+      <div class="boot-status" role="status"><span class="boot-indicator" aria-hidden="true"></span><span id="bootMessage">Preparing your experience</span><a id="bootRetry" href="" hidden>Try again</a></div>
+   </div>
    <section id="welcomeScreen" class="welcome-screen" aria-labelledby="welcomeTitle">
       <div class="welcome-content">
          <h1 id="welcomeTitle" tabindex="-1">UCG-50</h1>

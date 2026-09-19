@@ -7,7 +7,7 @@ import { startOptions, savedDisplayMode, type DisplayMode } from './options';
 import type { Point } from '../core/contracts/cockpit';
 import { displayMarkup } from './markup';
 
-export async function startDisplay() {
+export async function startDisplay(onFirstFrame?: () => void) {
    document.body.className = 'experience';
    document.title = 'Purity — A wider view. A closer feel.';
    document.body.innerHTML = displayMarkup;
@@ -284,12 +284,17 @@ export async function startDisplay() {
    renderRoute();
    let lastPublish = 0,
       previousRevision = -1;
+   let firstFrame = true;
    function frame(time: number) {
       renderer.draw(session, time);
       if (time - lastPublish > 300 || session.revision !== previousRevision) {
          lastPublish = time;
          previousRevision = session.revision;
          publish();
+      }
+      if (firstFrame) {
+         firstFrame = false;
+         onFirstFrame?.();
       }
       requestAnimationFrame(frame);
    }

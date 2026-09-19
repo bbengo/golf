@@ -73,7 +73,7 @@ input:focus-visible,
 select:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible {
-   outline: 2px solid #c6e88b;
+   outline: 2px solid var(--purity-accent);
    outline-offset: 4px;
 }
 [hidden] {
@@ -166,8 +166,8 @@ h3 {
 }
 .primary {
    color: #192414;
-   background: #d0ee96;
-   border: 1px solid #d0ee96;
+   background: var(--purity-accent);
+   border: 1px solid var(--purity-accent);
 }
 .primary:hover {
    background: #e2f6b9;
@@ -255,7 +255,7 @@ h3 {
    margin-right: 6px;
 }
 .is-connected #connection:before {
-   background: #d0ee96;
+   background: var(--purity-accent);
 }
 .live-dot {
    font-size: 8px;
@@ -545,7 +545,7 @@ input[type='range']::-moz-range-track {
 input[type='range']::-moz-range-thumb {
    width: 17px;
    height: 17px;
-   background: #d0ee96;
+   background: var(--purity-accent);
    border: 0;
    border-radius: 50%;
 }
@@ -887,10 +887,10 @@ input[type='range']::-moz-range-thumb {
    color: #718468;
 }
 .cockpit[data-theme='dark'] .controller-brand .purity-mark {
-   color: #d9dfc2;
+   color: var(--purity-accent);
 }
 .cockpit .play-dock .primary {
-   background: #d9dfc2;
+   background: var(--purity-accent);
    color: #18251c;
    font-weight: 650;
    box-shadow: none;

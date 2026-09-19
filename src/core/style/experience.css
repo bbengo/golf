@@ -23,7 +23,7 @@
 }
 .experience em {
    font-style: normal;
-   color: #c6e292;
+   color: var(--purity-accent);
 }
 /* The world is the root surface. Only bounded menu interiors can scroll. */
 html:has(body.experience) {
@@ -73,7 +73,7 @@ html:has(body.experience) {
    color: #d1ddc4;
 }
 .title-screen h1 {
-   font-size: clamp(90px, 15vw, 240px);
+   font-size: clamp(80px, 12vw, 160px);
    font-weight: 550;
    letter-spacing: -0.075em;
    line-height: 1.05;
@@ -81,7 +81,7 @@ html:has(body.experience) {
    text-shadow: 0 8px 60px #07160c66;
 }
 .title-subtitle {
-   letter-spacing: 0.4em;
+   letter-spacing: 0.22em;
 }
 .begin-button {
    display: flex;
@@ -717,7 +717,7 @@ html:has(body.experience) {
    background: #e0e9cf12;
 }
 .display-tools .resume-action {
-   background: #d9dfc2;
+   background: var(--purity-accent);
    color: #172218;
    font-weight: 550;
 }
@@ -853,7 +853,7 @@ html:has(body.experience) {
 }
 .aim-switch button[aria-pressed='true'],
 #desktopTune[aria-expanded='true'] {
-   background: #d9dfc2;
+   background: var(--purity-accent);
    color: #172218;
 }
 .desktop-hint {
@@ -905,7 +905,7 @@ html:has(body.experience) {
    cursor: pointer;
 }
 .desktop-play {
-   background: #d9dfc2;
+   background: var(--purity-accent);
    color: #172218;
    border-radius: 12px;
    min-height: 48px;
@@ -958,7 +958,7 @@ html:has(body.experience) {
 }
 .desktop-tuning button {
    grid-column: 1 / -1;
-   background: #d7e7b512;
+   background: #d9dfc212;
    border-radius: 8px;
    font-size: 12px;
 }
@@ -1031,7 +1031,7 @@ html:has(body.experience) {
 }
 .options-tabs button[aria-pressed='true'] {
    color: #e4efcc;
-   border-color: #d7e7b5;
+   border-color: var(--purity-accent);
 }
 .options-scroll {
    overflow: auto;
@@ -1064,8 +1064,8 @@ html:has(body.experience) {
    cursor: pointer;
 }
 .display-choices label:has(input:checked) {
-   background: #d7e7b510;
-   border-color: #d7e7b5;
+   background: #d9dfc210;
+   border-color: var(--purity-accent);
 }
 .display-choices input {
    accent-color: #bdcbb4;
@@ -1124,7 +1124,7 @@ html:has(body.experience) {
    display: inline-block;
    margin-top: 24px;
    font-size: 13px;
-   color: #d7e7b5;
+   color: var(--purity-accent);
 }
 .game-options > footer {
    padding: 16px 30px;
@@ -1239,9 +1239,9 @@ html:has(body.experience) {
    flex: none;
 }
 .title-screen > .purity-mark {
-   width: 64px;
-   height: 64px;
-   color: #d9dfc2;
+   width: 54px;
+   height: 54px;
+   color: var(--purity-accent);
    margin-bottom: 20px;
 }
 .game-wordmark {
@@ -1250,12 +1250,12 @@ html:has(body.experience) {
    gap: 12px;
 }
 .game-wordmark .purity-mark {
-   color: #d9dfc2;
+   color: var(--purity-accent);
 }
 .begin-button {
-   background: #d9dfc2;
+   background: var(--purity-accent);
    color: #18251c;
-   border-color: #d9dfc2;
+   border-color: var(--purity-accent);
    font-weight: 650;
    box-shadow: 0 8px 32px #10221a40;
 }
@@ -1280,7 +1280,7 @@ html:has(body.experience) {
 }
 .course-info .hud-eyebrow > span {
    background: #203b2d;
-   color: #d9dfc2;
+   color: var(--purity-accent);
    padding: 4px 7px;
    border-radius: 6px;
 }
@@ -1313,7 +1313,7 @@ html:has(body.experience) {
    border-right: 1px solid #d8eee026;
 }
 .desktop-effort output {
-   color: #d9dfc2;
+   color: var(--purity-accent);
    font-size: 20px;
    font-variant-numeric: tabular-nums;
 }
@@ -1324,7 +1324,7 @@ html:has(body.experience) {
    border-radius: 100px;
 }
 #desktopNorth {
-   background: #d9dfc2;
+   background: var(--purity-accent);
    color: #18251c;
 }
 @media (max-height: 540px) {
@@ -1365,7 +1365,7 @@ html:has(body.experience) {
 }
 #desktopNorth {
    background: #ffffff0c;
-   color: #d9dfc2;
+   color: var(--purity-accent);
 }
 #openCaddy {
    display: flex;
@@ -1396,7 +1396,7 @@ html:has(body.experience) {
 #openCaddy .caddy-art {
    width: 38px;
    height: 56px;
-   color: #d9dfc2;
+   color: var(--purity-accent);
 }
 @media (max-width: 760px) {
    .shot-dock {
