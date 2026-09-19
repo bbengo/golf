@@ -1,13 +1,62 @@
 export const displayMarkup = `
-<canvas id="course" tabindex="0" aria-label="Golf course. Drag to explore, scroll to zoom, double click to reframe."></canvas>
-<section id="portal" aria-label="Purity clubhouse">
- <header class="site-header"><a class="brand" href="#home" aria-label="Purity home">purity<span>↗</span></a><nav aria-label="Main navigation"><a href="#home" data-route-link="home">Home</a><a href="#course" data-route-link="course">The course</a><a href="#guide" data-route-link="guide">How to play</a></nav><a href="#play" class="header-play" data-open-controls>Enter the course ↗</a></header>
- <main>
-  <section class="portal-page home-page" data-page="home"><div class="hero-copy"><p class="eyebrow"><span class="status-dot"></span> A NEW WAY TO PLAY</p><h1>A wider view.<br>A closer <em>feel.</em></h1><p class="hero-description">The course in front of you.<br>The next move in your hands.</p><div class="hero-actions"><a href="#play" class="primary" data-open-controls>Play on this screen <span>↗</span></a><a href="#pair" class="quiet-link">Connect a phone <span>↗</span></a></div><p class="hero-note">No account. No downloads. Just a little room to play.</p></div><div class="scene-label"><span class="label-line"></span><span>01 / CREEK & SHOULDER<small>YOUR FIRST FAIRWAY</small></span></div><div class="home-bottom"><a class="feature-link" href="#course"><span class="feature-number">01</span><div><small>THE PRACTICE COLLECTION</small><h2>Meet Creek & Shoulder</h2><p>A winding creek. A raised green. Your line through it.</p></div><span class="round-arrow">↗</span></a><a class="story-link" href="#story"><span class="eyebrow">A DIFFERENT PERSPECTIVE</span><h2>One game.<br>Two ways to be there. ↗</h2></a></div></section>
-  <section class="portal-page course-page" data-page="course" hidden><a class="back-link" href="#home">← Home</a><p class="eyebrow">THE PRACTICE COLLECTION / 01</p><h1>Read the land.<br>Find your line.</h1><div class="course-selection"><div class="course-art" aria-hidden="true"><svg viewBox="0 0 560 270"><path fill="#3e6747" d="M-30 170Q80 20 210 70T610 15V300H-30Z"/><path fill="#6f9458" d="M25 215Q80 195 160 158T275 138 358 80 518 65Q537 88 500 112T355 134 260 185 70 241Z"/><path fill="#a7bc76" d="M45 216Q111 211 164 178T277 159 365 103 505 79Q524 90 491 100T353 119 265 172 61 234Z"/><path fill="none" stroke="#78a8a0" stroke-width="20" d="M130 300Q160 216 235 200T321 170 350 135 425 145 489 67 560 20"/><path fill="#d9d5a8" d="M390 70q40-22 41-4t-45 21q-13-7 4-17"/><ellipse fill="#b9cc89" cx="499" cy="84" rx="24" ry="14"/><path stroke="#edf1d6" stroke-width="3" d="M499 84V49"/><path fill="#dc906a" d="M500 49l20 7-20 7"/><circle fill="#f2f4e7" cx="61" cy="222" r="5"/></svg><span>ILLUSTRATED COURSE STUDY</span></div><div class="course-details"><div class="pill">AVAILABLE TO PLAY</div><h2>Creek & Shoulder</h2><p>Work your way up a narrow fairway, negotiate the creek, and land softly on the raised green.</p><dl><div><dt>Format</dt><dd>Single-hole practice</dd></div><div><dt>Your choice</dt><dd>3 tees · 3 pin positions</dd></div><div><dt>Conditions</dt><dd>Adjustable wind & ground</dd></div></dl><div class="hero-actions"><a class="primary" href="#play" data-open-controls>Play this course ↗</a><a class="quiet-link" href="#pair">Use my phone ↗</a></div></div></div><p class="page-footnote">One playable hole in this collection. New conditions give you a different challenge.</p></section>
-  <section class="portal-page guide-page" data-page="guide" hidden><a class="back-link" href="#home">← Home</a><p class="eyebrow">FIND YOUR RHYTHM</p><h1>Less figuring out.<br>More <em>playing.</em></h1><div class="guide-cards"><article><span class="guide-number">01</span><h2>Choose your seat.</h2><p>Open the controls over the course, or scan the QR on a phone connected to the same Wi-Fi. Switch whenever you like.</p><a href="#pair">Connect a phone ↗</a></article><article><span class="guide-number">02</span><h2>Make your decision.</h2><p>Drag the aim pad, choose a club from My bag and set your effort. Shape & flight gives you the finer adjustments.</p><a href="#play" data-open-controls>Try the controls ↗</a></article><article><span class="guide-number">03</span><h2>Let the course respond.</h2><p>Play your shot and follow the ball. Then continue from its lie, or take a mulligan and try another approach.</p><a href="#course">Explore the course ↗</a></article></div><div class="guide-footer"><span>LOOK AROUND</span><p>Drag to pan · Scroll to zoom · Double-click to see the whole hole.<br>Use the Round tab to jump to your ball or the green.</p></div></section>
-  <section class="portal-page story-page" data-page="story" hidden><a class="back-link" href="#home">← Home</a><p class="eyebrow">FROM UCG-50 TO PURITY</p><h1>A game that<br>outgrew its <em>frame.</em></h1><div class="story-columns"><p class="story-lead">It began with a whole golf simulation inside a single HTML file. The next idea was simple: give the course some space.</p><div><p>On a wide screen, the landscape gets room to breathe. On your phone, each decision sits in the palm of your hand. Playing at your desk? Bring those same controls onto the course and fold them away when you're done.</p><p>Purity is an evolving practice ground for that idea—with real simulation at its centre and a quieter, more intentional way to play around it.</p><a href="/?mode=lab" class="secondary">Visit the original UCG-50 lab ↗</a><small>The original lab is a separate experience. Opening it leaves your current practice round.</small></div></div></section>
- </main><footer class="site-footer"><span>PURITY / THE LOCAL GOLF EXPERIMENT</span><a href="#story">The story ↗</a><a href="/?mode=lab">Original lab ↗</a></footer>
+<canvas id="course" tabindex="0" aria-label="Golf course. Drag to explore, scroll to zoom, Shift-drag to rotate."></canvas>
+<section id="portal" aria-label="Game menus">
+ <section class="title-screen" data-page="title">
+  <p class="title-kicker">A LITTLE ROOM TO PLAY</p>
+  <h1>purity</h1><p class="title-subtitle">THE GOLF EXPERIMENT</p>
+  <a href="#editions" class="begin-button">Enter the course <span aria-hidden="true">↗</span></a>
+  <p class="title-location">CREEK & SHOULDER <span>01 / WOODLAND</span></p>
+ </section>
+ <section class="edition-screen" data-page="editions" hidden aria-labelledby="editionTitle">
+  <header><a class="back-link" href="#title">← Back to title</a><p class="eyebrow">TWO WAYS INTO THE GAME</p><h1 id="editionTitle">Choose your experience.</h1></header>
+  <div class="edition-grid">
+   <a class="edition-card edition-purity" href="#home" aria-label="Choose Purity">
+    <span class="edition-label">01 / THE NEXT CHAPTER</span><h2>Purity</h2><p>The course takes the whole screen. Keep your controls here, or move them to your phone.</p>
+    <div class="edition-emblem" aria-hidden="true">p<span>↗</span></div>
+    <dl><div><dt>Play</dt><dd>Desktop or paired phone</dd></div><div><dt>Course</dt><dd>Woodland practice</dd></div><div><dt>Physics</dt><dd>Experimental fundamentals</dd></div></dl><span class="edition-enter">Enter Purity <b aria-hidden="true">↗</b></span>
+   </a>
+   <a class="edition-card edition-original" href="/?mode=lab" aria-label="Choose UCG-50 Original">
+    <span class="edition-label">02 / THE ORIGINAL EXPERIENCE</span><h2>UCG-50<span>Original</span></h2><p>The full original desktop experience, with its player setup, course tools and original simulation.</p>
+    <div class="edition-emblem" aria-hidden="true">50<span>°</span></div>
+    <dl><div><dt>Play</dt><dd>Original desktop controls</dd></div><div><dt>Course</dt><dd>Original course study</dd></div><div><dt>Physics</dt><dd>Original UCG-50 model</dd></div></dl><span class="edition-enter">Enter UCG-50 <b aria-hidden="true">↗</b></span>
+   </a>
+  </div><p class="edition-note">Opening UCG-50 leaves your current Purity round. You can return to this selection from the original experience.</p>
+ </section>
+ <section class="game-lobby" data-page="home" hidden>
+  <header class="game-heading"><a href="#title" class="game-wordmark" aria-label="Return to title">purity</a><span>YOUR PRACTICE GROUND</span></header>
+  <div class="lobby-body"><p class="eyebrow">CREEK & SHOULDER / 01</p><h1>Find your<br>own rhythm.</h1>
+   <nav class="game-actions" aria-label="Game menu">
+    <a href="#play" data-open-controls class="selected-action"><span id="enterRoundLabel">Play</span><small>Controls on this screen</small><b aria-hidden="true">↗</b></a>
+    <a href="#pair"><span>Connect a phone</span><small>Your controls. In your hand.</small></a>
+    <a href="#course"><span>The course</span><small>Explore your practice ground</small></a>
+    <a href="#guide"><span>How to play</span></a>
+    <a href="#editions"><span>Choose experience</span><small>Purity / UCG-50 Original</small></a>
+   </nav>
+  </div>
+  <footer class="game-footer"><a href="#story">About Purity</a><button id="fullscreenButton">Full screen ↗</button><a href="#title">Title screen</a><span id="screenStatus" role="status"></span></footer>
+  <div class="world-caption" aria-hidden="true"><span>01</span><p>Creek & Shoulder<small>Woodland practice · Three tees · Your pace</small></p></div>
+ </section>
+ <section class="game-panel" data-page="course" hidden aria-labelledby="courseTitle">
+  <header><a class="back-link" href="#home">← Back</a><span class="eyebrow">PRACTICE GROUND / 01</span></header>
+  <div class="panel-scroll"><p class="eyebrow">WOODLAND</p><h1 id="courseTitle">Creek &<br>Shoulder</h1><p class="panel-lead">Follow the creek. Read the shoulder. Find your line.</p>
+   <dl class="course-facts"><div><dt>Format</dt><dd>Single-hole practice</dd></div><div><dt>Starting points</dt><dd>Three tees</dd></div><div><dt>The green</dt><dd>Three pin positions</dd></div><div><dt>Conditions</dt><dd>Adjustable wind & ground</dd></div></dl>
+   <p>The woodland frames a narrow fairway, with sand guarding the approach and a raised green that rewards a considered landing.</p><p>Choose your club and conditions from the controls. Change your approach, take a mulligan, and play at your own pace.</p>
+  </div><footer><a class="primary" href="#play" data-open-controls>Play this course ↗</a><a href="#pair">Use my phone</a></footer>
+ </section>
+ <section class="game-panel" data-page="guide" hidden aria-labelledby="guideTitle">
+  <header><a class="back-link" href="#home">← Back</a><span class="eyebrow">FIELD GUIDE</span></header>
+  <div class="panel-scroll"><h1 id="guideTitle">Make it<br>your game.</h1><div class="guide-cards">
+   <article><span>01 / GET COMFORTABLE</span><h2>Choose your controls.</h2><p>Play with the overlay on this screen, or connect a phone on the same Wi-Fi. The course stays here. Your controls go with you.</p></article>
+   <article><span>02 / FIND YOUR LINE</span><h2>Read. Aim. Commit.</h2><p>Drag the aim pad to set your target. Pick a club from My bag, then choose your effort. Shape & flight gives you finer control.</p></article>
+   <article><span>03 / PLAY IT THROUGH</span><h2>Let the ball travel.</h2><p>Play your shot. Desktop controls fold away as the camera follows. Open the menu for your next shot, or continue directly on your phone.</p></article>
+   <article><span>YOUR VIEW</span><h2>Look around.</h2><p>Drag to pan. Scroll to zoom. Shift-drag or right-drag to rotate. Double-click to see the hole. N restores north; Escape opens the menu. On the phone, Round takes you to the ball or green.</p></article>
+  </div></div><footer><a class="primary" href="#play" data-open-controls>Try a shot ↗</a><a href="#pair">Connect a phone</a></footer>
+ </section>
+ <section class="game-panel" data-page="story" hidden aria-labelledby="storyTitle">
+  <header><a class="back-link" href="#home">← Back</a><span class="eyebrow">ABOUT PURITY</span></header>
+  <div class="panel-scroll"><h1 id="storyTitle">A course<br>without a frame.</h1><p class="panel-lead">One world. Two ways to play.</p><p>Purity began with UCG-50: a golf simulation inside a single HTML file. This is its next practice ground. The course fills your screen, while each decision belongs in your hand.</p><p>Play with the controls here or move them to your phone. The same simulation responds to every shot.</p><h2>The original experiment</h2><p>The original UCG-50 lab remains available separately. Opening it leaves your current in-memory round.</p><a class="secondary" href="/?mode=lab">Open original lab ↗</a></div>
+  <footer><a href="#home">Return to game menu</a></footer>
+ </section>
 </section>
 <nav id="displayTools" class="display-tools" aria-label="Course navigation" hidden><header><div><p class="eyebrow">BACK AT YOUR PACE</p><h2>On the course.</h2></div><button id="quietView" class="icon-button" aria-label="Return to uninterrupted play">×</button></header><button id="toggleControls" class="menu-action" aria-controls="desktopControls" aria-expanded="false"><span>Shot controls<small>Your line, club & next move</small></span><span>↗</span></button><a href="#pair" id="pairButton" class="menu-action">Connect a phone ↗</a><div class="camera-menu"><p class="eyebrow">YOUR VIEW</p><div><button id="rotateLeft" aria-label="Rotate course left">↶</button><button id="northView">N <span>North up</span></button><button id="rotateRight" aria-label="Rotate course right">↷</button></div><button id="fitView">See the whole hole</button><p>Drag to explore. Scroll to zoom.<br>Shift-drag or right-drag to rotate.</p></div><div class="menu-links"><a href="#home" aria-label="Back to home">Home ↗</a><a href="#guide">How to play ↗</a></div></nav>
 <button id="revealTools" class="reveal-tools" aria-label="Open course menu" aria-controls="displayTools" aria-expanded="false" title="Course menu (Escape)" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 16h14"/></svg></button>

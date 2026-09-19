@@ -14,8 +14,10 @@ npm ci
 npm run local
 ```
 
-Open `http://localhost:3000/` for the new Purity welcome. Choose **Play on this
-screen** for collapsible controls on the course, or **Connect a phone** for pairing.
+Open `http://localhost:3000/` for the title screen. Choose **Purity** or **UCG-50
+Original**. In Purity, choose **Play** for on-screen controls or **Connect a phone**.
+The world fills the viewport throughout; longer menus scroll inside their panels.
+The game menu also offers optional browser full screen and resumes your current round.
 Scan its QR with your phone on the same Wi-Fi. The overlay closes after joining.
 The direct pairing route `/?mode=display` still works.
 If the machine has several network adapters, choose the Wi-Fi address on the

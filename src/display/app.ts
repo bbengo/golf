@@ -20,8 +20,26 @@ export async function startDisplay() {
    let controlsOpen = false,
       phoneConnected = false,
       quiet = true;
-   const initial = new URLSearchParams(location.search).get('mode') === 'display' ? 'pair' : 'home';
-   let previousPage = 'home';
+   const initial =
+      new URLSearchParams(location.search).get('mode') === 'display' ? 'pair' : 'title';
+   let previousPage = initial;
+   let pairingReturn = 'play';
+   let enteredRound = false;
+   const fullscreen = $('fullscreenButton');
+   fullscreen.hidden = !document.fullscreenEnabled;
+   fullscreen.onclick = async () => {
+      try {
+         if (document.fullscreenElement) await document.exitFullscreen();
+         else await document.documentElement.requestFullscreen();
+         $('screenStatus').textContent = '';
+      } catch {
+         $('screenStatus').textContent =
+            'Full screen is unavailable here. You can keep playing in this view.';
+      }
+   };
+   document.addEventListener('fullscreenchange', () => {
+      fullscreen.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen ↗';
+   });
    function publish() {
       const state = session.snapshot();
       localReceive?.(state);
@@ -77,12 +95,21 @@ export async function startDisplay() {
    ] as const)
       $(id).onclick = () => renderer.setView(action);
    document.addEventListener('keydown', (event) => {
-      if (
-         event.key !== 'Escape' ||
-         document.querySelector('dialog[open]') ||
-         !['play', 'pair'].includes(document.body.dataset.route || '')
-      )
+      if (event.key !== 'Escape' || document.querySelector('dialog[open]')) return;
+      const route = document.body.dataset.route;
+      if (!['play', 'pair'].includes(route || '')) {
+         if (route === 'title') return;
+         navigate(
+            route === 'editions'
+               ? 'title'
+               : route === 'home'
+                 ? enteredRound
+                    ? 'play'
+                    : 'editions'
+                 : 'home',
+         );
          return;
+      }
       if (controlsOpen || !quiet) showControls(false);
       else {
          quiet = false;
@@ -95,11 +122,20 @@ export async function startDisplay() {
    }
    function renderRoute() {
       let route = location.hash.slice(1) || initial;
-      if (!['home', 'course', 'guide', 'story', 'play', 'pair'].includes(route)) route = 'home';
+      if (
+         !['title', 'editions', 'home', 'course', 'guide', 'story', 'play', 'pair'].includes(route)
+      )
+         route = 'title';
+      if (route === 'pair' && previousPage !== 'pair') pairingReturn = previousPage;
+      pairing.querySelector('.back-link')!.textContent =
+         pairingReturn === 'play' ? '← Back to course' : '← Back to game menu';
+      if (route === 'play') enteredRound = true;
+      $('enterRoundLabel').textContent = enteredRound ? 'Resume practice' : 'Play';
       const onCourse = route === 'play' || route === 'pair';
       document.body.dataset.route = route;
       document.body.dataset.quiet = String(quiet && !controlsOpen);
       $('portal').hidden = onCourse;
+      $('course').tabIndex = onCourse ? 0 : -1;
       $('displayTools').hidden = !onCourse || quiet;
       $('revealTools').hidden = !onCourse || route === 'pair';
       $('revealTools').setAttribute('aria-expanded', String(!quiet));
@@ -132,7 +168,11 @@ export async function startDisplay() {
       showControls(true);
       navigate('play');
    };
-   $('closePairing').onclick = () => navigate('play');
+   $('closePairing').onclick = () => navigate(pairingReturn);
+   pairing.querySelector<HTMLAnchorElement>('.back-link')!.onclick = (event) => {
+      event.preventDefault();
+      navigate(pairingReturn);
+   };
    $('cockpitLink').onclick = async (event) => {
       event.preventDefault();
       const link = $<HTMLAnchorElement>('cockpitLink').href;
@@ -149,7 +189,7 @@ export async function startDisplay() {
    };
    pairing.addEventListener('cancel', (event) => {
       event.preventDefault();
-      navigate('play');
+      navigate(pairingReturn);
    });
    window.addEventListener('hashchange', renderRoute);
    renderRoute();

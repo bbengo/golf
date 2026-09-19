@@ -3,7 +3,9 @@ import { expect, test } from '@playwright/test';
 test('QR pairing, live controls, shot, phone reconnect, and display isolation', async ({
    browser,
 }) => {
-   test.setTimeout(120000);
+   // Two browser contexts, full shot animations and visual captures on a shared runner.
+   // Individual action/assertion deadlines remain unchanged.
+   test.setTimeout(180000);
    const displayContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
    const phoneContext = await browser.newContext({
       viewport: { width: 390, height: 844 },

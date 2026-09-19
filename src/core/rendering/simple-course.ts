@@ -19,6 +19,7 @@ export class SimpleCourse {
    private previewRevision = -1;
    private preview: { x: number; y: number; z: number } | null = null;
    camera = new CourseCamera();
+   private menuCamera = new CourseCamera();
    constructor(canvas: HTMLCanvasElement) {
       this.canvas = canvas;
       this.ctx = canvas.getContext('2d')!;
@@ -128,13 +129,7 @@ export class SimpleCourse {
          dpr = Math.min(devicePixelRatio || 1, 2),
          c = session.course;
       const desiredOffset =
-         rect.width > 900
-            ? document.body.dataset.route === 'home'
-               ? rect.width * 0.23
-               : document.body.classList.contains('controls-open')
-                 ? -175
-                 : 0
-            : 0;
+         rect.width > 900 ? (document.body.classList.contains('controls-open') ? -175 : 0) : 0;
       this.camera.offsetX +=
          (desiredOffset - this.camera.offsetX) * (this.reducedMotion.matches ? 1 : 0.08);
       this.camera.resize(rect.width, rect.height, c.plate.worldBounds);
@@ -191,6 +186,18 @@ export class SimpleCourse {
       const ctx = this.ctx;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
+      const route = document.body.dataset.route || 'title';
+      if (!['play', 'pair'].includes(route)) {
+         const view = this.menuCamera;
+         const drift = this.reducedMotion.matches ? 0 : Math.sin(time / 24000);
+         view.angle = -0.28 + drift * 0.025;
+         view.offsetX = route === 'title' || rect.width < 700 ? 0 : rect.width * 0.16;
+         view.resize(rect.width, rect.height, c.plate.worldBounds);
+         view.go({ x: 155 + drift * 8, y: 355 }, 1.45);
+         view.tick(16, this.reducedMotion.matches);
+         this.atlas.paint(ctx, c, view);
+         return;
+      }
       if (session.renderer === 'photo' && !this.photoLoading) {
          this.photoLoading = true;
          void import('./photo-renderer.js').then(({ PhotoRenderer, PhotoAssets }) => {

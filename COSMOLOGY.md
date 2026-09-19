@@ -71,6 +71,14 @@ as measured data.
 
 ## Documentation ownership
 
+**The world comes first.** The September 19 direction replaces the website-style
+clubhouse with a game entry and overlay menus. The viewport never becomes a scrolling
+page: long information belongs inside bounded panels. The title and menus share the
+live course atlas through an independent presentation camera, preserving gameplay
+state and the player's chosen camera. Phone control is an input option within that
+game, not the reason to present the experience as a website.
+
+
 Settled architecture and its reasons belong in the nearest `COSMOLOGY.md`. Keep
 code comments for equations, units and non-obvious local behaviour. Update the
 cosmology when changing a boundary, dependency, physical assumption or failure

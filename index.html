@@ -5,18 +5,25 @@
 <head>
    <meta charset="utf-8" />
    <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
-   <title>UCG-50</title>
+   <title>Purity</title>
    <meta name="robots" content="noindex,nofollow,noarchive" />
-   <meta name="description" content="The fiftieth anniversary edition of Ultimate Challenge Golf" />
+   <meta name="description" content="A golf practice ground. One world, controls on your screen or phone." />
    <meta name="theme-color" content="#0c211e" />
    <link rel="icon" href="data:," />
    <meta http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ws://localhost:* ws://127.0.0.1:*; font-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'" />
    
    
+   <style>
+      body[data-booting] { margin: 0; background: #101d16; color: #e5edda; overflow: hidden; }
+      body[data-booting] > :not(#bootScreen):not(noscript) { display: none; }
+      #bootScreen { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; font: 500 48px system-ui, sans-serif; letter-spacing: -2px; }
+      #bootScreen small { margin-top: 18px; font-size: 12px; letter-spacing: .05em; color: #a9baa1; }
+   </style>
 </head>
 
-<body data-state="0">
+<body data-state="0" data-booting>
+   <div id="bootScreen" role="status">purity<small>Preparing your course</small></div>
    <section id="welcomeScreen" class="welcome-screen" aria-labelledby="welcomeTitle">
       <div class="welcome-content">
          <h1 id="welcomeTitle" tabindex="-1">UCG-50</h1>
@@ -25,6 +32,7 @@
       </div>
    </section>
    <noscript>
+      <style>#bootScreen { display: none; }</style>
       <p class="noscript-message">UCG-50 needs JavaScript to run the game. Enable JavaScript, then reload this page.</p>
    </noscript>
    <header id="entryHeader" hidden>

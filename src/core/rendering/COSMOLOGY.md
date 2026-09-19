@@ -45,8 +45,11 @@ markers, pointer anchoring and panning share the same orientation.
 The compass sits beside the bottom-left menu button, with its label inside its
 own disc, so neither the button nor the open menu covers it. Quiet play hides it.
 
-The welcome view offsets the composition to give the landscape space beside the
-copy. Opening desktop controls shifts the course into the remaining visual area;
+Title and menu screens use a separate presentation camera over the same atlas.
+Its slow drift stops with reduced motion. It renders terrain without aim/ball HUD
+marks and never overwrites the playing camera or physics state. Menu input is
+intercepted by the shell so it cannot accidentally pan the hidden playing camera.
+Opening desktop controls shifts the course into the remaining visual area;
 the canvas still fills the screen. Reduced-motion preference also snaps this offset.
 Initial framing uses the course plate, not invented multi-hole geometry.
 

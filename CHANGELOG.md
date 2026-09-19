@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-19: world-first game entry and menu shell
+
+- Replaced the scrolling clubhouse website with a title screen, game menu and
+  bounded course/guide/about panels over the live, full-viewport course.
+- Made Purity and UCG-50 Original prominent, equal experience choices immediately
+  after the title, with a direct return path from the original and game menu.
+- Removed the site header, promotional page structure and decorative course card.
+  Scrolling belongs to panel interiors; back/actions stay anchored.
+- Added an independent, slowly moving menu camera, reduced-motion support,
+  play/resume wording, optional browser full screen and contextual pairing return.
+- Retained phone pairing, shared desktop controls, quiet play and original lab.
+  The rendering remains the procedural 2D woodland atlas; this is not a 3D engine migration.
+
+Validation: production build, TypeScript, formatting and five browser flows pass
+(paired phone, experience selection/original return, desktop round, narrow-screen
+local play, original lab). Title, menu, panel and desktop/mobile selection screenshots
+were inspected. Shared-runner timeouts required larger overall journey budgets;
+individual assertion deadlines remain unchanged. Physical-device full-screen and
+frame-time checks, deeper terrain detail and the existing large data chunk remain follow-up work.
+
 ## 2026-09-18: compass/menu overlap correction
 
 - Moved the compass beside the menu button and placed its north label inside

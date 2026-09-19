@@ -5,7 +5,9 @@ preserving the original lab does not mean inheriting its entry journey.
 
 | Route | Owner | Behaviour |
 | --- | --- | --- |
-| `/` | `display/app.ts` | Clubhouse, course selection, guidance, story and live course |
+| `/` or `/#title` | `display/app.ts` | Full-viewport title over the live course |
+| `/#editions` | `display/app.ts` | Equal, prominent entrances to Purity and UCG-50 Original |
+| `/#home` | `display/app.ts` | In-world game menu: play/resume, pairing, course and guide |
 | `/#play` | `display/app.ts` | Same session, with collapsible on-screen controls |
 | `/#pair` or `/?mode=display` | `display/app.ts` | QR pairing over the live course |
 | `/?mode=cockpit&token=…` | `cockpit/app.ts` | Phone controller, no course/physics bundle |
@@ -13,17 +15,28 @@ preserving the original lab does not mean inheriting its entry journey.
 
 ## Navigation is presentation state
 
-Home, course, guide, story, play and pairing use native fragment history. In-page
+Title, editions, home, course, guide, story, play and pairing use native fragment history. In-page
 navigation never replaces `CockpitSession`, so choosing Home and returning to the
 course keeps ball, shot count, intent and conditions. Reloading or opening the
 separate original lab is a different lifetime and starts a new round on return.
 There is no persistence database. The original standalone HTML remains untouched.
 
-`display/markup.ts` owns the clubhouse and course shell. The story explains the
+`display/markup.ts` owns the game shell. About Purity explains the
 single-file origin and two-screen direction without requiring a player to read
 implementation details. There is only one playable course, explicitly labelled as
 single-hole practice; the interface does not invent locked courses or fake progress.
-The course-card SVG is a decorative study, not simulation geometry.
+The course itself is the backdrop, rather than a separate illustrated course card.
+
+The viewport is a fixed game surface from entry onwards. There is no site header,
+marketing page, outer scroll or footer sitemap. Title leads to an experience choice:
+Purity and UCG-50 Original have distinct, equally sized sections with real links,
+control/physics descriptions and a clear round-lifetime note. The original is not
+buried in About. Purity leads to the game menu, which can reopen this choice;
+long course/guide/about content scrolls inside bounded panels with fixed back and
+action rows. The lobby action region can scroll on short screens. Native browser
+full screen is an optional explicit action with a fallback when unavailable.
+Pairing cancellation returns to the originating screen. Escape backs out of panels;
+from the game menu it resumes an entered round or returns to the title.
 
 Desktop navigation exposes Home, phone pairing and Controls. The controller can
 collapse without leaving the course, and navigation can hide for a quiet view.

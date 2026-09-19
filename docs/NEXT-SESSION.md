@@ -1,5 +1,26 @@
 # Next session: unfinished work
 
+## Game-shell direction
+
+The 19 September direction replaces the website-style clubhouse with a fixed game
+viewport: title, prominent Purity/UCG-50 experience selection, in-world menu,
+internally scrolling panels and optional browser full
+screen. A separate presentation camera uses the live course while preserving the
+playing camera. A loading surface prevents the retained lab HTML flashing on entry.
+Check title/menu transitions and panel scrolling on physical phones, short windows,
+larger text, browser zoom and device safe areas. The attached references establish
+world-first composition, not a claim that this Canvas 2D scene matches 3D studio art.
+Terrain depth, close-range detail and richer lighting remain subsequent rendering work.
+
+The owner's subsequent golfee reference sharpens that direction: readable elevation,
+recessed sand, substantial banks, volumetric trees with directional shadows, water
+shallows/depth and mowing that describes terrain. A flat colour atlas cannot achieve
+that by palette changes alone. Explore a depth-aware terrain renderer using the
+existing physical height field and surface polygons before adding more decorative
+detail. The reference image establishes appearance, not evidence of its implementation.
+Keep floating panels compact and high-contrast; preserve Purity's single-menu quiet
+play and phone controller instead of importing the reference's entire statistics HUD.
+
 ## Woodland presentation pass
 
 Purity uses `purity-woodland/0.1.0`, a separate deterministic layout with shared

@@ -4,6 +4,14 @@
 `npm run test:e2e` builds the app and starts the actual local relay for Playwright.
 Tests run locally; no hosted workflow is required by this proof of concept.
 
+The game-shell flow checks title entry, prominent experience choices, the original
+game's direct entrance/return, menu/pairing return, preserved rounds and
+internal guide scrolling in a short viewport, plus the lack of document overflow.
+Screenshots capture title, game menu and bounded panels. The paired flow allows
+180 seconds overall for two contexts, two shot animations and screenshots on a
+shared runner. The expanded desktop journey has the same overall budget for its
+round, viewport changes and captures. Assertion deadlines remain unchanged.
+
 The woodland checks cover deterministic construction, preservation of the original,
 finite connected creek banks, bunker lies, tee clearance and replay geometry.
 Camera checks include north-up defaults, rotation and resize preservation. Browser
