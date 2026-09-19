@@ -10,6 +10,25 @@ function camera() {
    return c;
 }
 
+test('desktop dock framing preserves coordinate and zoom anchors above the controls', () => {
+   const c = camera();
+   c.offsetY = -120;
+   c.resize(1440, 900, bounds);
+   c.fit();
+   c.tick(16, true);
+   assert.ok(c.world({ x: 128, y: bounds.minY }).y < 660);
+   const pixel = { x: 720, y: 250 },
+      anchor = c.inverse(pixel);
+   const mapped = c.world(anchor);
+   close(mapped.x, pixel.x);
+   close(mapped.y, pixel.y);
+   c.zoomAt(pixel, 1.5);
+   c.tick(16, true);
+   const after = c.world(anchor);
+   close(after.x, pixel.x);
+   close(after.y, pixel.y);
+});
+
 test('camera coordinates round-trip after zoom, pan and viewport resize', () => {
    const c = camera();
    assert.equal(c.angle, 0);

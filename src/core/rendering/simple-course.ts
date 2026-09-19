@@ -74,6 +74,7 @@ export class SimpleCourse {
          this.camera.fit();
       });
       canvas.addEventListener('keydown', (e) => {
+         if (e.altKey) return;
          if (
             ![
                'ArrowLeft',
@@ -132,6 +133,14 @@ export class SimpleCourse {
          rect.width > 900 ? (document.body.classList.contains('controls-open') ? -175 : 0) : 0;
       this.camera.offsetX +=
          (desiredOffset - this.camera.offsetX) * (this.reducedMotion.matches ? 1 : 0.08);
+      const dock = document.querySelector<HTMLElement>('.shot-dock');
+      const dockSpace =
+         document.body.dataset.displayMode === 'desktop' && document.body.dataset.route === 'play'
+            ? (dock?.offsetHeight || 190) + (rect.width < 600 ? 90 : 36)
+            : 0;
+      const desiredY = -Math.min(rect.height * 0.24, dockSpace / 2);
+      this.camera.offsetY +=
+         (desiredY - this.camera.offsetY) * (this.reducedMotion.matches ? 1 : 0.08);
       this.camera.resize(rect.width, rect.height, c.plate.worldBounds);
       session.cameraAngle = this.camera.angle;
       if (this.viewRevision !== session.viewRevision) {
@@ -149,7 +158,8 @@ export class SimpleCourse {
       if (session.phase === 'animating' && session.last) {
          if (this.shotStarted !== session.animationStarted) {
             this.shotStarted = session.animationStarted;
-            this.following = !this.reducedMotion.matches;
+            this.following =
+               !this.reducedMotion.matches && document.body.dataset.followBall !== 'false';
          }
          const trace = session.last.result.trajectory,
             elapsed = ((time - session.animationStarted) / 1000) * 3;
@@ -165,7 +175,11 @@ export class SimpleCourse {
             ball = { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f };
          }
       }
-      if (this.following && !this.reducedMotion.matches) {
+      if (
+         this.following &&
+         !this.reducedMotion.matches &&
+         document.body.dataset.followBall !== 'false'
+      ) {
          const height = Math.max(0, (ball.z ?? 0) - Course.heightAt(c, ball));
          this.camera.go(ball, Math.max(1.65, 3 - height * 0.025));
          this.canvas.dataset.cameraMode = 'follow';
@@ -220,34 +234,6 @@ export class SimpleCourse {
             dpr,
          );
       else this.atlas.paint(ctx, c, this.camera);
-      if (
-         ['play', 'pair'].includes(document.body.dataset.route || '') &&
-         document.body.dataset.quiet !== 'true'
-      ) {
-         ctx.save();
-         // Reserve the bottom-left corner for the menu; keep the compass beside it.
-         ctx.translate(112, rect.height - 48);
-         ctx.fillStyle = '#172c24b3';
-         ctx.beginPath();
-         ctx.arc(0, 0, 25, 0, Math.PI * 2);
-         ctx.fill();
-         ctx.font = '9px Onest, sans-serif';
-         ctx.textAlign = 'center';
-         ctx.fillStyle = '#eef2df';
-         ctx.fillText('N', 0, -14);
-         ctx.translate(0, 4);
-         ctx.rotate(-this.camera.angle);
-         ctx.strokeStyle = '#e6eed6';
-         ctx.lineWidth = 1.3;
-         ctx.beginPath();
-         ctx.moveTo(0, 10);
-         ctx.lineTo(0, -11);
-         ctx.moveTo(-4, -5);
-         ctx.lineTo(0, -11);
-         ctx.lineTo(4, -5);
-         ctx.stroke();
-         ctx.restore();
-      }
       const pin = this.world(c.pin);
       ctx.fillStyle = '#263b31';
       ctx.beginPath();
@@ -265,7 +251,7 @@ export class SimpleCourse {
       ctx.lineTo(pin.x + 15, pin.y - 19);
       ctx.lineTo(pin.x, pin.y - 15);
       ctx.fill();
-      if (session.phase === 'plan') {
+      if (session.phase === 'plan' && document.body.dataset.displayMode !== 'clear') {
          const a = this.world(ball),
             p = this.world(session.aim);
          ctx.strokeStyle = '#fcf4d5aa';

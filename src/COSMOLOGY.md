@@ -38,40 +38,39 @@ full screen is an optional explicit action with a fallback when unavailable.
 Pairing cancellation returns to the originating screen. Escape backs out of panels;
 from the game menu it resumes an entered round or returns to the title.
 
-Desktop navigation exposes Home, phone pairing and Controls. The controller can
-collapse without leaving the course, and navigation can hide for a quiet view.
-The canvas remains full viewport; its camera composition leaves room for the
-controller. Native dialogs manage pairing and settings, including Escape/back.
+The game menu contains Resume, Options and navigation, separate from shot controls.
+Options offers Desktop controls, Minimal HUD and Clear course. The canvas remains
+full viewport; desktop framing reserves space for its bottom dock. Native dialogs
+manage pairing and options, including Escape/back.
 
-## One session, interchangeable controllers
+## One session, distinct interfaces
 
-`startCockpit(root, transport?)` mounts into either the phone body or a desktop
-overlay. Queries and datasets are scoped to that root. `ControlTransport` supplies
-the same send/receive/status interface for direct commands and WebSocket commands.
-The desktop never opens a second socket in the cockpit role. Local acknowledgements
-are delivered in a microtask so input bookkeeping completes before responses.
+`startCockpit` owns the phone interface. `display/desktop-controls.ts` owns the
+mouse/keyboard HUD and shot dock; desktop no longer mounts the phone UI. Both use
+one command contract and session validation. Desktop commands apply directly and
+synchronously, without a second cockpit socket or simulation.
 Every accepted action publishes a snapshot to both controllers. Expected shot
 numbers and existing phase checks protect simultaneous play attempts.
 
 The display computes physics and renders the recorded trajectory. The relay only
-delivers messages. QR pairing folds the desktop controller away on a new phone join;
-it can be reopened while the phone stays connected. Disconnecting a phone preserves
-the round. Pairing can be reopened from navigation. If the server is unavailable,
+delivers messages. Pairing preserves the player's interface preference; desktop
+and phone can both control the round. Disconnecting a phone preserves the round.
+Pairing is available in Game Options. If the server is unavailable,
 local controls still work and pairing explains how to start the local server.
 Only one display and one phone may occupy the relay; a rejected display hides its
 QR/link rather than offering a link to somebody else's active display.
 
-## Controller destinations
+## Phone controller destinations
 
 - **Shot:** live lie/distance/wind, aim/read-ground pad, current club, effort,
   optional shape/height, play/result/mulligan.
 - **My bag:** select a club and explicitly return to the shot.
 - **Round:** current shot/phase, hole information, camera destinations and settings.
 
-Phone tabs also use fragment history; desktop tabs stay local so they do not
-overwrite the clubhouse's route. The back button returns to Shot from another tab,
-collapses the desktop controller from Shot, or opens a phone menu with a clear
-leave-controller action. No separate window or embedded document is required.
+Phone tabs use fragment history. The back button returns to Shot from another tab
+or opens the phone menu. Desktop controls have no phone-style tabs: information,
+camera actions and shot inputs occupy separate screen regions. See
+[display/COSMOLOGY.md](display/COSMOLOGY.md) for input and interface-mode decisions.
 
 Settings uses authoritative conditions when opened so changes from the other
 controller do not leave stale setup fields. Changing conditions starts a new hole.
@@ -80,19 +79,19 @@ pending local edits. The Play command carries current intent and expected shot.
 
 ## Visual and loading boundaries
 
-Dark forest controls are the default for indoor play. An ivory alternative is saved
+Dark forest controls are the default for indoor play. The phone's ivory alternative is saved
 in localStorage; unavailable storage falls back safely. Locally bundled Onest typography,
 consistent SVG icons, large actions, focus outlines, safe-area spacing and reduced
 motion are implemented without a UI library or external font requests. The full
 variable font and OFL license live in public/assets/fonts/onest. Display headlines
 use a stronger weight; numerical readouts use tabular figures to avoid shifting.
 
-The gameplay menu begins folded into one icon. Opening shot controls closes the
-menu; launching a shot folds the desktop controller away. Escape toggles the menu
-or dismisses controls, while native dialogs retain their own Escape handling.
-The menu provides home, guide, pairing, controls, rotation and north-up reset.
+Desktop and Minimal modes have a menu button. Clear course hides all interface
+and aim guides; clicking the course or pressing Escape restores navigation.
+Desktop controls remain available through shots; the selected mode persists locally.
+Native dialogs retain their own Escape handling. Camera actions live in the HUD.
 
-`cockpit.css` styles the shared controller. `experience.css` styles the clubhouse
+`cockpit.css` styles the phone controller. `experience.css` styles the game menus
 and desktop shell. `reference.css` belongs only to the original lab. Dynamic imports
 keep course data and physics out of the phone; that separation remains tested.
 The original index markup is retained for the lab and replaced by Purity surfaces.

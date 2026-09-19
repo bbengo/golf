@@ -11,6 +11,7 @@ export class CourseCamera {
    scale = 1;
    angle = 0;
    offsetX = 0;
+   offsetY = 0;
    target = { x: 0, y: 0, zoom: 1 };
    private fitScale = 1;
    private ready = false;
@@ -25,7 +26,7 @@ export class CourseCamera {
          bh = bounds.maxY - bounds.minY;
       this.fitScale = Math.min(
          (w - Math.abs(this.offsetX) * 1.3) / (co * bw + si * bh + 30),
-         h / (si * bw + co * bh + 45),
+         (h - Math.abs(this.offsetY) * 2) / (si * bw + co * bh + 45),
       );
       if (!this.ready) {
          this.fit();
@@ -70,14 +71,14 @@ export class CourseCamera {
          dy = p.y - this.y;
       return {
          x: (co * dx - si * dy) * this.scale + this.w / 2 + this.offsetX,
-         y: this.h / 2 - (si * dx + co * dy) * this.scale,
+         y: this.h / 2 + this.offsetY - (si * dx + co * dy) * this.scale,
       };
    }
    inverse(p: Point) {
       const co = Math.cos(this.angle),
          si = Math.sin(this.angle),
          dx = (p.x - this.w / 2 - this.offsetX) / this.scale,
-         dy = (this.h / 2 - p.y) / this.scale;
+         dy = (this.h / 2 + this.offsetY - p.y) / this.scale;
       return {
          x: this.x + co * dx + si * dy,
          y: this.y - si * dx + co * dy,
@@ -94,7 +95,7 @@ export class CourseCamera {
       const co = Math.cos(this.angle),
          si = Math.sin(this.angle);
       const dx = p.x - this.w / 2 - this.offsetX,
-         dy = this.h / 2 - p.y;
+         dy = this.h / 2 + this.offsetY - p.y;
       const vx = co * dx + si * dy,
          vy = -si * dx + co * dy;
       const anchor = {

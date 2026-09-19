@@ -2,8 +2,9 @@ import QRCode from 'qrcode';
 import { CockpitSession } from '../core/session/cockpit-session';
 import { SimpleCourse } from '../core/rendering/simple-course';
 import { connectRelay } from '../core/network/relay-client';
-import { startCockpit } from '../cockpit/app';
-import type { Message } from '../core/contracts/cockpit';
+import { startDesktop, type DesktopAction } from './desktop-controls';
+import { startOptions, savedDisplayMode, type DisplayMode } from './options';
+import type { Point } from '../core/contracts/cockpit';
 import { displayMarkup } from './markup';
 
 export async function startDisplay() {
@@ -15,13 +16,12 @@ export async function startDisplay() {
       renderer = new SimpleCourse($<HTMLCanvasElement>('course'));
    const pairing = $<HTMLDialogElement>('pairing'),
       controls = $('desktopControls');
-   let localReceive: ((message: Message) => void) | undefined;
    let relay: ReturnType<typeof connectRelay> | undefined;
-   let controlsOpen = false,
-      phoneConnected = false,
+   let phoneConnected = false,
       quiet = true;
    const initial =
       new URLSearchParams(location.search).get('mode') === 'display' ? 'pair' : 'title';
+   let displayMode = savedDisplayMode(initial === 'pair' ? 'clear' : 'desktop');
    let previousPage = initial;
    let pairingReturn = 'play';
    let enteredRound = false;
@@ -42,58 +42,136 @@ export async function startDisplay() {
    });
    function publish() {
       const state = session.snapshot();
-      localReceive?.(state);
+      desktop.render(state);
       relay?.send(state);
    }
-   startCockpit(controls, (receive, status) => {
-      localReceive = receive;
-      queueMicrotask(() => {
-         status(true, 'Controls on this screen');
-         receive({ type: 'PEERS', display: true, cockpit: true });
-         receive(session.snapshot());
-      });
-      return {
-         send(message) {
-            if (message.type !== 'COMMAND') return false;
-            const ack = session.apply(message);
-            queueMicrotask(() => {
-               receive(ack);
-               publish();
-            });
-            return true;
-         },
-         close() {
-            localReceive = undefined;
-         },
-      };
-   });
-   function showControls(open: boolean) {
-      controlsOpen = open;
-      quiet = true;
-      $('toggleControls').setAttribute('aria-expanded', String(open));
+   let commandSequence = 0;
+   function send(action: DesktopAction) {
+      const ack = session.apply({ type: 'COMMAND', id: `desktop-${++commandSequence}`, ...action });
+      desktop.notice(ack.ok ? '' : ack.error || 'Could not apply that action.');
+      publish();
+      return ack.ok;
+   }
+   function aimAt(point: Point, target: 'aim' | 'probe') {
+      const current = session[target];
+      const dx = point.x - current.x,
+         dy = point.y - current.y;
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 100));
+      for (let i = 0; i < steps; i++)
+         if (!send({ action: 'MOVE', target, dx: dx / steps, dy: dy / steps })) break;
+   }
+   const desktop = startDesktop(controls, send, aimAt);
+   function setMode(mode: DisplayMode) {
+      displayMode = mode;
+      try {
+         localStorage.setItem('purity-display-mode', mode);
+      } catch {}
       renderRoute();
    }
-   controls.addEventListener('collapse-controls', () => {
-      showControls(false);
-      $('revealTools').focus();
-   });
-   $('toggleControls').onclick = () => showControls(!controlsOpen);
+   const options = startOptions(
+      $<HTMLDialogElement>('gameOptions'),
+      () => session.snapshot(),
+      () => displayMode,
+      setMode,
+      (setup) => send({ action: 'SETUP', setup }),
+      () => navigate('pair'),
+   );
+   const openOptions = () => {
+      quiet = true;
+      renderRoute();
+      options.open();
+   };
+   $('openGameOptions').onclick = openOptions;
+   $('lobbyOptions').onclick = openOptions;
    $('quietView').onclick = () => {
-      showControls(false);
-      $('revealTools').focus();
+      quiet = true;
+      renderRoute();
+      $('course').focus();
+   };
+   $('menuShade').onclick = () => {
+      quiet = true;
+      renderRoute();
    };
    $('revealTools').onclick = () => {
-      controlsOpen = false;
       quiet = !quiet;
       renderRoute();
    };
-   for (const [id, action] of [
-      ['rotateLeft', 'left'],
-      ['rotateRight', 'right'],
-      ['northView', 'north'],
-      ['fitView', 'fit'],
-   ] as const)
-      $(id).onclick = () => renderer.setView(action);
+   $('desktopNorth').onclick = () => renderer.setView('north');
+   const canvas = $<HTMLCanvasElement>('course');
+   let down: { x: number; y: number; moved: boolean } | null = null;
+   let pendingAim: ReturnType<typeof setTimeout> | undefined;
+   canvas.addEventListener('dblclick', () => clearTimeout(pendingAim));
+   canvas.addEventListener('pointerdown', (event) => {
+      clearTimeout(pendingAim);
+      down = event.button === 0 ? { x: event.clientX, y: event.clientY, moved: false } : null;
+   });
+   canvas.addEventListener('pointermove', (event) => {
+      if (down && Math.hypot(event.clientX - down.x, event.clientY - down.y) >= 5)
+         down.moved = true;
+   });
+   canvas.addEventListener('pointercancel', () => {
+      down = null;
+   });
+   canvas.addEventListener('pointerup', (event) => {
+      const clicked =
+         down && !down.moved && Math.hypot(event.clientX - down.x, event.clientY - down.y) < 5;
+      down = null;
+      if (
+         !clicked ||
+         document.body.dataset.route !== 'play' ||
+         !quiet ||
+         document.querySelector('dialog[open]')
+      )
+         return;
+      if (displayMode === 'clear') {
+         quiet = false;
+         renderRoute();
+         return;
+      }
+      if (displayMode === 'desktop') {
+         const bounds = canvas.getBoundingClientRect();
+         const point = renderer.camera.inverse({
+            x: event.clientX - bounds.left,
+            y: event.clientY - bounds.top,
+         });
+         // Distinguish a target click from the existing double-click camera reset.
+         pendingAim = setTimeout(() => {
+            if (
+               quiet &&
+               displayMode === 'desktop' &&
+               document.body.dataset.route === 'play' &&
+               !document.querySelector('dialog[open]')
+            )
+               desktop.pick(point);
+         }, 240);
+      }
+   });
+   document.addEventListener('keydown', (event) => {
+      if (
+         document.body.dataset.route !== 'play' ||
+         !quiet ||
+         displayMode !== 'desktop' ||
+         document.querySelector('dialog[open]') ||
+         ![document.body, canvas].includes(document.activeElement as HTMLElement)
+      )
+         return;
+      if (event.code === 'Space') {
+         event.preventDefault();
+         if (!event.repeat) desktop.play();
+      }
+      if (event.altKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+         event.preventDefault();
+         const x = event.key === 'ArrowLeft' ? -2 : event.key === 'ArrowRight' ? 2 : 0;
+         const y = event.key === 'ArrowDown' ? -2 : event.key === 'ArrowUp' ? 2 : 0;
+         const angle = renderer.camera.angle;
+         send({
+            action: 'MOVE',
+            target: 'aim',
+            dx: Math.cos(angle) * x + Math.sin(angle) * y,
+            dy: -Math.sin(angle) * x + Math.cos(angle) * y,
+         });
+      }
+   });
    document.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape' || document.querySelector('dialog[open]')) return;
       const route = document.body.dataset.route;
@@ -110,12 +188,15 @@ export async function startDisplay() {
          );
          return;
       }
-      if (controlsOpen || !quiet) showControls(false);
-      else {
+      if (!quiet) {
+         quiet = true;
+         renderRoute();
+      } else {
          quiet = false;
          renderRoute();
       }
-      $('revealTools').focus();
+      if (!quiet) $('quietView').focus();
+      else $('course').focus();
    });
    function navigate(route: string) {
       location.hash = route;
@@ -131,17 +212,25 @@ export async function startDisplay() {
          pairingReturn === 'play' ? '← Back to course' : '← Back to game menu';
       if (route === 'play') enteredRound = true;
       $('enterRoundLabel').textContent = enteredRound ? 'Resume practice' : 'Play';
+      document.querySelector('.selected-action small')!.textContent =
+         displayMode === 'desktop'
+            ? 'Mouse & keyboard controls'
+            : displayMode === 'minimal'
+              ? 'Minimal HUD / phone controls'
+              : 'Clear course / phone controls';
       const onCourse = route === 'play' || route === 'pair';
       document.body.dataset.route = route;
-      document.body.dataset.quiet = String(quiet && !controlsOpen);
+      document.body.dataset.quiet = String(displayMode === 'clear' || !quiet);
+      document.body.dataset.displayMode = displayMode;
       $('portal').hidden = onCourse;
       $('course').tabIndex = onCourse ? 0 : -1;
       $('displayTools').hidden = !onCourse || quiet;
-      $('revealTools').hidden = !onCourse || route === 'pair';
+      $('revealTools').hidden = !onCourse || route === 'pair' || displayMode === 'clear';
+      $('menuShade').hidden = !onCourse || quiet || route === 'pair';
       $('revealTools').setAttribute('aria-expanded', String(!quiet));
       $('revealTools').setAttribute('aria-label', quiet ? 'Open course menu' : 'Close course menu');
-      controls.hidden = !onCourse || !controlsOpen || route === 'pair';
-      document.body.classList.toggle('controls-open', onCourse && controlsOpen && route !== 'pair');
+      controls.hidden = !onCourse || !quiet || displayMode === 'clear' || route === 'pair';
+      document.body.classList.toggle('controls-open', false);
       for (const page of document.querySelectorAll<HTMLElement>('[data-page]'))
          page.hidden = page.dataset.page !== route;
       for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-route-link]')) {
@@ -160,12 +249,12 @@ export async function startDisplay() {
    }
    for (const link of document.querySelectorAll('[data-open-controls]'))
       link.addEventListener('click', () => {
-         quiet = false;
-         showControls(true);
+         quiet = true;
+         renderRoute();
       });
    $('playHere').onclick = () => {
-      quiet = false;
-      showControls(true);
+      quiet = true;
+      setMode('desktop');
       navigate('play');
    };
    $('closePairing').onclick = () => navigate(pairingReturn);
@@ -195,10 +284,7 @@ export async function startDisplay() {
    renderRoute();
    let lastPublish = 0,
       previousRevision = -1;
-   let previousPhase = session.phase;
    function frame(time: number) {
-      if (session.phase === 'animating' && previousPhase !== 'animating') showControls(false);
-      previousPhase = session.phase;
       renderer.draw(session, time);
       if (time - lastPublish > 300 || session.revision !== previousRevision) {
          lastPublish = time;
@@ -250,11 +336,10 @@ export async function startDisplay() {
             } else if (message.type === 'PEERS') {
                const joined = message.cockpit && !phoneConnected;
                phoneConnected = message.cockpit;
-               $('pairButton').textContent = phoneConnected
-                  ? 'Phone connected ●'
-                  : 'Connect phone ↗';
+               options.phone(phoneConnected);
                if (joined) {
-                  showControls(false);
+                  quiet = true;
+                  renderRoute();
                   if (location.hash === '#pair' || (!location.hash && initial === 'pair'))
                      navigate('play');
                }

@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-19: distinct desktop HUD and player-controlled interface
+
+- Replaced the embedded phone controller with desktop round information, camera
+  toolbar and a horizontal club/effort/shot dock. Added direct course aiming,
+  inspection, Alt-arrow fine aim and Space for the current shot action.
+- Replaced the control-filled menu with Resume, Game options and game navigation.
+  Options owns Desktop controls, Minimal HUD, Clear course, phone pairing, ball
+  following and practice conditions. Display preferences persist locally.
+- Phone controls retain their mobile layout; both interfaces share authoritative
+  commands and snapshots. Pairing no longer overrides the chosen interface mode.
+- Clear course hides interface and aim guides; clicking or Escape restores the menu.
+  Camera framing reserves room for the desktop dock. Double-click reframe cancels
+  delayed single-click targeting; dragging never changes aim.
+
+Validation: production build, TypeScript, formatting, five camera checks and all
+five browser flows pass. Browser coverage includes bidirectional desktop/phone
+edits, mode persistence/recovery, local play without a relay, original experience
+navigation and the original lab. Desktop HUD and Options screenshots were reviewed.
+Physical-device input/legibility trials and the existing terrain-rendering roadmap
+remain follow-up work; this change does not alter simulation equations.
+
 ## 2026-09-19: world-first game entry and menu shell
 
 - Replaced the scrolling clubhouse website with a title screen, game menu and

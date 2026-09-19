@@ -26,115 +26,110 @@ test('experience selection gives the original a direct entrance and return path'
    await expect(page.locator('.title-screen')).toBeVisible();
 });
 
-test('game menus preserve a desktop round and controls collapse in place', async ({ page }) => {
-   // Includes a round, multiple panel journeys, viewport changes and screenshots.
+test('desktop controls, mouse aiming and player-selected interface modes', async ({ page }) => {
    test.setTimeout(180000);
    const errors: string[] = [];
    page.on('pageerror', (error) => errors.push(error.message));
-   await page.goto('/');
-   await expect(page.locator('.title-screen')).toBeVisible();
-   await page.screenshot({ path: 'test-results/purity-title.png' });
-   await page.getByRole('link', { name: 'Enter the course' }).click();
-   await expect(page.getByRole('link', { name: 'Choose UCG-50 Original' })).toBeVisible();
-   await page.getByRole('link', { name: 'Choose Purity', exact: true }).click();
-   await expect(page.locator('.game-lobby')).toBeVisible();
-   await page.getByRole('navigation', { name: 'Game menu' }).getByText('Connect a phone').click();
-   await page.getByRole('button', { name: 'Close pairing', exact: true }).click();
-   await expect(page.locator('.game-lobby')).toBeVisible();
-   await page.screenshot({ path: 'test-results/purity-home.png' });
-   await page.getByRole('navigation', { name: 'Game menu' }).getByText('The course').click();
-   await expect(page.locator('[data-page=course]')).toBeVisible();
-   await page.screenshot({ path: 'test-results/purity-course-selection.png' });
-   await page.getByRole('link', { name: 'Play this course' }).click();
-   const controls = page.locator('#desktopControls');
-   await expect(controls).toBeVisible();
-   await expect(controls).toHaveAttribute('data-theme', 'dark');
-   await page.evaluate(() => document.fonts.ready);
-   expect(await page.evaluate(() => document.fonts.check('500 16px Onest'))).toBe(true);
-   await controls.locator('#chooseClub').click();
-   await controls.locator('#club').selectOption('6I');
-   await controls.locator('#backToShot').click();
-   await controls.locator('#effort').fill('72');
-   await expect(controls.locator('#effortValue')).toHaveText('72%');
-   await page.screenshot({ path: 'test-results/purity-desktop-controls.png' });
-   await controls.locator('#controllerBack').click();
-   await expect(controls).toBeHidden();
-   await page.locator('#revealTools').click();
-   await page.locator('#rotateLeft').click();
+   await page.goto('/#play');
+   await expect(page.locator('#desktopPlay')).toBeVisible();
+   await expect(page.locator('#desktopControls .cockpit-shell')).toHaveCount(0);
+   await page.locator('#desktopClub').selectOption('6I');
+   await page.locator('#desktopEffort').fill('72');
+   await expect(page.locator('#desktopEffortValue')).toHaveText('72%');
+   const distance = await page.locator('#desktopDistance').textContent();
+   await page.locator('#course').click({ position: { x: 720, y: 350 } });
+   await expect(page.locator('#desktopDistance')).not.toHaveText(distance!);
+   const aimed = await page.locator('#desktopDistance').textContent();
+   await page.mouse.move(780, 400);
+   await page.mouse.down();
+   await page.mouse.move(830, 420, { steps: 5 });
+   await page.mouse.up();
+   await expect(page.locator('#desktopDistance')).toHaveText(aimed!);
+   await page.locator('#course').dblclick({ position: { x: 780, y: 350 } });
+   await expect(page.locator('#course')).toHaveAttribute('data-camera-zoom', '1.000');
+   await expect(page.locator('#desktopDistance')).toHaveText(aimed!);
+   await page.locator('#course').press('[');
    await expect(page.locator('#course')).not.toHaveAttribute('data-camera-angle', '0.0000');
-   await page.locator('#northView').click();
+   await page.locator('#desktopNorth').click();
    await expect(page.locator('#course')).toHaveAttribute('data-camera-angle', '0.0000');
-   await page.getByRole('link', { name: 'Back to home', exact: true }).click();
-   await page.getByRole('navigation', { name: 'Game menu' }).getByText('How to play').click();
-   await expect(page.locator('.guide-cards')).toBeVisible();
-   await page.setViewportSize({ width: 1000, height: 550 });
-   const guide = page.locator('[data-page=guide] .panel-scroll');
-   await expect(guide).toBeVisible();
-   expect(await guide.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
-   await guide.evaluate((el) => {
-      el.scrollTop = 200;
-   });
-   expect(await guide.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
-   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(
-      true,
-   );
-   await page.screenshot({ path: 'test-results/purity-guide-panel.png' });
-   await page.setViewportSize({ width: 1440, height: 1000 });
-   await page.goBack();
+   await page.locator('#desktopTune').click();
+   await page.locator('#desktopShape').fill('20');
+   await expect(page.locator('#desktopShapeValue')).toHaveText('20% draw');
+   await page.locator('#desktopTune').click();
+   await page.screenshot({ path: 'test-results/desktop-hud.png' });
+   await page.locator('#desktopPlay').click();
+   await expect(page.locator('#desktopPlay')).toHaveText('Show result');
+   await expect(page.locator('#desktopClub')).toBeDisabled();
+   await page.locator('#desktopPlay').click();
+   await expect(page.locator('#desktopResult')).toContainText('carry');
+   await page.locator('#desktopMulligan').click();
+   await expect(page.locator('#desktopPlay')).toHaveText('Play shot');
+   await page.locator('#revealTools').click();
+   await expect(page.locator('#displayTools')).toBeVisible();
+   await page.screenshot({ path: 'test-results/game-menu.png' });
+   await page.locator('#openGameOptions').click();
+   await page.screenshot({ path: 'test-results/game-options.png' });
+   await page.locator('[name=displayMode][value=minimal]').check();
+   await page.locator('#closeGameOptions').click();
+   await expect(page.locator('.course-info')).toBeVisible();
+   await expect(page.locator('.shot-dock')).toBeHidden();
+   await page.locator('#revealTools').click();
+   await page.locator('#openGameOptions').click();
+   await page.locator('[name=displayMode][value=clear]').check();
+   await page.locator('#closeGameOptions').click();
+   await expect(page.locator('#desktopControls')).toBeHidden();
+   await expect(page.locator('#revealTools')).toBeHidden();
+   await page.locator('#course').click({ position: { x: 500, y: 300 } });
+   await expect(page.locator('#displayTools')).toBeVisible();
+   await page.locator('#openGameOptions').click();
+   await page.locator('[name=displayMode][value=desktop]').check();
+   await page.locator('#followBall').uncheck();
+   await page.locator('#optionsPair').click();
+   await expect(page.locator('#pairing')).toBeVisible();
+   await page.locator('#closePairing').click();
+   await expect(page.locator('#desktopClub')).toHaveValue('6I');
+   await page.locator('#revealTools').click();
+   await page.getByRole('link', { name: 'Return to main menu' }).click();
    await expect(page.locator('.game-lobby')).toBeVisible();
    await page.locator('.game-actions [data-open-controls]').click();
-   await expect(controls.locator('#effort')).toHaveValue('72');
-   await expect(controls.locator('#club')).toHaveValue('6I');
-   await controls.locator('#play').click();
-   await expect(controls.locator('#play')).toHaveText('Show result');
-   await expect(controls.locator('#play')).toHaveText('Next shot', { timeout: 20000 });
-   await expect(controls).toBeHidden();
-   await expect(page.locator('#displayTools')).toBeHidden();
+   await expect(page.locator('#desktopClub')).toHaveValue('6I');
+   await expect(page.locator('#desktopEffort')).toHaveValue('72');
    await page.locator('#revealTools').click();
-   await page.locator('#toggleControls').click();
-   await controls.locator('#play').click();
-   await expect(controls.locator('#shot')).toHaveText('2');
-   await controls.locator('#controllerBack').click();
-   await expect(controls).toBeHidden();
-   await page.locator('#revealTools').click();
-   await page.locator('#toggleControls').click();
-   await expect(controls.locator('#shot')).toHaveText('2');
-   await controls.locator('#openSettings').click();
-   await controls.locator('#theme').selectOption('light');
-   await expect(controls).toHaveAttribute('data-theme', 'light');
-   await controls.locator('#closeSettings').click();
-   await page.locator('#revealTools').click();
-   await page.locator('#pairButton').click();
-   await expect(page.locator('#pairing')).toBeVisible();
-   await page.getByRole('button', { name: 'Close pairing', exact: true }).click();
-   await expect(controls.locator('#shot')).toHaveText('2');
+   await page.locator('#openGameOptions').click();
+   await page.locator('[data-option-tab=course]').click();
+   await page.locator('#optionTee').selectOption('red');
+   await page.locator('#desktopSetup button[type=submit]').click();
+   await expect(page.locator('#optionsNotice')).toHaveText('New practice ready.');
+   await page.locator('[data-option-tab=experience]').click();
+   await page.locator('[name=displayMode][value=minimal]').check();
+   await page.locator('#closeGameOptions').click();
+   await page.reload();
+   await expect(page.locator('body')).toHaveAttribute('data-display-mode', 'minimal');
+   await expect(page.locator('body')).toHaveAttribute('data-follow-ball', 'false');
    expect(errors).toEqual([]);
 });
 
-test('small-screen home and local controls remain usable without the relay', async ({ page }) => {
+test('short-screen options scroll internally and local play works without relay', async ({
+   page,
+}) => {
    await page.setViewportSize({ width: 390, height: 844 });
    await page.route('**/api/session', (route) => route.abort());
-   await page.goto('/');
-   await page.getByRole('link', { name: 'Enter the course' }).click();
-   await expect(page.getByRole('link', { name: 'Choose UCG-50 Original' })).toBeVisible();
-   await page.getByRole('link', { name: 'Choose Purity', exact: true }).click();
-   await expect(page.locator('.game-lobby')).toBeVisible();
-   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(
-      true,
-   );
-   await page.locator('.game-actions [data-open-controls]').click();
-   const controls = page.locator('#desktopControls');
-   await expect(controls.locator('#controls')).toBeEnabled();
-   await controls.locator('[data-panel="bag"]').click();
-   await expect(controls.locator('#club')).toBeVisible();
-   await controls.locator('#controllerBack').click();
-   await expect(controls.locator('#touchpad')).toBeVisible();
-   await controls.locator('#controllerBack').click();
-   await expect(controls).toBeHidden();
+   await page.goto('/#play');
+   await expect(page.locator('#desktopPlay')).toBeVisible();
+   expect(
+      await page.evaluate(
+         () =>
+            document.documentElement.scrollWidth <= innerWidth &&
+            document.documentElement.scrollHeight <= innerHeight,
+      ),
+   ).toBe(true);
    await page.locator('#revealTools').click();
-   await page.locator('#pairButton').click();
+   await page.locator('#openGameOptions').click();
+   await page.setViewportSize({ width: 700, height: 480 });
+   const scroller = page.locator('.options-scroll');
+   expect(await scroller.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+   await page.locator('#optionsPair').click();
    await expect(page.locator('#pairStatus')).toContainText('You can still play on this screen');
    await page.locator('#playHere').click();
-   await expect(controls).toBeVisible();
+   await expect(page.locator('#desktopPlay')).toBeVisible();
 });

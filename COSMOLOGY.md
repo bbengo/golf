@@ -23,7 +23,7 @@ results. A relay delivers messages without calculating physics. This avoids two
 independent engines drifting and keeps the complete shot calculation local to the
 display browser. The shared engine is reusable without the lab's DOM controls.
 
-**One controller, two transports.** Phone and desktop mount the same controller.
+**One session, distinct interfaces.** Phone and desktop have their own control layouts.
 Desktop commands go directly to the authoritative session; phone commands arrive
 through the relay. Both use the same validation, shot gates and snapshots. A second
 window, iframe or second simulation is unnecessary. Local controls work even when
@@ -56,8 +56,9 @@ in the original lab because it depicts the original layout.
 so typography works without Google Fonts requests. Variable weights distinguish
 headlines, actions and supporting information; numeric readouts use tabular figures.
 The course starts north-up and supports manual rotation. During uninterrupted play,
-one menu button is the only interface overlay. Desktop shot controls fold away on
-launch and remain available from that menu; phone controls remain in the player's hand.
+the player chooses Desktop controls, Minimal HUD or Clear course in Game Options.
+Clear course has no interface or aim guides; clicking or Escape opens the menu.
+Desktop controls remain available through shots. Pairing preserves that choice.
 
 **Two physics versions.** The desktop lab preserves the original engine. Paired
 play uses the experimental fundamentals model. Versioned shot evidence makes the

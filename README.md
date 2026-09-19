@@ -1,6 +1,6 @@
 # Golf / Purity local cockpit
 
-One course, with controls on your phone or folded over the display. The display
+One course, with dedicated desktop controls and a separate phone interface. The display
 owns the simulation. A local Node server serves the app and
 relays WebSocket messages. GitHub is for source-code sync; gameplay needs no
 internet service. `UCG50_R06_Play.html` is the unchanged reference.
@@ -15,16 +15,17 @@ npm run local
 ```
 
 Open `http://localhost:3000/` for the title screen. Choose **Purity** or **UCG-50
-Original**. In Purity, choose **Play** for on-screen controls or **Connect a phone**.
+Original**. In Purity, choose **Play** for desktop controls or use **Game options**
+to connect a phone and choose your interface.
 The world fills the viewport throughout; longer menus scroll inside their panels.
 The game menu also offers optional browser full screen and resumes your current round.
-Scan its QR with your phone on the same Wi-Fi. The overlay closes after joining.
+Scan its QR with your phone on the same Wi-Fi. The pairing dialog closes after joining.
 The direct pairing route `/?mode=display` still works.
 If the machine has several network adapters, choose the Wi-Fi address on the
 pairing panel. Allow Node on your private network if Windows Firewall prompts.
 Guest Wi-Fi with client isolation prevents the devices from connecting.
 
-The controller opens in dark mode; Settings offers an ivory alternative. Use
+The phone controller opens in dark mode; Settings offers an ivory alternative. Use
 **Shot** for aim/effort, **My bag** to choose a club, and **Round** for camera views
 and conditions. Read ground shows terrain information. Expand Shape & flight
 for curve and height. The bottom play
@@ -37,8 +38,11 @@ see the whole hole. With the canvas focused, arrows pan, plus/minus zoom, and Ho
 reframes north-up. Shift-drag or right-drag rotates; N restores north and brackets
 rotate with the keyboard. Escape toggles the course menu. Shots follow until you use the mouse
 or a phone camera button. Reduced-motion preference disables automatic following.
-The course fills the screen. The single menu icon opens navigation, view actions
-and **Shot controls**. Desktop controls fold away automatically when a shot starts.
+The course fills the screen. **Game options** offers Desktop controls, Minimal HUD
+or Clear course. Desktop uses a bottom shot dock: click the course to aim, Alt-arrow
+to fine aim, Space to play. Minimal retains readouts; Clear hides interface and aim
+guides. Click the course or press Escape to recover the menu. Phone controls work
+with all three modes; pairing does not override the saved display preference.
 Home/course/guide navigation preserves the current round without reloading.
 
 Phone reconnection preserves the round.

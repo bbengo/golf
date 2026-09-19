@@ -1,5 +1,16 @@
 # Next session: unfinished work
 
+## Desktop interface and player choice
+
+Desktop now has its own HUD and horizontal shot dock; the phone retains its touch
+layout. Game Options owns Desktop/Minimal/Clear modes, pairing, camera following
+and practice conditions. Preferences survive reload; phone joining preserves them.
+Clear mode has no interface or aim guides and recovers its menu by click or Escape.
+Playtest panel spacing, text sizes, direct aiming, short-screen layouts and the
+240 ms single-click/double-click distinction on real hardware. Check keyboard-only
+use, touch-display recovery, phone sleep/wake and simultaneous input. The renderer
+still needs the previously documented terrain-depth and lighting work.
+
 ## Game-shell direction
 
 The 19 September direction replaces the website-style clubhouse with a fixed game

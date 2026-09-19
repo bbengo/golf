@@ -21,6 +21,12 @@ they are inspection artifacts, not visual-regression baselines or proof of reali
 
 ## Independent checks
 
+The desktop flow now exercises the distinct HUD, direct aiming versus camera drag,
+double-click framing, shaping, shot/mulligan, all three UI modes, Clear-mode recovery,
+practice setup and saved preferences. The paired flow checks edits in both directions
+between desktop and phone. Camera tests include dock-aware fit and inverse/zoom
+coordinates. Short-screen options scroll internally without document overflow.
+
 - `reference-parity.test.mjs` executes the first original HTML simulation scripts
   in a separate VM and compares course data and complete seeded driver, iron,
   wedge, chip and putt records against the baseline ES modules. This catches

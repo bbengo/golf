@@ -27,9 +27,7 @@ export const displayMarkup = `
   <div class="lobby-body"><p class="eyebrow">CREEK & SHOULDER / 01</p><h1>Find your<br>own rhythm.</h1>
    <nav class="game-actions" aria-label="Game menu">
     <a href="#play" data-open-controls class="selected-action"><span id="enterRoundLabel">Play</span><small>Controls on this screen</small><b aria-hidden="true">↗</b></a>
-    <a href="#pair"><span>Connect a phone</span><small>Your controls. In your hand.</small></a>
-    <a href="#course"><span>The course</span><small>Explore your practice ground</small></a>
-    <a href="#guide"><span>How to play</span></a>
+    <button id="lobbyOptions"><span>Game options</span><small>Your interface, phone pairing & conditions</small></button>
     <a href="#editions"><span>Choose experience</span><small>Purity / UCG-50 Original</small></a>
    </nav>
   </div>
@@ -46,9 +44,9 @@ export const displayMarkup = `
  <section class="game-panel" data-page="guide" hidden aria-labelledby="guideTitle">
   <header><a class="back-link" href="#home">← Back</a><span class="eyebrow">FIELD GUIDE</span></header>
   <div class="panel-scroll"><h1 id="guideTitle">Make it<br>your game.</h1><div class="guide-cards">
-   <article><span>01 / GET COMFORTABLE</span><h2>Choose your controls.</h2><p>Play with the overlay on this screen, or connect a phone on the same Wi-Fi. The course stays here. Your controls go with you.</p></article>
-   <article><span>02 / FIND YOUR LINE</span><h2>Read. Aim. Commit.</h2><p>Drag the aim pad to set your target. Pick a club from My bag, then choose your effort. Shape & flight gives you finer control.</p></article>
-   <article><span>03 / PLAY IT THROUGH</span><h2>Let the ball travel.</h2><p>Play your shot. Desktop controls fold away as the camera follows. Open the menu for your next shot, or continue directly on your phone.</p></article>
+   <article><span>01 / GET COMFORTABLE</span><h2>Choose your controls.</h2><p>Choose Desktop controls, Minimal HUD or Clear course in Game options. Connect a phone on the same Wi-Fi whenever you want touch controls.</p></article>
+   <article><span>02 / FIND YOUR LINE</span><h2>Read. Aim. Commit.</h2><p>On desktop, click the course to aim and use the shot dock to choose your club and effort. On your phone, use the aim pad and My bag. Shape & flight gives you finer control on either screen.</p></article>
+   <article><span>03 / PLAY IT THROUGH</span><h2>Let the ball travel.</h2><p>Play your shot, then continue from the result or take a mulligan. Your selected interface stays available. Camera following is optional in Game options.</p></article>
    <article><span>YOUR VIEW</span><h2>Look around.</h2><p>Drag to pan. Scroll to zoom. Shift-drag or right-drag to rotate. Double-click to see the hole. N restores north; Escape opens the menu. On the phone, Round takes you to the ball or green.</p></article>
   </div></div><footer><a class="primary" href="#play" data-open-controls>Try a shot ↗</a><a href="#pair">Connect a phone</a></footer>
  </section>
@@ -58,7 +56,9 @@ export const displayMarkup = `
   <footer><a href="#home">Return to game menu</a></footer>
  </section>
 </section>
-<nav id="displayTools" class="display-tools" aria-label="Course navigation" hidden><header><div><p class="eyebrow">BACK AT YOUR PACE</p><h2>On the course.</h2></div><button id="quietView" class="icon-button" aria-label="Return to uninterrupted play">×</button></header><button id="toggleControls" class="menu-action" aria-controls="desktopControls" aria-expanded="false"><span>Shot controls<small>Your line, club & next move</small></span><span>↗</span></button><a href="#pair" id="pairButton" class="menu-action">Connect a phone ↗</a><div class="camera-menu"><p class="eyebrow">YOUR VIEW</p><div><button id="rotateLeft" aria-label="Rotate course left">↶</button><button id="northView">N <span>North up</span></button><button id="rotateRight" aria-label="Rotate course right">↷</button></div><button id="fitView">See the whole hole</button><p>Drag to explore. Scroll to zoom.<br>Shift-drag or right-drag to rotate.</p></div><div class="menu-links"><a href="#home" aria-label="Back to home">Home ↗</a><a href="#guide">How to play ↗</a></div></nav>
+<div id="menuShade" class="menu-shade" hidden></div>
+<nav id="displayTools" class="display-tools" aria-label="Game menu" hidden><p class="hud-eyebrow">PURITY / IN THE ROUND</p><h2>Game menu</h2><button id="quietView" class="resume-action">Resume game</button><button id="openGameOptions">Game options</button><a href="#guide">How to play</a><a href="#editions">Choose experience</a><a href="#home" aria-label="Return to main menu">Main menu</a></nav>
+<dialog id="gameOptions" class="game-options" aria-labelledby="optionsTitle"></dialog>
 <button id="revealTools" class="reveal-tools" aria-label="Open course menu" aria-controls="displayTools" aria-expanded="false" title="Course menu (Escape)" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 16h14"/></svg></button>
-<section id="desktopControls" class="desktop-controls" aria-label="Desktop shot controls" hidden></section>
+<section id="desktopControls" class="desktop-hud" aria-label="Desktop shot controls" hidden></section>
 <dialog id="pairing" class="pairing" aria-labelledby="pairingTitle"><header><a class="back-link" href="#play">← Back to course</a><button id="closePairing" class="icon-button" aria-label="Close pairing">×</button></header><p class="eyebrow">ONE COURSE. TWO SCREENS.</p><h1 id="pairingTitle">A little space<br>between you &<br><em>the controls.</em></h1><p>Scan with your phone. Keep both devices on the same Wi-Fi.</p><canvas id="qr" aria-label="Pairing QR code"></canvas><a id="cockpitLink" role="button">Copy phone pairing link ↗</a><input id="pairUrl" aria-label="Phone pairing link" readonly hidden><label id="networkLabel" hidden>Wi-Fi address<select id="network"></select></label><p id="pairStatus" role="status">Preparing your connection…</p><button id="playHere" class="secondary">Use controls on this screen instead</button></dialog>`;

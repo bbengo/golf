@@ -42,14 +42,15 @@ camera angle and transforms screen-relative aim deltas back into world coordinat
 so right still moves right on the display. The ground atlas, photographic renderer,
 markers, pointer anchoring and panning share the same orientation.
 
-The compass sits beside the bottom-left menu button, with its label inside its
-own disc, so neither the button nor the open menu covers it. Quiet play hides it.
+The desktop camera toolbar owns the rotating north indicator and reset action.
+It is separate from the bottom-left game menu. Minimal and Clear modes hide it.
 
 Title and menu screens use a separate presentation camera over the same atlas.
 Its slow drift stops with reduced motion. It renders terrain without aim/ball HUD
 marks and never overwrites the playing camera or physics state. Menu input is
 intercepted by the shell so it cannot accidentally pan the hidden playing camera.
-Opening desktop controls shifts the course into the remaining visual area;
+Desktop mode reserves vertical camera space above the shot dock using offsetY
+and the corresponding fit scale. World/inverse/zoom transforms include this offset;
 the canvas still fills the screen. Reduced-motion preference also snaps this offset.
 Initial framing uses the course plate, not invented multi-hole geometry.
 
@@ -65,6 +66,10 @@ a phone view request interrupts following until the next shot. Reduced-motion
 preference disables following and makes requested framing immediate. Ball animation
 remains visible and can be skipped from the phone. Camera coordinates never enter
 the shot solver.
+
+Game Options can disable following independently of interface mode. Desktop, Minimal
+and Clear affect presentation only. Clear also suppresses aim/launch guides; the
+actual flag and moving ball remain visible.
 
 The launch indicator uses deterministic launch velocity and a symbolic curve cue.
 It is not a predicted landing point or optimiser. Ball motion comes from the actual
