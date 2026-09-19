@@ -1,3 +1,4 @@
+import { caddyMarkup, clubArt, mountCaddy } from '../cockpit/caddy';
 import {
    CLUBS,
    type Command,
@@ -32,13 +33,32 @@ export function startDesktop(
    root.innerHTML = `
    <aside class="course-info" aria-label="Round information"><p class="hud-eyebrow">CREEK & SHOULDER <span>01</span></p><div class="hud-distance"><strong id="desktopDistance">—</strong><span>yds to aim</span></div><div class="hud-facts"><span>SHOT <b id="desktopShot">1</b></span><span id="desktopLie">Tee</span></div><p id="desktopWind" class="hud-weather"></p><p id="desktopProbe" hidden></p></aside>
    <nav class="view-toolbar" aria-label="Course view"><button data-view="hole">Whole hole</button><button data-view="ball">Ball</button><button data-view="green">Green</button><button id="desktopNorth" aria-label="Reset north up">N <span id="northNeedle" aria-hidden="true">↑</span></button></nav>
-   <section class="shot-dock" aria-label="Desktop shot controls">
+   <dialog id="desktopCaddy" class="caddy-dialog" aria-labelledby="caddyTitle"><header><div><p class="eyebrow">YOUR CADDY</p><h2 id="caddyTitle">Choose your next club.</h2></div><button id="closeCaddy" aria-label="Close caddy">&times;</button></header><p class="caddy-intro">Woods for distance. Irons for approach. Touch around the green.</p>${caddyMarkup()}</dialog><section class="shot-dock" aria-label="Desktop shot controls">
     <header><div class="aim-switch" role="group" aria-label="Pointer action"><button id="desktopAim" aria-pressed="true">Aim</button><button id="desktopInspect" aria-pressed="false">Inspect ground</button></div><span class="desktop-hint">Click the course · Drag to explore · Alt + arrows to fine aim</span><button id="desktopTune" aria-expanded="false" aria-controls="desktopTuning">Shape & flight</button></header>
     <div id="desktopTuning" class="desktop-tuning" hidden><label>Shape <output id="desktopShapeValue">Straight</output><input id="desktopShape" type="range" min="-100" max="100" value="0"></label><label>Flight <output id="desktopHeightValue">Normal</output><input id="desktopHeight" type="range" min="-100" max="100" value="0"></label><button id="desktopNeutral">Reset shaping</button></div>
-    <div class="shot-dock-main"><label class="desktop-club">CLUB<select id="desktopClub">${CLUBS.map((c) => `<option value="${c}">${names[c]}</option>`).join('')}</select></label><label class="desktop-effort">EFFORT <output id="desktopEffortValue">100%</output><input id="desktopEffort" type="range" min="15" max="110" value="100"></label><button id="desktopPlay" class="desktop-play">Play shot <kbd>Space</kbd></button></div>
+    <div class="shot-dock-main"><div class="desktop-club"><button id="openCaddy" aria-haspopup="dialog"><span id="selectedClubArt"></span><span><small>IN YOUR HAND</small><strong id="selectedClubName">Driver</strong></span><span aria-hidden="true">&#8963;</span></button><select id="desktopClub" hidden aria-label="Selected club">${CLUBS.map((c) => `<option value="${c}">${names[c]}</option>`).join('')}</select></div><label class="desktop-effort">EFFORT <output id="desktopEffortValue">100%</output><input id="desktopEffort" type="range" min="15" max="110" value="100"></label><button id="desktopPlay" class="desktop-play">Play shot <kbd>Space</kbd></button></div>
     <footer><span id="desktopResult" role="status">Set your line and choose your club.</span><button id="desktopMulligan" disabled>Mulligan</button></footer>
    </section><p id="desktopNotice" role="status" class="desktop-notice" hidden></p>`;
    const $ = <T extends HTMLElement>(id: string) => root.querySelector('#' + id) as T;
+   const caddy = $<HTMLDialogElement>('desktopCaddy');
+   const refreshCaddy = mountCaddy(root, $<HTMLSelectElement>('desktopClub'), () => caddy.close());
+   $('openCaddy').onclick = () => {
+      refreshCaddy();
+      caddy.showModal();
+   };
+   $('closeCaddy').onclick = () => caddy.close();
+   caddy.onclick = (event) => {
+      if (event.target === caddy) {
+         const r = caddy.getBoundingClientRect();
+         if (
+            event.clientX < r.left ||
+            event.clientX > r.right ||
+            event.clientY < r.top ||
+            event.clientY > r.bottom
+         )
+            caddy.close();
+      }
+   };
    let state: Snapshot | undefined;
    let target: 'aim' | 'probe' = 'aim';
    const intent = (): Intent => ({
@@ -112,6 +132,11 @@ export function startDesktop(
             input.value = String(value);
             input.disabled = next.phase !== 'plan';
          }
+         $('selectedClubArt').innerHTML = clubArt(next.intent.club);
+         $('selectedClubName').textContent = names[next.intent.club];
+         $<HTMLButtonElement>('openCaddy').disabled = next.phase !== 'plan';
+         refreshCaddy();
+         if (next.phase !== 'plan' && caddy.open) caddy.close();
          $<HTMLButtonElement>('desktopNeutral').disabled = next.phase !== 'plan';
          $('desktopEffortValue').textContent = `${Math.round(next.intent.effort * 100)}%`;
          $('desktopShapeValue').textContent =

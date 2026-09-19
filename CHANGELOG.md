@@ -157,3 +157,11 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Added a flag-and-ball Purity mark across loading, title, lobby and phone, plus brighter citron actions, mint selections and ivory readouts.
 - Kept procedural assets, local Onest, reduced-motion support, desktop/phone controls and player-selected UI modes.
 - Validation: TypeScript and production build pass; 26 unit tests pass, followed by all 3 course tests after outline refinement; all 5 browser flows pass. Inspected desktop and phone screenshots. Existing legacy bundle-size warning remains.
+
+## 2026-09-19 ? Elegant controls and illustrated caddy
+
+- Unified dark readouts and controls, muted bright accents and tightened desktop spacing with rounder shapes.
+- Replaced visible club dropdowns with illustrated caddy cards on desktop and phone, including the selected club in shot preparation.
+- Added purpose labels, selection indicators, keyboard dismissal and phase-aware desktop picker availability.
+- Browser coverage now selects through the visible caddy and checks selection, illustration, Escape and focus restoration.
+- Validation: TypeScript and production build pass; all five browser flows pass, including visible desktop/phone caddy selection, keyboard focus return, sync and gameplay. Inspected caddy and HUD screenshots.

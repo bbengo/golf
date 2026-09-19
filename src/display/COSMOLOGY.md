@@ -46,3 +46,9 @@ corner. Camera-follow can be disabled; reduced motion takes precedence.
 ## Estate identity and control hierarchy
 
 An original flag-and-ball SVG mark connects loading, title, lobby and phone. Citron identifies the main shot/entry action, mint identifies selected control modes, ivory carries distance readouts, and dark green anchors controls. This separates information from decisions without changing the desktop/phone interaction contracts. Boot animation respects reduced motion and does not invent a progress percentage. Onest is served locally, including during loading.
+
+## Illustrated caddy and restrained HUD
+
+The desktop club control opens a native modal dialog of equipment cards with original family silhouettes and purpose labels. Selection uses the existing INTENT path, closes the dialog and updates the dock from the authoritative snapshot. Escape restores trigger focus; a shot started remotely closes the picker and disables equipment changes. Phone My bag shares the illustrations and choices while retaining touch layout and navigation. Chip is explicitly a technique. Illustrations describe families, not branded models; purpose labels are not numerical carry advice. Hidden selects remain internal value adapters for existing intent handling, not visible menus.
+
+Readouts and actions use a unified dark forest material, muted sage selections, smaller gaps and rounded controls. The phone retains its explicit light-theme option. No simulation or course geometry changes accompany this refinement.

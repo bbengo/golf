@@ -1,3 +1,4 @@
+import { clubArt, mountCaddy } from './caddy';
 import type { ControlTransport } from './transport';
 import { cockpitMarkup } from './markup';
 import { type Command, type Intent, type Snapshot, type Setup } from '../core/contracts/cockpit';
@@ -7,6 +8,7 @@ export function startCockpit(root: HTMLElement = document.body, transport?: Cont
    root.classList.add('cockpit');
    root.innerHTML = cockpitMarkup;
    const $ = <T extends HTMLElement>(id: string) => root.querySelector('#' + id) as T;
+   const refreshCaddy = mountCaddy(root, $<HTMLSelectElement>('club'));
    let latestSetup: Setup | undefined;
    let theme = 'dark';
    try {
@@ -116,6 +118,8 @@ export function startCockpit(root: HTMLElement = document.body, transport?: Cont
    function labels() {
       const i = intent();
       const select = $<HTMLSelectElement>('club');
+      refreshCaddy();
+      root.querySelector('.club-glyph')!.innerHTML = clubArt(i.club);
       $('clubName').textContent = select.selectedOptions[0]?.textContent || i.club;
       if (!state || state.phase === 'plan')
          $('dockHint').textContent =

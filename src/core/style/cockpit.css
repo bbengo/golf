@@ -195,7 +195,7 @@ h3 {
    --ink: #eff2e8;
    --muted: #a9b6a6;
    --line: #354237;
-   --accent: #d0ee96;
+   --accent: #c6d3b8;
    --accent-ink: #1f311a;
    background: var(--bg);
    color: var(--ink);
@@ -884,33 +884,160 @@ input[type='range']::-moz-range-thumb {
    width: 28px;
    height: 28px;
    stroke: none;
-   color: #c4cc38;
+   color: #718468;
 }
 .cockpit[data-theme='dark'] .controller-brand .purity-mark {
-   color: #edee58;
+   color: #d9dfc2;
 }
 .cockpit .play-dock .primary {
-   background: #edee58;
+   background: #d9dfc2;
    color: #18251c;
    font-weight: 650;
-   box-shadow: 0 4px 0 #9da426;
+   box-shadow: none;
    border-radius: 20px;
 }
 .cockpit .shot-ticket {
-   background: #f1f2df;
-   color: #213e30;
+   background: var(--surface);
+   color: var(--ink);
    border-radius: 24px;
 }
 .cockpit .shot-ticket small,
 .cockpit .shot-ticket .weather {
-   color: #43624e;
+   color: var(--muted);
 }
 .cockpit .controller-nav button[aria-pressed='true'] {
    color: var(--ink);
 }
 .cockpit .controller-nav button[aria-pressed='true'] > span {
    color: #102c21;
-   background: #55e9a0;
+   background: #bdcbb4;
    padding: 5px 20px;
    border-radius: 100px;
+}
+
+/* Equipment is a tactile caddy, shared by the two distinct layouts. */
+.caddy-dialog {
+   width: min(640px, calc(100vw - 32px));
+   max-height: calc(100dvh - 40px);
+   padding: 26px;
+   border-radius: 30px;
+   border: 1px solid #bbcbaa30;
+   background: #14231f;
+   color: #edf0e5;
+   overflow-y: auto;
+   box-shadow: 0 24px 100px #0008;
+}
+.caddy-dialog::backdrop {
+   background: #07110db3;
+   backdrop-filter: blur(8px);
+}
+.caddy-dialog > header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 16px;
+}
+.caddy-dialog h2 {
+   font-size: 24px;
+   font-weight: 500;
+   margin-top: 8px;
+}
+.caddy-dialog > header button {
+   background: #ffffff0c;
+   color: inherit;
+   border-radius: 50%;
+   width: 44px;
+   font-size: 24px;
+}
+.caddy-intro {
+   color: #bac7b5;
+   font-size: 12px;
+   line-height: 1.6;
+   margin: 16px 0 22px;
+}
+.caddy-grid {
+   display: grid;
+   grid-template-columns: repeat(3, minmax(0, 1fr));
+   gap: 10px;
+}
+.caddy-grid button {
+   position: relative;
+   display: flex;
+   flex-direction: column;
+   align-items: flex-start;
+   text-align: left;
+   min-width: 0;
+   background: #ffffff05;
+   color: inherit;
+   border: 1px solid #a8ba9d30;
+   border-radius: 22px;
+   padding: 14px;
+   transition:
+      background 0.15s,
+      border-color 0.15s;
+}
+.caddy-grid button:hover {
+   background: #a8ba9d15;
+   border-color: #a8ba9d70;
+}
+.caddy-grid button[aria-pressed='true'] {
+   background: #c3cfb61c;
+   border-color: #bdcbb4;
+}
+.caddy-grid strong {
+   display: block;
+   font-size: 14px;
+   font-weight: 550;
+}
+.caddy-grid small {
+   display: block;
+   font-size: 10px;
+   opacity: 0.7;
+   line-height: 1.5;
+   margin-top: 5px;
+}
+.caddy-art,
+.cockpit .caddy-art {
+   width: 48px;
+   height: 72px;
+   stroke: none;
+}
+.caddy-check {
+   position: absolute;
+   right: 13px;
+   top: 12px;
+   font-size: 12px;
+   opacity: 0;
+}
+[aria-pressed='true'] > .caddy-check {
+   opacity: 1;
+}
+.cockpit .caddy-grid {
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   margin: 20px 0;
+}
+.cockpit .club-glyph .caddy-art {
+   width: 42px;
+   height: 64px;
+}
+.cockpit .control-card,
+.cockpit .shot-ticket {
+   border-radius: 28px;
+}
+.cockpit .play-dock .primary {
+   border-radius: 100px;
+   font-weight: 550;
+}
+@media (max-width: 480px) {
+   .caddy-dialog {
+      padding: 20px;
+   }
+   .caddy-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+   }
+}
+@media (prefers-reduced-motion: reduce) {
+   .caddy-grid button {
+      transition: none;
+   }
 }

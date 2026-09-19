@@ -717,7 +717,7 @@ html:has(body.experience) {
    background: #e0e9cf12;
 }
 .display-tools .resume-action {
-   background: #edee58;
+   background: #d9dfc2;
    color: #172218;
    font-weight: 550;
 }
@@ -853,7 +853,7 @@ html:has(body.experience) {
 }
 .aim-switch button[aria-pressed='true'],
 #desktopTune[aria-expanded='true'] {
-   background: #edee58;
+   background: #d9dfc2;
    color: #172218;
 }
 .desktop-hint {
@@ -900,12 +900,12 @@ html:has(body.experience) {
    display: block;
    width: 100%;
    margin: 12px 0 0;
-   accent-color: #55e9a0;
+   accent-color: #bdcbb4;
    height: 24px;
    cursor: pointer;
 }
 .desktop-play {
-   background: #edee58;
+   background: #d9dfc2;
    color: #172218;
    border-radius: 12px;
    min-height: 48px;
@@ -914,7 +914,7 @@ html:has(body.experience) {
    font-weight: 550;
 }
 .desktop-play:hover {
-   background: #f6f795;
+   background: #e7ebda;
 }
 .shot-dock footer {
    display: flex;
@@ -954,7 +954,7 @@ html:has(body.experience) {
 }
 .desktop-tuning input {
    width: 100%;
-   accent-color: #55e9a0;
+   accent-color: #bdcbb4;
 }
 .desktop-tuning button {
    grid-column: 1 / -1;
@@ -1068,7 +1068,7 @@ html:has(body.experience) {
    border-color: #d7e7b5;
 }
 .display-choices input {
-   accent-color: #55e9a0;
+   accent-color: #bdcbb4;
    width: 18px;
    height: 18px;
    flex-shrink: 0;
@@ -1117,7 +1117,7 @@ html:has(body.experience) {
 .option-row input {
    width: 22px;
    height: 22px;
-   accent-color: #55e9a0;
+   accent-color: #bdcbb4;
    flex-shrink: 0;
 }
 #optionsGuide {
@@ -1232,7 +1232,7 @@ html:has(body.experience) {
    }
 }
 
-/* Estate identity: citron commits, mint selects, ivory reports. */
+/* Shared muted-sage identity across readouts and controls. */
 .purity-mark {
    width: 36px;
    height: 36px;
@@ -1241,7 +1241,7 @@ html:has(body.experience) {
 .title-screen > .purity-mark {
    width: 64px;
    height: 64px;
-   color: #edee58;
+   color: #d9dfc2;
    margin-bottom: 20px;
 }
 .game-wordmark {
@@ -1250,42 +1250,42 @@ html:has(body.experience) {
    gap: 12px;
 }
 .game-wordmark .purity-mark {
-   color: #edee58;
+   color: #d9dfc2;
 }
 .begin-button {
-   background: #edee58;
+   background: #d9dfc2;
    color: #18251c;
-   border-color: #edee58;
+   border-color: #d9dfc2;
    font-weight: 650;
    box-shadow: 0 8px 32px #10221a40;
 }
 .begin-button:hover {
-   background: #f7f798;
+   background: #e7ebda;
    transform: translateY(-2px);
 }
 .course-info {
-   background: #f5f4e9f5;
-   color: #203b2d;
-   border-color: #ffffff80;
+   background: #14231ff2;
+   color: #edf0e5;
+   border-color: #c7d8b82e;
    border-radius: 22px;
 }
 .course-info .hud-eyebrow,
 .course-info .hud-distance > span,
 .course-info .hud-weather,
 .course-info #desktopProbe {
-   color: #45604c;
+   color: #bac7b5;
 }
 .course-info .hud-weather {
-   border-color: #203b2d20;
+   border-color: #bbcbaa24;
 }
 .course-info .hud-eyebrow > span {
    background: #203b2d;
-   color: #edee58;
+   color: #d9dfc2;
    padding: 4px 7px;
    border-radius: 6px;
 }
 .hud-distance strong {
-   font-size: 52px;
+   font-size: 42px;
    font-weight: 550;
 }
 .shot-dock {
@@ -1295,14 +1295,14 @@ html:has(body.experience) {
 }
 .aim-switch button[aria-pressed='true'],
 #desktopTune[aria-expanded='true'] {
-   background: #55e9a0;
+   background: #bdcbb4;
    color: #102c21;
 }
 .desktop-play {
    border-radius: 16px;
-   min-height: 58px;
+   min-height: 50px;
    font-weight: 650;
-   box-shadow: 0 3px 0 #a6ac27;
+   box-shadow: none;
 }
 .desktop-play:active {
    transform: translateY(2px);
@@ -1313,7 +1313,7 @@ html:has(body.experience) {
    border-right: 1px solid #d8eee026;
 }
 .desktop-effort output {
-   color: #edee58;
+   color: #d9dfc2;
    font-size: 20px;
    font-variant-numeric: tabular-nums;
 }
@@ -1324,7 +1324,7 @@ html:has(body.experience) {
    border-radius: 100px;
 }
 #desktopNorth {
-   background: #edee58;
+   background: #d9dfc2;
    color: #18251c;
 }
 @media (max-height: 540px) {
@@ -1332,5 +1332,84 @@ html:has(body.experience) {
       width: 36px;
       height: 36px;
       margin-bottom: 8px;
+   }
+}
+
+/* Compact round HUD; information and actions share one material. */
+.course-info {
+   width: 214px;
+   padding: 17px;
+   border-radius: 26px;
+}
+.hud-distance {
+   margin: 12px 0;
+}
+.shot-dock {
+   width: min(810px, calc(100% - 160px));
+   padding: 12px 18px 10px;
+   border-radius: 28px;
+}
+.shot-dock-main {
+   grid-template-columns: 220px minmax(100px, 1fr) 145px;
+   gap: 18px;
+   padding: 12px 0;
+}
+.desktop-play {
+   border-radius: 100px;
+   font-size: 14px;
+   font-weight: 550;
+}
+.aim-switch button,
+#desktopTune {
+   border-radius: 100px;
+}
+#desktopNorth {
+   background: #ffffff0c;
+   color: #d9dfc2;
+}
+#openCaddy {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   width: 100%;
+   text-align: left;
+   padding: 0;
+   background: transparent;
+   color: #edf0e5;
+}
+#openCaddy > span:last-child {
+   margin-left: auto;
+   color: #bdcbb4;
+}
+#openCaddy small {
+   display: block;
+   color: #b4c2a9;
+   font-size: 9px;
+   letter-spacing: 0.12em;
+   margin-bottom: 5px;
+}
+#openCaddy strong {
+   font-size: 18px;
+   font-weight: 500;
+   letter-spacing: -0.4px;
+}
+#openCaddy .caddy-art {
+   width: 38px;
+   height: 56px;
+   color: #d9dfc2;
+}
+@media (max-width: 760px) {
+   .shot-dock {
+      width: auto;
+   }
+   .shot-dock-main {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+   }
+   #openCaddy {
+      gap: 4px;
+   }
+   #openCaddy strong {
+      font-size: 15px;
    }
 }

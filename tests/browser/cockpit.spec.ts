@@ -54,7 +54,9 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await phone.locator('[data-panel="shot"]').click();
    await expect(course).toHaveAttribute('data-camera-zoom', '1.000');
    await phone.locator('#chooseClub').click();
-   await phone.locator('#club').selectOption('6I');
+   await phone.locator('[data-caddy="6I"]').click();
+   await expect(phone.locator('[data-caddy="6I"]')).toHaveAttribute('aria-pressed', 'true');
+   await phone.screenshot({ path: 'test-results/phone-caddy.png' });
    await phone.locator('#backToShot').click();
    await phone.locator('#effort').fill('85');
    await expect(phone.locator('#effortValue')).toHaveText('85%');
