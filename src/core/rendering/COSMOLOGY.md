@@ -8,7 +8,7 @@ and the reference HTML remains unchanged.
 ## Colour and ground
 
 `course-atlas.ts` draws authored polygons and physical tree/bridge objects into a
-cached world-space canvas. Warm yellow-green fairways, pale greens, cooler rough,
+cached world-space canvas. Muted olive fairways, pale greens, cooler rough,
 quiet blue-green water and warm sand establish a value and temperature hierarchy.
 These are deliberate sRGB art-direction choices, not measured spectral materials,
 HDR or physically based lighting.
@@ -82,3 +82,13 @@ The retained `plate-renderer.js` is not the active procedural renderer.
 ## Estate colour direction
 
 Warmer mown greens and pale sand contrast with turquoise lakes and cooler tree shadows. Lake colour gradients suggest depth artistically, not measured bathymetry; shoreline strokes are decorative banks around the physical water polygon. The cache remains two pixels per metre to limit rebuild cost and memory. Lawns use rounded ribbon ends and denser spline sampling, with identical geometry in the renderer and simulation. This remains a procedural overhead Canvas renderer, not a 3D landscape.
+
+## October 2026: material detail and the wider landscape
+
+The direction moves away from diagram-like fills toward layered overhead landscape materials. `terrain-detail.ts` creates deterministic value noise at three spatial scales. This is overlaid on authored surfaces, with seeded directional turf fibres and subtler mowing bands. At close zoom, visible fairway/green/tee regions receive a world-anchored vector blade pass so fine turf detail does not rely solely on magnifying the two-pixels-per-metre atlas. The clipping mask derives from those physical surface polygons.
+
+Water uses muted depth colours, broken shoreline grain and small ripples whose full footprint is checked against the water union at build time. Ripples are batched into one stroke and freeze under reduced motion. Depth gradients are artistic, not excavated bathymetry. Small shoreline flecks are material texture, not collidable boulders. Trees use irregular crown/shadow outlines and denser light/shade clusters rather than smooth disks.
+
+Two scenic lakes, interrupted woodland clusters and creek continuation occupy the existing 350-metre surround. Scenic tree crowns remain outside the playable rectangle; scenic lakes are also fully outside it. Creek extensions begin at the authored endpoints beyond playable bounds. These decorations are built only in the renderer, never added to the physical snapshot, and do not expand playable space. Within the course, visible trees and surface geometry continue to come from the simulation. Scenery is subordinate in colour and framing to the hole.
+
+Performance: the base cache remains two pixels/metre (roughly 32 MB RGBA); the temporary water mask is similar in size, plus a one-third-resolution material buffer. Distant trees and leaf clusters are bounded. Twelve 128-pixel procedural canopy stamps replace repeated leaf construction; visible physical trees reuse these sharper stamps at close zoom. The per-frame additions are capped, batched ripples, visible close-view crowns and a viewport-limited close-view grass pass. No image assets, external services or new dependencies are needed. The cache still has finite extent; extreme pans/zoom-outs can reveal its fallback. This is an improved overhead 2D renderer, not photorealistic 3D terrain, true volumetric grass or ray-traced reflection. Higher-resolution close-view terrain and tree detail remain future work.

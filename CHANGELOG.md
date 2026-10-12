@@ -172,3 +172,11 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Kept loading visible through the first rendered course frame; added a short reduced-motion-aware reveal without delaying for phone pairing.
 - Added startup import-error retry and browser checks for slow startup, small-screen overflow and recovery.
 - Validation: TypeScript and production build pass; all seven browser tests pass. Inspected desktop and phone loading screenshots. Existing legacy bundle-size warning remains.
+
+## 2026-10-12 ? Procedural landscape materials and surroundings
+
+- Added deterministic multiscale terrain variation, fine turf fibres and a close-view vector grass layer; subdued flat colours and mowing contrast.
+- Refined tree crowns/shadow silhouettes, broken shore texture and water depth colours, with batched, reduced-motion-aware ripples.
+- Extended the scene outside playable bounds with scenic lakes, woodland glades and continued creek. Course geometry and physics remain unchanged.
+- Retained the two-pixels/metre cache, bounded surrounding foliage and cached procedural canopy stamps; redraw visible crowns sharply at close zoom.
+- Validation: TypeScript and production build pass. Six of seven browser flows passed in the final full run; the remaining short-screen startup check timed out and then passed in isolation (12.5 s test duration). Reviewed whole-course and green close-up screenshots. Target-device frame time remains unmeasured; the legacy bundle-size warning remains.

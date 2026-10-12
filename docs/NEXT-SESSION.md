@@ -100,3 +100,7 @@ checks are not a substitute for iOS/Safari testing.
 ## Estate refinement follow-up
 
 The new surroundings are physical surfaces in woodland revision 0.2.0. Visually inspect the expanded layout on the target display; retain the single-hole framing and assess loading time on older hardware. Lake depth is colour treatment, not excavated terrain. Future terrain/shoreline relief needs shared geometry and collision work, not only visual displacement. The atlas remains at two pixels/metre.
+
+## October landscape pass
+
+Procedural materials and outside-bounds scenery are implemented in course-atlas.ts and terrain-detail.ts. Validate frame time on the intended display hardware, especially close zoom and rotation; browser automation is not a physical-device performance certification. A near-field grass pass improves turf detail, but the base terrain/tree cache remains two pixels/metre and is not a photorealistic 3D replacement. Any future height/displacement or playable landscape expansion must remain aligned with simulation geometry.
