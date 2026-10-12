@@ -1,3 +1,4 @@
+import { daylightChoice } from '../core/rendering/daylight';
 import type { Setup, Snapshot } from '../core/contracts/cockpit';
 export type DisplayMode = 'desktop' | 'minimal' | 'clear';
 export function savedDisplayMode(fallback: DisplayMode): DisplayMode {
@@ -24,6 +25,7 @@ export function startOptions(
    <label><input type="radio" name="displayMode" value="clear"><span><strong>Clear course</strong><small>No interface or aim guides. Click the course or press Escape to open the menu.</small></span></label></fieldset>
    <div class="option-row"><div><h3>Phone controller</h3><p id="optionsPhoneStatus">Optional. Same course, touch controls.</p></div><button id="optionsPair">Connect phone</button></div>
    <label class="option-row"><span><strong>Follow the ball</strong><small>Camera follows shots; dragging takes over. Reduced motion takes priority.</small></span><input id="followBall" type="checkbox" checked></label>
+   <label class="option-row"><span><strong>Daylight</strong><small>Change the sun direction and warmth. Your round and wind stay the same.</small></span><select id="daylight" aria-label="Daylight"><option value="morning">Morning</option><option value="day">Daylight</option><option value="evening">Late afternoon</option></select></label>
    <a href="#guide" id="optionsGuide">Controls & how to play ↗</a>
    </section>
    <section data-option-page="course" hidden><h2>A different challenge.</h2><p>Applying these conditions starts a new practice hole.</p><form id="desktopSetup" class="desktop-setup">
@@ -54,6 +56,19 @@ export function startOptions(
       document.body.dataset.followBall = String(follow.checked);
       try {
          localStorage.setItem('purity-follow-ball', String(follow.checked));
+      } catch {}
+   };
+   const light = $<HTMLSelectElement>('daylight');
+   try {
+      light.value = daylightChoice(localStorage.getItem('purity-daylight'));
+   } catch {
+      light.value = 'day';
+   }
+   document.body.dataset.daylight = light.value;
+   light.onchange = () => {
+      document.body.dataset.daylight = daylightChoice(light.value);
+      try {
+         localStorage.setItem('purity-daylight', light.value);
       } catch {}
    };
    $('optionsPair').onclick = () => {

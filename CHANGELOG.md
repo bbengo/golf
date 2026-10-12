@@ -180,3 +180,11 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Extended the scene outside playable bounds with scenic lakes, woodland glades and continued creek. Course geometry and physics remain unchanged.
 - Retained the two-pixels/metre cache, bounded surrounding foliage and cached procedural canopy stamps; redraw visible crowns sharply at close zoom.
 - Validation: TypeScript and production build pass. Six of seven browser flows passed in the final full run; the remaining short-screen startup check timed out and then passed in isolation (12.5 s test duration). Reviewed whole-course and green close-up screenshots. Target-device frame time remains unmeasured; the legacy bundle-size warning remains.
+
+## 2026-10-12 ? Wind cues and sun direction
+
+- Linked flag flutter, water ripple direction/intensity and near-view grass lean to the current authoritative wind. Calm and reduced-motion settings suppress oscillation.
+- Added persistent Morning / Daylight / Late afternoon choices under Game options > Experience.
+- Changed tree shadows, canopy highlights, slope lighting and colour warmth together for each sun position, without resetting the round or changing physical conditions.
+- Daylight uses art-directed presets, not an automatic geographic day/night simulation.
+- Validation: TypeScript and production build pass; the desktop gameplay/options browser flow passes with daylight selection and round-preservation checks. Reviewed the late-afternoon screenshot.

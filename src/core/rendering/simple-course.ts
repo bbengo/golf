@@ -1,3 +1,4 @@
+import { Wind } from '../course/wind.js';
 import { CourseAtlas } from './course-atlas';
 import { CourseCamera } from './camera';
 import { Course } from '../course/course.js';
@@ -200,6 +201,8 @@ export class SimpleCourse {
       const ctx = this.ctx;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
+      const wind = Wind.presentation(Wind.atDay(session.day(), 0));
+      this.canvas.dataset.daylight = document.body.dataset.daylight || 'day';
       const route = document.body.dataset.route || 'title';
       if (!['play', 'pair'].includes(route)) {
          const view = this.menuCamera;
@@ -209,7 +212,7 @@ export class SimpleCourse {
          view.resize(rect.width, rect.height, c.plate.worldBounds);
          view.go({ x: 155 + drift * 8, y: 355 }, 1.45);
          view.tick(16, this.reducedMotion.matches);
-         this.atlas.paint(ctx, c, view);
+         this.atlas.paint(ctx, c, view, wind);
          return;
       }
       if (session.renderer === 'photo' && !this.photoLoading) {
@@ -233,7 +236,7 @@ export class SimpleCourse {
             },
             dpr,
          );
-      else this.atlas.paint(ctx, c, this.camera);
+      else this.atlas.paint(ctx, c, this.camera, wind);
       const pin = this.world(c.pin);
       ctx.fillStyle = '#263b31';
       ctx.beginPath();
@@ -248,7 +251,16 @@ export class SimpleCourse {
       ctx.fillStyle = '#e6aa73';
       ctx.beginPath();
       ctx.moveTo(pin.x, pin.y - 23);
-      ctx.lineTo(pin.x + 15, pin.y - 19);
+      const bearing = (wind.rotation * Math.PI) / 180 - this.camera.angle;
+      const flutter =
+         this.reducedMotion.matches || wind.calm
+            ? 0
+            : Math.sin(time / 170) * Math.min(2, wind.fraction * 6);
+      const reach = wind.calm ? 3 : 8 + wind.fraction * 14;
+      ctx.lineTo(
+         pin.x + Math.sin(bearing) * reach + Math.cos(bearing) * 3 + flutter,
+         pin.y - 19 - Math.cos(bearing) * reach * 0.55 + (wind.calm ? 6 : 0),
+      );
       ctx.lineTo(pin.x, pin.y - 15);
       ctx.fill();
       if (session.phase === 'plan' && document.body.dataset.displayMode !== 'clear') {

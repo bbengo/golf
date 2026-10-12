@@ -40,7 +40,7 @@ export function terrainVariation(width: number, height: number) {
 }
 
 /** Small procedural canopy stamps keep woodland build cost independent of leaf count. */
-export function canopyStamp(variant: number) {
+export function canopyStamp(variant: number, sun = { x: -0.45, y: 0.8 }) {
    const canvas = document.createElement('canvas');
    canvas.width = canvas.height = 128;
    const ctx = canvas.getContext('2d')!;
@@ -60,7 +60,7 @@ export function canopyStamp(variant: number) {
       else ctx.moveTo(x, y);
    }
    ctx.closePath();
-   const light = ctx.createRadialGradient(44, 40, 3, 64, 64, 62);
+   const light = ctx.createRadialGradient(64 + sun.x * 24, 64 - sun.y * 24, 3, 64, 64, 62);
    light.addColorStop(0, variant % 3 ? '#8a9b66' : '#a3a071');
    light.addColorStop(0.55, variant % 3 ? '#4c6843' : '#67774b');
    light.addColorStop(1, '#233d2c');

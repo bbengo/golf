@@ -1,7 +1,8 @@
+import { DAYLIGHT, daylightChoice, type Daylight } from './daylight';
 import { terrainVariation, canopyStamp } from './terrain-detail';
 import { Course } from '../course/course.js';
 import type { CockpitSession } from '../session/cockpit-session';
-import type { Point } from '../contracts/cockpit';
+import type { Point, Snapshot } from '../contracts/cockpit';
 import type { CourseCamera } from './camera';
 
 const colors: Record<string, string> = {
@@ -22,12 +23,21 @@ export class CourseAtlas {
    private course: CockpitSession['course'] | null = null;
    private scale = 2;
    private margin = 350;
+   private daylight: Daylight = 'day';
    private crowns = Array.from({ length: 12 }, (_, i) => canopyStamp(i));
    private turfMask = new Path2D();
    private ripples: { x: number; y: number; phase: number }[] = [];
    private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-   paint(ctx: CanvasRenderingContext2D, c: CockpitSession['course'], camera: CourseCamera) {
-      if (this.course !== c) {
+   paint(
+      ctx: CanvasRenderingContext2D,
+      c: CockpitSession['course'],
+      camera: CourseCamera,
+      wind: Snapshot['wind'],
+   ) {
+      const daylight = daylightChoice(document.body.dataset.daylight);
+      if (this.course !== c || daylight !== this.daylight) {
+         this.daylight = daylight;
+         this.crowns = Array.from({ length: 12 }, (_, i) => canopyStamp(i, DAYLIGHT[daylight]));
          this.course = c;
          this.build(c);
       }
@@ -60,23 +70,27 @@ export class CourseAtlas {
             ctx.drawImage(this.crowns[variant], x - r, y - r, r * 2, r * 2);
          }
       }
-      const time = this.reducedMotion.matches ? 0 : performance.now() / 2400;
+      const strength = Math.min(1, wind.fraction * 2);
+      const bearing = (wind.rotation * Math.PI) / 180;
+      const dx = Math.sin(bearing),
+         dy = -Math.cos(bearing);
+      const angle = Math.atan2(dy, dx) + Math.PI / 2;
+      const time =
+         this.reducedMotion.matches || strength === 0
+            ? 0
+            : (performance.now() / 2400) * (0.4 + strength);
       ctx.lineWidth = 0.65;
-      ctx.strokeStyle = `rgba(205,224,211,${0.08 + 0.025 * Math.sin(time)})`;
+      ctx.strokeStyle = `rgba(205,224,211,${0.035 + strength * 0.07 + strength * 0.02 * Math.sin(time)})`;
       ctx.beginPath();
       for (const ripple of this.ripples) {
          const t = time + ripple.phase;
 
-         ctx.moveTo(ripple.x + Math.sin(t) * 2 + 5 + Math.sin(t) * 2, ripple.y);
-         ctx.ellipse(
-            ripple.x + Math.sin(t) * 2,
-            ripple.y,
-            5 + Math.sin(t) * 2,
-            1.2,
-            -0.2,
-            0,
-            Math.PI,
-         );
+         const drift = this.reducedMotion.matches ? 0 : Math.sin(t) * strength * 2;
+         const x = ripple.x + dx * drift,
+            y = ripple.y + dy * drift;
+         const radius = 4 + strength * 2;
+         ctx.moveTo(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+         ctx.ellipse(x, y, radius, 1.2, angle, 0, Math.PI);
       }
       ctx.stroke();
       ctx.restore();
@@ -117,7 +131,7 @@ export class CourseAtlas {
                   const px = x * 12 + ((seed & 65535) / 65535) * 12;
                   const py = y * 12 + ((seed >>> 16) / 65535) * 12;
                   ctx.moveTo(px, py);
-                  ctx.lineTo(px + 0.18, py - 0.6);
+                  ctx.lineTo(px + 0.18 + dx * strength * 0.35, py - 0.6 + dy * strength * 0.15);
                }
             }
          ctx.stroke();
@@ -126,6 +140,7 @@ export class CourseAtlas {
       ctx.restore();
    }
    private build(c: CockpitSession['course']) {
+      const sun = DAYLIGHT[this.daylight];
       const bounds = {
             minX: c.bounds.minX - this.margin,
             maxX: c.bounds.maxX + this.margin,
@@ -458,7 +473,10 @@ export class CourseAtlas {
             const p = { x: bounds.minX + (x * 18) / s, y: bounds.maxY - (y * 18) / s };
             if (!Course.inBounds(c, p)) continue;
             const slope = Course.slopeAt(c, p),
-               shade = Math.max(-0.055, Math.min(0.055, (slope.x - slope.y) * 0.12));
+               shade = Math.max(
+                  -0.055,
+                  Math.min(0.055, -(slope.x * sun.x + slope.y * sun.y) * 0.12),
+               );
             pixels.data.set(
                shade > 0
                   ? [255, 239, 185, Math.round(shade * 255)]
@@ -504,8 +522,8 @@ export class CourseAtlas {
             for (let k = 0; k <= 48; k++) {
                const a = (k / 48) * Math.PI * 2;
                const rr = 1 + 0.08 * Math.sin(a * 7) + 0.06 * Math.cos(a * 11);
-               const x = p.x + r * 0.68 + Math.cos(a) * r * rr;
-               const y = p.y + r * 0.9 + Math.sin(a) * r * rr * 0.85;
+               const x = p.x - r * sun.x * sun.length + Math.cos(a) * r * rr;
+               const y = p.y + r * sun.y * sun.length + Math.sin(a) * r * rr * 0.85;
                if (k) ctx.lineTo(x, y);
                else ctx.moveTo(x, y);
             }
@@ -533,8 +551,13 @@ export class CourseAtlas {
          }
       }
       // A restrained warm-to-cool daylight grade unifies grass, sand and crowns.
-      const daylight = ctx.createLinearGradient(0, 0, w, h);
-      daylight.addColorStop(0, '#f8d3940b');
+      const daylight = ctx.createLinearGradient(
+         w * (0.5 + sun.x * 0.5),
+         h * (0.5 - sun.y * 0.5),
+         w * (0.5 - sun.x * 0.5),
+         h * (0.5 + sun.y * 0.5),
+      );
+      daylight.addColorStop(0, sun.warmth);
       daylight.addColorStop(0.55, '#ebedb200');
       daylight.addColorStop(1, '#123b3620');
       ctx.fillStyle = daylight;

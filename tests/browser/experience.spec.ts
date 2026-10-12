@@ -80,6 +80,14 @@ test('desktop controls, mouse aiming and player-selected interface modes', async
    await page.screenshot({ path: 'test-results/game-menu.png' });
    await page.locator('#openGameOptions').click();
    await page.screenshot({ path: 'test-results/game-options.png' });
+   const clubBeforeLight = await page.locator('#desktopClub').inputValue();
+   await page.locator('#daylight').selectOption('evening');
+   await expect(page.locator('#course')).toHaveAttribute('data-daylight', 'evening');
+   await expect(page.locator('#desktopClub')).toHaveValue(clubBeforeLight);
+   await page.locator('#closeGameOptions').click();
+   await page.screenshot({ path: 'test-results/late-afternoon.png' });
+   await page.locator('#revealTools').click();
+   await page.locator('#openGameOptions').click();
    await page.locator('[name=displayMode][value=minimal]').check();
    await page.locator('#closeGameOptions').click();
    await expect(page.locator('.course-info')).toBeVisible();

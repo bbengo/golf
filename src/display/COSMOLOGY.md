@@ -56,3 +56,7 @@ Readouts and actions use a unified dark forest material, muted sage selections, 
 ## Loading is part of the experience
 
 The HTML provides a styled, locally-fonted initial screen before JavaScript arrives. Shared root colour tokens also drive controls and menus. The bootstrap preserves this layer outside the body while the app replaces its contents. Display signals readiness only after renderer.draw succeeds; pairing setup does not delay local entry. Phone and original-lab modes reveal after mounting. The handoff lasts 380 ms and is immediate with reduced motion. No simulated percentage or forced wait is shown. Import errors retain the layer with retry rather than leaving an endless indicator. An initial entry-script network failure cannot run this JavaScript recovery and still requires a browser reload.
+
+## Daylight preference
+
+Experience options includes Morning / Daylight / Late afternoon. The value is validated and saved locally as purity-daylight, independently of practice conditions and pairing. Selecting it does not issue a SETUP command or change the current shot. The canvas reports the active choice for browser verification.
