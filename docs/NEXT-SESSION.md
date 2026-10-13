@@ -112,3 +112,7 @@ The previously pending outer-environment coverage is implemented with a viewport
 ## 2026-10-13 - Procedural-world audit
 
 Survey-edge flight/roll termination, controller aim/probe clipping, camera pan caps and terrain-inspection clipping have been removed for Purity. Environment selection restored in Game options with image/procedural split comparison. Next architectural priority: one shared deterministic world sampler for distant water, trees and ground, followed by a smooth terrain continuation beyond the DEM. Current distant scenery remains decorative; do not claim full physical parity. Preserve local image study as a presentation option without allowing its dimensions to constrain the synthetic world.
+
+## 2026-10-13 - Engine foundation pass
+
+Camera response modes, ball renderer, recorded-shot effects, validated presentation preferences and viewport allocation are implemented. Settings split into four sections. Follow the ordered engine roadmap in COSMOLOGY: shared procedural world physics first, versioned calibrated ball/club profiles second, shared weather/environment state third, evidence-based practice analysis fourth. Do not describe decorative distant water/trees as physical yet.

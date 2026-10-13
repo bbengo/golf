@@ -10,6 +10,13 @@ test('environment choices load, align with the same camera and persist', async (
    const canvas = page.locator('#course');
    await page.keyboard.press('Escape');
    await page.locator('#openGameOptions').click();
+   await page.locator('[data-option-tab=camera]').click();
+   await page.getByLabel('Camera response', { exact: true }).selectOption('responsive');
+   await page.getByLabel('Ball visibility', { exact: true }).selectOption('enhanced');
+   await page.getByLabel('Ball finish', { exact: true }).selectOption('yellow');
+   await page.getByLabel('Last-shot trace', { exact: true }).selectOption('last');
+   await page.screenshot({ path: 'test-results/camera-ball-options.png' });
+   await page.locator('[data-option-tab=world]').click();
    const selection = page.getByLabel('Environment', { exact: true });
    await selection.selectOption('photo');
    await expect(canvas).toHaveAttribute('data-image-ready', 'true', { timeout: 30000 });
@@ -21,5 +28,8 @@ test('environment choices load, align with the same camera and persist', async (
    await page.reload();
    await expect(canvas).toHaveAttribute('data-environment', 'comparison', { timeout: 30000 });
    await expect(canvas).toHaveAttribute('data-image-ready', 'true', { timeout: 30000 });
+   await expect(page.locator('body')).toHaveAttribute('data-ball-colour', 'yellow');
+   await expect(page.locator('body')).toHaveAttribute('data-camera-feel', 'responsive');
+   await expect(page.locator('body')).toHaveAttribute('data-shot-trace', 'last');
    expect(errors).toEqual([]);
 });

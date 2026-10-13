@@ -81,6 +81,7 @@ test('desktop controls, mouse aiming and player-selected interface modes', async
    await page.locator('#openGameOptions').click();
    await page.screenshot({ path: 'test-results/game-options.png' });
    const clubBeforeLight = await page.locator('#desktopClub').inputValue();
+   await page.locator('[data-option-tab=world]').click();
    await page.locator('#daylight').selectOption('evening');
    await expect(page.locator('#course')).toHaveAttribute('data-daylight', 'evening');
    await expect(page.locator('#desktopClub')).toHaveValue(clubBeforeLight);
@@ -102,7 +103,9 @@ test('desktop controls, mouse aiming and player-selected interface modes', async
    await expect(page.locator('#displayTools')).toBeVisible();
    await page.locator('#openGameOptions').click();
    await page.locator('[name=displayMode][value=desktop]').check();
+   await page.locator('[data-option-tab=camera]').click();
    await page.locator('#followBall').uncheck();
+   await page.locator('[data-option-tab=experience]').click();
    await page.locator('#optionsPair').click();
    await expect(page.locator('#pairing')).toBeVisible();
    await page.locator('#closePairing').click();

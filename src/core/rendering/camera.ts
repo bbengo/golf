@@ -1,3 +1,4 @@
+import type { Presentation } from './presentation';
 import type { Point } from '../contracts/cockpit';
 export type Bounds = { minX: number; maxX: number; minY: number; maxY: number };
 
@@ -14,6 +15,8 @@ export class CourseCamera {
    offsetY = 0;
    target = { x: 0, y: 0, zoom: 1 };
    restrictPan = true;
+   motion: 'manual' | 'follow' = 'manual';
+   feel: Presentation['cameraFeel'] = 'balanced';
    private fitScale = 1;
    private ready = false;
    bounds: Bounds = { minX: 0, maxX: 256.8, minY: 0, maxY: 550.8 };
@@ -56,10 +59,13 @@ export class CourseCamera {
       this.target = { x: p.x, y: p.y, zoom: Math.max(0.65, Math.min(zoom, 10)) };
    }
    tick(ms: number, reducedMotion = false) {
-      const a = reducedMotion ? 1 : 1 - Math.exp(-Math.min(ms, 64) / 190);
+      const factor = this.feel === 'responsive' ? 0.65 : this.feel === 'cinematic' ? 1.4 : 1;
+      const moveMs = (this.motion === 'follow' ? 190 : 85) * factor;
+      const zoomMs = (this.motion === 'follow' ? 420 : 125) * factor;
+      const a = reducedMotion ? 1 : 1 - Math.exp(-Math.max(0, Math.min(ms, 64)) / moveMs);
       this.x += (this.target.x - this.x) * a;
       this.y += (this.target.y - this.y) * a;
-      const zoomEase = reducedMotion ? 1 : 1 - Math.exp(-Math.min(ms, 64) / 420);
+      const zoomEase = reducedMotion ? 1 : 1 - Math.exp(-Math.max(0, Math.min(ms, 64)) / zoomMs);
       this.zoom += (this.target.zoom - this.zoom) * zoomEase;
       if (Math.abs(this.target.x - this.x) < 0.001) this.x = this.target.x;
       if (Math.abs(this.target.y - this.y) < 0.001) this.y = this.target.y;

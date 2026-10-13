@@ -1017,12 +1017,16 @@ html:has(body.experience) {
    font-size: 24px;
 }
 .options-tabs {
+   overflow-x: auto;
+   flex-shrink: 0;
    display: flex;
    gap: 24px;
    padding: 0 30px;
    border-bottom: 1px solid #c4d6b323;
 }
 .options-tabs button {
+   flex: 0 0 auto;
+   white-space: nowrap;
    background: none;
    color: #aabb9d;
    padding: 12px 0;
@@ -1411,5 +1415,29 @@ html:has(body.experience) {
    }
    #openCaddy strong {
       font-size: 15px;
+   }
+}
+
+/* Presentation settings use the same rounded, quiet field language as practice setup. */
+.option-row select {
+   min-width: 168px;
+   max-width: 100%;
+   flex-shrink: 0;
+   border: 1px solid #c4d6b32e;
+   border-radius: 14px;
+   background: #223127;
+   color: #e8eddf;
+   font: inherit;
+   font-size: 13px;
+   padding: 12px 14px;
+   color-scheme: dark;
+}
+.option-row select:focus-visible {
+   outline: 2px solid var(--purity-accent);
+   outline-offset: 3px;
+}
+@media (max-width: 600px) {
+   .option-row select {
+      width: 100%;
    }
 }

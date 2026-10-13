@@ -1,3 +1,8 @@
+import { ViewportSurface } from './viewport';
+import { BallRenderer } from './ball-renderer';
+import { ShotEffects } from './shot-effects';
+import { readPresentation } from './presentation';
+import { daylightChoice } from './daylight';
 import { Wind } from '../course/wind.js';
 import { CourseAtlas } from './course-atlas';
 import { CourseCamera } from './camera';
@@ -8,7 +13,10 @@ import type { Point } from '../contracts/cockpit';
 
 export class SimpleCourse {
    private canvas: HTMLCanvasElement;
+   private viewport: ViewportSurface;
    private ctx: CanvasRenderingContext2D;
+   private ballRenderer = new BallRenderer();
+   private effects = new ShotEffects();
    private atlas = new CourseAtlas();
    private lastTime = 0;
    private viewRevision = -1;
@@ -23,6 +31,7 @@ export class SimpleCourse {
    private menuCamera = new CourseCamera();
    constructor(canvas: HTMLCanvasElement) {
       this.canvas = canvas;
+      this.viewport = new ViewportSurface(canvas);
       this.ctx = canvas.getContext('2d')!;
       let pointer: { x: number; y: number; id: number; rotate: boolean } | null = null;
       const manual = () => {
@@ -127,9 +136,10 @@ export class SimpleCourse {
       } else this.camera.rotate(action === 'left' ? Math.PI / 12 : -Math.PI / 12);
    }
    draw(session: CockpitSession, time: number) {
-      const rect = this.canvas.getBoundingClientRect(),
-         dpr = Math.min(devicePixelRatio || 1, 2),
-         c = session.course;
+      const settings = readPresentation(document.body.dataset);
+      this.camera.feel = settings.cameraFeel;
+      const { rect, dpr } = this.viewport.prepare(settings.renderQuality);
+      const c = session.course;
       const frameMs = this.lastTime ? Math.max(0, time - this.lastTime) : 16;
       const layoutEase = this.reducedMotion.matches
          ? 1
@@ -188,20 +198,18 @@ export class SimpleCourse {
          // Broad flight framing eases into a modest landing view; avoid aggressive bounce zoom.
          this.camera.go(ball, 2.35 - 0.6 * (1 - Math.exp(-height / 22)));
          this.canvas.dataset.cameraMode = 'follow';
-         if (session.phase !== 'animating') this.following = false;
       }
+      this.camera.motion = this.following ? 'follow' : 'manual';
       this.camera.tick(this.lastTime ? time - this.lastTime : 16, this.reducedMotion.matches);
+      if (
+         session.phase !== 'animating' &&
+         Math.abs(this.camera.zoom - this.camera.target.zoom) < 0.005
+      )
+         this.following = false;
       this.lastTime = time;
       this.canvas.dataset.cameraZoom = this.camera.zoom.toFixed(3);
       this.canvas.dataset.cameraX = this.camera.x.toFixed(2);
       this.canvas.dataset.cameraAngle = this.camera.angle.toFixed(4);
-      if (
-         this.canvas.width !== Math.round(rect.width * dpr) ||
-         this.canvas.height !== Math.round(rect.height * dpr)
-      ) {
-         this.canvas.width = Math.round(rect.width * dpr);
-         this.canvas.height = Math.round(rect.height * dpr);
-      }
       const ctx = this.ctx;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
@@ -333,23 +341,27 @@ export class SimpleCourse {
             ctx.stroke();
          }
       }
-      const q = this.world(ball),
-         height = Math.max(0, (ball.z ?? 0) - Course.heightAt(c, ball));
-      ctx.fillStyle = '#20392b55';
-      ctx.beginPath();
-      ctx.ellipse(q.x + 3, q.y + 3, 4, 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-      if (session.last?.result.status !== 'holed' || session.phase !== 'resolved') {
-         ctx.fillStyle = '#fffdf1';
-         ctx.beginPath();
-         ctx.arc(
-            q.x,
-            q.y - Math.min(22, height * 0.3),
-            4 + Math.min(4, height * 0.05),
-            0,
-            Math.PI * 2,
+      if (session.last && document.body.dataset.displayMode !== 'clear') {
+         const elapsed = Math.max(0, ((time - session.animationStarted) / 1000) * 3);
+         this.effects.paint(
+            ctx,
+            this.camera,
+            session.last.result.trajectory,
+            session.last.result.events,
+            elapsed,
+            settings,
+            this.reducedMotion.matches,
          );
-         ctx.fill();
+      }
+      if (session.last?.result.status !== 'holed' || session.phase !== 'resolved') {
+         this.ballRenderer.paint(
+            ctx,
+            this.camera,
+            ball,
+            Course.heightAt(c, ball),
+            settings,
+            daylightChoice(document.body.dataset.daylight),
+         );
       }
    }
 }

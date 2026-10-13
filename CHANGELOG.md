@@ -232,3 +232,13 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Corrected image-camera registration for vertical as well as horizontal HUD offsets.
 - Documented remaining physical/scenic mismatch and DEM extension work in COSMOLOGY.
 - Final validation: all 32 unit tests pass, including legacy parity; environment switching/reload browser test passes. Prior desktop gameplay and wide/portrait landscape checks pass. Split comparison visually inspected.
+
+## 2026-10-13 - Camera, ball and effects foundation
+
+- Separated ball drawing, recorded-shot effects, viewport allocation and validated presentation preferences from display coordination.
+- Added fast manual versus smooth follow camera responses with Balanced, Responsive and Cinematic settings.
+- Ball grows with zoom, with daylight shading, close-up dimples, ivory/yellow finish and enhanced visibility. Physics radius and performance unchanged.
+- Optional last-shot ground track and landing cue use recorded simulation evidence and respect Clear course/reduced motion.
+- Organised options into Experience, Camera & ball, Environment and Practice conditions; added render quality and persistent display preferences.
+- Documented the ordered physical-world, ball-profile, weather and practice-analysis roadmap.
+- Validation: TypeScript, production build, all 36 unit tests and both targeted gameplay/settings browser tests pass. Settings capture visually inspected. Existing legacy bundle-size warning remains.
