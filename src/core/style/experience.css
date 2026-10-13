@@ -1441,3 +1441,45 @@ html:has(body.experience) {
       width: 100%;
    }
 }
+
+.desktop-strategy {
+   position: absolute;
+   right: 24px;
+   top: 112px;
+   width: 264px;
+   padding: 20px;
+   border: 1px solid #c4d6b323;
+   border-radius: 26px;
+   background: #12261eee;
+   backdrop-filter: blur(18px);
+   pointer-events: auto;
+}
+.desktop-strategy header {
+   display: grid;
+   gap: 16px;
+}
+.desktop-strategy .desktop-hint {
+   display: block;
+   line-height: 1.7;
+   font-size: 11px;
+   color: #a9baa4;
+}
+.desktop-strategy .aim-switch {
+   justify-content: space-between;
+}
+.desktop-strategy #desktopTune {
+   text-align: left;
+   padding-top: 12px;
+   border-top: 1px solid #c4d6b323;
+}
+.desktop-strategy .desktop-tuning {
+   position: static;
+   width: auto;
+   padding: 16px 0 0;
+   border: 0;
+   box-shadow: none;
+   background: none;
+}
+.experience[data-display-mode='minimal'] .desktop-strategy {
+   display: none;
+}

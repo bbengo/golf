@@ -1,3 +1,4 @@
+import { paintTarget } from './target-reticle';
 import { ViewportSurface } from './viewport';
 import { BallRenderer } from './ball-renderer';
 import { ShotEffects } from './shot-effects';
@@ -310,9 +311,7 @@ export class SimpleCourse {
          ctx.stroke();
          ctx.setLineDash([]);
          ctx.strokeStyle = '#fff6da';
-         ctx.beginPath();
-         ctx.arc(p.x, p.y, 5 + session.intent.effort * 2, 0, Math.PI * 2);
-         ctx.stroke();
+         paintTarget(ctx, this.camera, ball, session.aim, time, this.reducedMotion.matches);
          // Show the deterministic launch vector, not an invented landing prediction.
          // Club, effort and height affect it through the actual launch calculation.
          if (this.previewRevision !== session.revision) {

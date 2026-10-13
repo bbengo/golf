@@ -242,3 +242,12 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Organised options into Experience, Camera & ball, Environment and Practice conditions; added render quality and persistent display preferences.
 - Documented the ordered physical-world, ball-profile, weather and practice-analysis roadmap.
 - Validation: TypeScript, production build, all 36 unit tests and both targeted gameplay/settings browser tests pass. Settings capture visually inspected. Existing legacy bundle-size warning remains.
+
+## 2026-10-13 - Aiming and desktop feature recovery
+
+- Restored explicit desktop controls from local-play links and a direct in-game menu action.
+- Added distributed wide-desktop panels with compact-screen fallback and Single dock preference.
+- Added animated target crosshair and nearby yardage label; respects reduced motion and Clear course.
+- Added Shot analysis with carry, total, apex, duration, contact evidence and JSON export.
+- Audited original UCG features and documented destinations and remaining parity work.
+- Validation: TypeScript and production build pass; desktop recovery/layout/export regression and existing desktop gameplay browser checks pass. Distributed layout and target label visually inspected. Existing legacy bundle-size warning remains.

@@ -116,3 +116,7 @@ Survey-edge flight/roll termination, controller aim/probe clipping, camera pan c
 ## 2026-10-13 - Engine foundation pass
 
 Camera response modes, ball renderer, recorded-shot effects, validated presentation preferences and viewport allocation are implemented. Settings split into four sections. Follow the ordered engine roadmap in COSMOLOGY: shared procedural world physics first, versioned calibrated ball/club profiles second, shared weather/environment state third, evidence-based practice analysis fourth. Do not describe decorative distant water/trees as physical yet.
+
+## 2026-10-13 - UCG feature parity
+
+See the explicit parity inventory in COSMOLOGY. Target reticle/distance, direct desktop recovery, distributed desktop controls and Shot analysis/export are implemented. Remaining: Course study contours/mesh, caddy stock yardages, player profiles/variance/files, recorded replay/profile charts, journal export and practice study presets. These remain queued alongside the shared physical-world work.

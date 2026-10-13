@@ -83,6 +83,51 @@ export async function startDisplay(onFirstFrame?: () => void) {
       options.open();
    };
    $('openGameOptions').onclick = openOptions;
+   $('closeShotAnalysis').onclick = () => $<HTMLDialogElement>('shotAnalysis').close();
+   $('openShotAnalysis').onclick = () => {
+      const record = session.last,
+         result = record?.result;
+      $('analysisSummary').textContent = result
+         ? `Result: ${result.status}. Final lie: ${result.finalSurface}.`
+         : 'Play a shot to see its flight and contact evidence here.';
+      $('analysisMetrics').replaceChildren();
+      $('analysisEvents').replaceChildren();
+      $<HTMLButtonElement>('exportShotEvidence').disabled = !record;
+      if (result) {
+         for (const [label, value] of [
+            ['Carry', `${(result.carry / 0.9144).toFixed(1)} yd`],
+            ['Start to finish', `${(result.total / 0.9144).toFixed(1)} yd`],
+            ['Apex above launch', `${(result.apexAboveLaunch / 0.3048).toFixed(1)} ft`],
+            ['Simulation duration', `${result.duration.toFixed(2)} s`],
+         ]) {
+            const row = document.createElement('div'),
+               term = document.createElement('dt'),
+               valueNode = document.createElement('dd');
+            term.textContent = label;
+            valueNode.textContent = value;
+            row.append(term, valueNode);
+            $('analysisMetrics').append(row);
+         }
+         for (const event of result.events) {
+            const item = document.createElement('li');
+            item.textContent = `${event.t.toFixed(2)} s - ${event.type}`;
+            $('analysisEvents').append(item);
+         }
+      }
+      $<HTMLDialogElement>('shotAnalysis').showModal();
+   };
+   $('exportShotEvidence').onclick = () => {
+      if (!session.last) return;
+      const url = URL.createObjectURL(
+         new Blob([JSON.stringify(session.last, null, 2)], { type: 'application/json' }),
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'purity-shot-evidence.json';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+   };
+
    $('lobbyOptions').onclick = openOptions;
    $('quietView').onclick = () => {
       quiet = true;
@@ -251,8 +296,13 @@ export async function startDisplay(onFirstFrame?: () => void) {
    for (const link of document.querySelectorAll('[data-open-controls]'))
       link.addEventListener('click', () => {
          quiet = true;
-         renderRoute();
+         setMode('desktop');
       });
+   $('useDesktopControls').onclick = () => {
+      quiet = true;
+      setMode('desktop');
+      navigate('play');
+   };
    $('playHere').onclick = () => {
       quiet = true;
       setMode('desktop');

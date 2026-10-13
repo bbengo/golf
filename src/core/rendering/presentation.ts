@@ -1,5 +1,6 @@
 /** Validated display preferences; no writes to shot state or physics. */
 export const PRESENTATION_CHOICES = {
+   desktopLayout: ['distributed', 'dock'],
    renderQuality: ['balanced', 'economy', 'crisp'],
    cameraFeel: ['balanced', 'responsive', 'cinematic'],
    ballColour: ['ivory', 'yellow'],
@@ -11,6 +12,7 @@ export type Presentation = {
    [K in keyof typeof PRESENTATION_CHOICES]: (typeof PRESENTATION_CHOICES)[K][number];
 };
 export const DEFAULT_PRESENTATION: Presentation = {
+   desktopLayout: 'distributed',
    renderQuality: 'balanced',
    cameraFeel: 'balanced',
    ballColour: 'ivory',

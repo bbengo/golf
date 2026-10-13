@@ -29,6 +29,7 @@ export function startOptions(
    <label><input type="radio" name="displayMode" value="desktop"><span><strong>Desktop controls</strong><small>Mouse aiming, a shot dock and separate course readouts.</small></span></label>
    <label><input type="radio" name="displayMode" value="minimal"><span><strong>Minimal HUD</strong><small>Distance, lie and wind. Play from your phone.</small></span></label>
    <label><input type="radio" name="displayMode" value="clear"><span><strong>Clear course</strong><small>No interface or aim guides. Click the course or press Escape to open the menu.</small></span></label></fieldset>
+   <label class="option-row"><span><strong>Desktop layout</strong><small>Distributed separates aiming tools from the shot dock on wide screens. Compact screens use the dock.</small></span><select data-presentation="desktopLayout" aria-label="Desktop layout"><option value="distributed">Distributed panels</option><option value="dock">Single dock</option></select></label>
    <div class="option-row"><div><h3>Phone controller</h3><p id="optionsPhoneStatus">Optional. Same course, touch controls.</p></div><button id="optionsPair">Connect phone</button></div>
    <a href="#guide" id="optionsGuide">Controls & how to play ↗</a>
    </section>

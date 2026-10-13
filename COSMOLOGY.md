@@ -176,3 +176,33 @@ Settings now separates Experience, Camera & ball, Environment, and Practice cond
 5. Presentation polish: predictive camera look-ahead using recorded trajectory, terrain-aware landing framing, quiet material-specific impact audio and optional replay controls. Respect manual override, reduced motion and Clear course throughout.
 
 Deferred systems above are not claimed implemented. In particular, distant scenery remains decorative and ground beyond the sampled terrain remains an approximation. This pass builds usable, testable presentation modules while retaining that audit as the next physics priority.
+
+## 2026-10-13 - UCG-50 feature recovery and desktop ownership
+
+The controls were not removed: the lobby's on-screen-controls entry retained a saved Minimal/Clear preference, making them effectively undiscoverable. Explicit local-play links now select desktop mode, and Game menu has a direct Use desktop controls action. The preference still persists for ordinary reload/resume. Phone pairing remains optional.
+
+The default desktop layout distributes the same live DOM controls at 1200px and above: round info left, aim/inspection/shaping right, club/effort/commit below. No duplicate inputs, command routes or mobile cockpit were added. Resizing or selecting Single dock reparents the existing header and tuning controls; focus/state and the authoritative session remain shared. Clear and Minimal suppress the strategy panel. Layout selection lives in Experience settings.
+
+Target reticle is a presentation-only module with a slow rotating four-arm crosshair, restrained radius breathing, and yards from the ball beside the chosen target. Reduced motion removes both animations; Clear course hides the reticle. Distance is intent, not a predicted carry/landing promise, and the camera is never animated by the reticle. Offscreen targets do not acquire misleading edge labels.
+
+Shot analysis is a direct menu destination, with actual recorded carry, start-to-finish distance, apex, simulation duration and ordered contact events. Export downloads the full recorded shot JSON, preserving engine/course/intent/seed evidence. It does not replay or resimulate the shot.
+
+### UCG-50 parity inventory
+
+| Original capability | Purity destination/status |
+| --- | --- |
+| Target crosshair and distance | Restored beside the course target; restrained optional-motion behaviour |
+| Club/effort/shape/height | Caddy, shot dock and separate desktop strategy panel; phone retains touch controls |
+| Desktop local play | Lobby local-play entry and direct Game menu action; no phone requirement |
+| Wind, moisture, tees and pin difficulty | Game options / Practice conditions |
+| Camera framing, north, image view | Course toolbar and Game options / Camera & ball / Environment |
+| Carry/total/apex/contact evidence and export | Game menu / Shot analysis; current-shot evidence export implemented |
+| Probe elevation/slope/lie | Existing Inspect ground; richer contour/slope layers and terrain mesh remain queued for a dedicated Course study panel |
+| Stock club yardages | Queue within the caddy: clearly label calm flat model reference rather than a promise for current conditions |
+| Player fitting, variance and saved player files | Queue Player profile settings with versioned import/export validation; current Purity uses the baseline player |
+| Replay, terrain/shot profile chart | Queue in Shot analysis; playback must reuse recorded trajectory rather than consume a new shot/seed |
+| Learning record and full round export | Queue Practice journal, distinguish simulated choices from real player measurement |
+| Approach/front-slope/putting studies and ground zones | Queue Practice conditions / Study presets; changing start must be explicit and auditable |
+| Source provenance/research limits | Existing original lab and COSMOLOGY; queue readable About the model page inside Purity |
+
+This inventory is a delivery checklist, not a claim of full UCG feature parity. Retain the original lab as a first-class experience while each remaining capability gets a discoverable Purity home.

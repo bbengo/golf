@@ -31,6 +31,7 @@ export function startDesktop(
    aim: (point: Point, target: 'aim' | 'probe') => void,
 ) {
    root.innerHTML = `
+   <section id="desktopStrategy" class="desktop-strategy" aria-label="Aim and shot shaping" hidden></section>
    <aside class="course-info" aria-label="Round information"><p class="hud-eyebrow">CREEK & SHOULDER <span>01</span></p><div class="hud-distance"><strong id="desktopDistance">—</strong><span>yds to aim</span></div><div class="hud-facts"><span>SHOT <b id="desktopShot">1</b></span><span id="desktopLie">Tee</span></div><p id="desktopWind" class="hud-weather"></p><p id="desktopProbe" hidden></p></aside>
    <nav class="view-toolbar" aria-label="Course view"><button data-view="hole">Whole hole</button><button data-view="ball">Ball</button><button data-view="green">Green</button><button id="desktopNorth" aria-label="Reset north up">N <span id="northNeedle" aria-hidden="true">↑</span></button></nav>
    <dialog id="desktopCaddy" class="caddy-dialog" aria-labelledby="caddyTitle"><header><div><p class="eyebrow">YOUR CADDY</p><h2 id="caddyTitle">Choose your next club.</h2></div><button id="closeCaddy" aria-label="Close caddy">&times;</button></header><p class="caddy-intro">Woods for distance. Irons for approach. Touch around the green.</p>${caddyMarkup()}</dialog><section class="shot-dock" aria-label="Desktop shot controls">
@@ -40,6 +41,23 @@ export function startDesktop(
     <footer><span id="desktopResult" role="status">Set your line and choose your club.</span><button id="desktopMulligan" disabled>Mulligan</button></footer>
    </section><p id="desktopNotice" role="status" class="desktop-notice" hidden></p>`;
    const $ = <T extends HTMLElement>(id: string) => root.querySelector('#' + id) as T;
+   const dock = root.querySelector<HTMLElement>('.shot-dock')!;
+   const strategy = $('desktopStrategy');
+   const shotHeader = dock.querySelector<HTMLElement>('header')!;
+   const tuning = $('desktopTuning');
+   const wide = matchMedia('(min-width: 1200px)');
+   const layout = () => {
+      const split = wide.matches && document.body.dataset.desktopLayout === 'distributed';
+      if (split && shotHeader.parentElement !== strategy) strategy.append(shotHeader, tuning);
+      else if (!split && shotHeader.parentElement !== dock) dock.prepend(shotHeader, tuning);
+      strategy.hidden = !split;
+   };
+   wide.addEventListener('change', layout);
+   new MutationObserver(layout).observe(document.body, {
+      attributes: true,
+      attributeFilter: ['data-desktop-layout'],
+   });
+   layout();
    const caddy = $<HTMLDialogElement>('desktopCaddy');
    const refreshCaddy = mountCaddy(root, $<HTMLSelectElement>('desktopClub'), () => caddy.close());
    $('openCaddy').onclick = () => {
