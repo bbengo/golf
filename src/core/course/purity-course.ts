@@ -3,7 +3,7 @@ import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.2.0';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.2.1';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -18,7 +18,21 @@ const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point =
          (2 * a.y - 5 * b.y + 4 * c.y - d.y) * t * t +
          (-a.y + 3 * b.y - 3 * c.y + d.y) * t * t * t),
 });
-function smooth(points: Point[]) {
+function smooth(points: Point[], closed = false) {
+   if (closed) {
+      const count = points.length;
+      return points.flatMap((_, i) =>
+         Array.from({ length: 4 }, (_, j) =>
+            interpolate(
+               points[(i + count - 1) % count],
+               points[i],
+               points[(i + 1) % count],
+               points[(i + 2) % count],
+               j / 4,
+            ),
+         ),
+      );
+   }
    const result: Point[] = [];
    for (let i = 0; i < points.length - 1; i++)
       for (let j = 0; j < 4; j++)
@@ -42,10 +56,11 @@ function bunker(x: number, y: number, rx: number, ry: number, phase: number) {
    });
 }
 function ribbon(points: Point[], width: number) {
-   const line = smooth(smooth(points));
+   const closed = points[0].x === points.at(-1)!.x && points[0].y === points.at(-1)!.y;
+   const line = closed ? smooth(smooth(points.slice(0, -1), true), true) : smooth(smooth(points));
    const banks = line.map((p, i) => {
-      const a = line[Math.max(0, i - 1)],
-         b = line[Math.min(line.length - 1, i + 1)];
+      const a = line[closed ? (i + line.length - 1) % line.length : Math.max(0, i - 1)],
+         b = line[closed ? (i + 1) % line.length : Math.min(line.length - 1, i + 1)];
       const length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
       const nx = (-(b.y - a.y) / length) * width,
          ny = ((b.x - a.x) / length) * width;
@@ -63,7 +78,8 @@ function ribbon(points: Point[], width: number) {
          return { x: p.x + Math.cos(a) * width, y: p.y + Math.sin(a) * width };
       });
    };
-   const closed = points[0].x === points.at(-1)!.x && points[0].y === points.at(-1)!.y;
+   // Close each bank before crossing the ribbon, leaving the interior as a hole.
+   if (closed) banks.push(banks[0]);
    return [
       ...banks.map((b) => b[0]),
       ...(closed ? [] : cap(line.length - 1, line.length - 2)),

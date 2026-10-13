@@ -204,3 +204,10 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Shared water shading across detailed and distant scenery, including daylight-specific reflection tones.
 - TypeScript and production build pass (existing legacy bundle-size warning remains).
 - Wide-screen and portrait landscape browser checks pass; both captures visually inspected.
+
+## 2026-10-13 - Smooth estate path closure
+
+- Rounded the bottom-left loop join using cyclic spline interpolation and continuous bank normals.
+- Versioned the shared course geometry as woodland 0.2.1.
+- TypeScript, production build and all four course regression tests pass.
+- Wide-screen/portrait browser coverage passes; rendered loop visually inspected.

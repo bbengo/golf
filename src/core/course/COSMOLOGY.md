@@ -1,7 +1,7 @@
 # Purity woodland course
 
 `purity-course.ts` clones HoleVisual into a separate synthetic design, versioned
-`purity-woodland/0.2.0`. The original lab and reference HTML stay unchanged.
+`purity-woodland/0.2.1`. The original lab and reference HTML stay unchanged.
 
 The creek banks are interpolated into connected quadrilaterals and extended through
 the surroundings. Water elevations inherit the nearest original segment. Three
@@ -18,3 +18,7 @@ imagery is unavailable in Purity because it depicts different geometry.
 ## Estate surroundings (September 2026)
 
 Revision `purity-woodland/0.2.0` adds two curved practice lawns, two lakes, two sand areas and an estate walking loop. Their polygons are shared by rendering, lie queries and the physics snapshot; seeded woodland avoids these surfaces. The original tees, pins, main hole and reference implementation remain intact. These are surroundings for one playable hole, not additional playable holes. Lakes use a constant water height sampled at their centre; the underlying DEM is not excavated. Off-line shots can encounter the new surfaces.
+
+## 2026-10-13 - Rounded estate-loop closure
+
+The estate walk repeated its first point but used open-ended spline interpolation and end normals. That produced a sharp bottom-left join. Closed ribbons now interpolate cyclic neighbours on both smoothing passes and use wrapped tangent normals, closing each bank before connecting the polygon. Open lawns retain their existing round caps. This changes shared visual/physical path geometry, so the woodland revision advances to 0.2.1. A regression checks both bank closures, tangent continuity and path/interior surface queries.

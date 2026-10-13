@@ -55,3 +55,23 @@ test('estate lakes and practice lawns participate in physical lie queries', () =
    assert.deepEqual(c.pin, HoleVisual.course.pin);
    assert.deepEqual(c.pins, HoleVisual.course.pins);
 });
+
+test('estate loop closes with continuous banks and a smooth seam', () => {
+   const course = createPurityCourse();
+   const polygon = course.surfaces.find((s) => s.id === 'estate-walk').polygon;
+   const half = polygon.length / 2;
+   for (const bank of [polygon.slice(0, half), polygon.slice(half)]) {
+      assert.deepEqual(bank[0], bank.at(-1));
+      const a = bank.at(-2),
+         b = bank[0],
+         c = bank[1];
+      const ux = b.x - a.x,
+         uy = b.y - a.y,
+         vx = c.x - b.x,
+         vy = c.y - b.y;
+      const cosine = (ux * vx + uy * vy) / (Math.hypot(ux, uy) * Math.hypot(vx, vy));
+      assert.ok(cosine > 0.97, 'closing tangent must not form a sharp corner');
+   }
+   assert.equal(Course.surfaceAt(course, { x: -145, y: -65 }).type, 'path');
+   assert.notEqual(Course.surfaceAt(course, { x: 120, y: 200 }).type, 'path');
+});
