@@ -196,3 +196,11 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Preserved course geometry, physics, camera limits and existing controls.
 - Added camera-coverage unit checks and browser pixel/screenshot checks at rotated pan limits in wide and portrait views.
 - Validation: TypeScript, production build and viewport-coverage unit test pass. Desktop gameplay/options and the new wide/portrait landscape browser checks pass; landscape coverage was rerun after creek continuation. Inspected both viewport screenshots. Existing legacy bundle-size warning remains.
+
+## 2026-10-13 - Landscape colour and water refinement
+
+- Brighter natural turf palette shared across the course and surroundings.
+- Replaced circular lake shading with procedural sky/cloud colour, bank-following shallows and restrained directional highlights.
+- Shared water shading across detailed and distant scenery, including daylight-specific reflection tones.
+- TypeScript and production build pass (existing legacy bundle-size warning remains).
+- Wide-screen and portrait landscape browser checks pass; both captures visually inspected.

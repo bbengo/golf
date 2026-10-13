@@ -1,4 +1,5 @@
-﻿import type { CourseCamera, Bounds } from './camera';
+import { waterColour } from './water-material';
+import type { CourseCamera, Bounds } from './camera';
 import { canopyStamp } from './terrain-detail';
 import { DAYLIGHT, type Daylight } from './daylight';
 
@@ -65,7 +66,7 @@ export class LandscapeSurround {
          this.crowns = Array.from({ length: 6 }, (_, i) => canopyStamp(i, DAYLIGHT[daylight]));
       }
       // Opaque undercoat prevents fractional rotated tile edges from exposing transparency.
-      ctx.fillStyle = '#526c3d';
+      ctx.fillStyle = '#51763e';
       ctx.fillRect(0, 0, camera.w, camera.h);
       const range = surroundTileRange(camera),
          size = SURROUND_TILE_SIZE;
@@ -115,12 +116,12 @@ export class LandscapeSurround {
                y = (ty + 1) * size - (py + 0.5) / factor;
             const wet = wetness(x, y),
                n = noise(x / 65, y / 65) - 0.5;
-            const fine = (hash(Math.floor(x), Math.floor(y)) - 0.5) * 9;
+            const fine = (hash(Math.floor(x), Math.floor(y)) - 0.5) * (wet < 0 ? 1.5 : 9);
             let colour: number[];
-            if (wet < 0) colour = [48 + n * 12, 91 + n * 15, 91 + n * 16];
+            if (wet < 0) colour = waterColour(x, y, -wet * 28, daylight);
             else if (wet < 0.12) colour = [114 + n * 20, 121 + n * 20, 90 + n * 15];
-            else colour = [76 + n * 35, 100 + n * 38, 57 + n * 23];
-            const warmth = daylight === 'day' ? 0 : 5;
+            else colour = [75 + n * 35, 111 + n * 38, 57 + n * 23];
+            const warmth = wet < 0 || daylight === 'day' ? 0 : 5;
             pixels.data.set(
                [colour[0] + fine + warmth, colour[1] + fine, colour[2] + fine - warmth, 255],
                (py * resolution + px) * 4,

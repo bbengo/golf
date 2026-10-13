@@ -1,3 +1,4 @@
+import { waterColour } from './water-material';
 import { LandscapeSurround } from './landscape-surround';
 import { DAYLIGHT, daylightChoice, type Daylight } from './daylight';
 import { terrainVariation, canopyStamp } from './terrain-detail';
@@ -7,12 +8,12 @@ import type { Point, Snapshot } from '../contracts/cockpit';
 import type { CourseCamera } from './camera';
 
 const colors: Record<string, string> = {
-   rough: '#526c3d',
-   'deep-rough': '#314c32',
-   fairway: '#7f9b52',
-   fringe: '#698246',
-   green: '#a2b574',
-   tee: '#97ac69',
+   rough: '#51763e',
+   'deep-rough': '#294f36',
+   fairway: '#83a951',
+   fringe: '#699044',
+   green: '#a7bf70',
+   tee: '#9bb966',
    sand: '#d9c9a5',
    water: '#386e70',
    path: '#aa9e7d',
@@ -281,45 +282,47 @@ export class CourseAtlas {
       const wc = waterLayer.getContext('2d')!;
       wc.fillStyle = colors.water;
       wc.fill(water);
+      // Sample a small union mask: shore distance follows banks, never lake centres.
+      const step = 4;
+      const material = document.createElement('canvas');
+      material.width = Math.ceil(w / step);
+      material.height = Math.ceil(h / step);
+      const mc = material.getContext('2d')!;
+      mc.scale(1 / step, 1 / step);
+      mc.fill(water);
+      const mask = mc.getImageData(0, 0, material.width, material.height);
+      const mw = material.width,
+         mh = material.height;
+      const distance = new Float32Array(mw * mh);
+      for (let i = 0; i < distance.length; i++) distance[i] = mask.data[i * 4 + 3] > 127 ? 1000 : 0;
+      for (let y = 0; y < mh; y++)
+         for (let x = 0; x < mw; x++) {
+            const i = y * mw + x;
+            distance[i] = Math.min(
+               distance[i],
+               x ? distance[i - 1] + 1 : 0,
+               y ? distance[i - mw] + 1 : 0,
+            );
+         }
+      for (let y = mh - 1; y >= 0; y--)
+         for (let x = mw - 1; x >= 0; x--) {
+            const i = y * mw + x;
+            distance[i] = Math.min(
+               distance[i],
+               x < mw - 1 ? distance[i + 1] + 1 : 0,
+               y < mh - 1 ? distance[i + mw] + 1 : 0,
+            );
+            const colour = waterColour(
+               bounds.minX + ((x + 0.5) * step) / s,
+               bounds.maxY - ((y + 0.5) * step) / s,
+               (distance[i] * step) / s,
+               this.daylight,
+            );
+            mask.data.set([...colour, 255], i * 4);
+         }
+      mc.putImageData(mask, 0, 0);
       wc.globalCompositeOperation = 'source-in';
-      const depth = wc.createLinearGradient(0, 0, w, h);
-      depth.addColorStop(0, '#658c80');
-      depth.addColorStop(0.5, '#305e63');
-      depth.addColorStop(1, '#56887d');
-      wc.fillStyle = depth;
-      wc.fillRect(0, 0, w, h);
-      for (const lake of c.surfaces.filter((surface: { id: string }) =>
-         surface.id.startsWith('estate-lake-'),
-      )) {
-         const ps = lake.polygon.map(point);
-         const minX = Math.min(...ps.map((p: Point) => p.x)),
-            maxX = Math.max(...ps.map((p: Point) => p.x));
-         const minY = Math.min(...ps.map((p: Point) => p.y)),
-            maxY = Math.max(...ps.map((p: Point) => p.y));
-         const x = (minX + maxX) / 2,
-            y = (minY + maxY) / 2,
-            radius = Math.max(maxX - minX, maxY - minY) / 2;
-         wc.save();
-         wc.beginPath();
-         ps.forEach((p: Point, i: number) => (i ? wc.lineTo(p.x, p.y) : wc.moveTo(p.x, p.y)));
-         wc.closePath();
-         wc.clip();
-         const waterDepth = wc.createRadialGradient(
-            x - radius * 0.15,
-            y + radius * 0.12,
-            0,
-            x,
-            y,
-            radius,
-         );
-         waterDepth.addColorStop(0, '#203f48');
-         waterDepth.addColorStop(0.55, '#315f66');
-         waterDepth.addColorStop(0.84, '#568980');
-         waterDepth.addColorStop(1, '#8b9e86');
-         wc.fillStyle = waterDepth;
-         wc.fillRect(minX, minY, maxX - minX, maxY - minY);
-         wc.restore();
-      }
+      wc.drawImage(material, 0, 0, w, h);
       for (const surface of c.surfaces) {
          if (surface.type === 'water') continue;
          path(surface.polygon);

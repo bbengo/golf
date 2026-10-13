@@ -106,3 +106,9 @@ Noise, drainage and woodland placement use global world coordinates and stable h
 
 The new view coverage test checks extreme wide and portrait viewports at minimum zoom, rotated and panned; corner pixels must remain opaque and varied, detecting both holes and the old flat fallback. The unit test independently checks inverse-projected corner coverage at camera limits. Arbitrarily extreme aspect ratios can exceed the tile cache's working set and cause regeneration; typical desktop/phone views remain the intended target.
 `wetness` also continues the remote north/south creek curves from woodland revision 0.2 into the patch field; those artistic endpoint constants must be revisited if that course layout changes.
+
+## 2026-10-13 - Shared water material
+
+`water-material.ts` samples smooth seeded world-space noise for sky/cloud colour, warped small ripples and sun-oriented glints. Morning/day/evening palettes follow the existing daylight selection. `course-atlas.ts` downsamples the union water mask to one sample per two world metres and makes two distance-transform passes. An exponential blend transitions bank green into reflected sky, avoiding lake-centred rings. The distance transform uses grid neighbours and is an approximate artistic distance, not physical depth. The resulting colour texture is clipped by the original full-resolution union mask.
+
+`landscape-surround.ts` shares the same sampler, with approximate shore distance from its drainage field; water grain is reduced to keep reflections smooth. This adds cache-build work only, not per-frame pixel processing. Existing wind-driven ripple animation remains. Cloud reflections are static and stylised; no live sky, ray tracing or view-dependent Fresnel is claimed. The surrounding and detailed rough palettes were lifted together to retain their blend.
