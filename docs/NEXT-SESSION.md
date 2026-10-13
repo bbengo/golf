@@ -104,3 +104,7 @@ The new surroundings are physical surfaces in woodland revision 0.2.0. Visually 
 ## October landscape pass
 
 Procedural materials and outside-bounds scenery are implemented in course-atlas.ts and terrain-detail.ts. Validate frame time on the intended display hardware, especially close zoom and rotation; browser automation is not a physical-device performance certification. A near-field grass pass improves turf detail, but the base terrain/tree cache remains two pixels/metre and is not a photorealistic 3D replacement. Any future height/displacement or playable landscape expansion must remain aligned with simulation geometry.
+
+## October 13 coverage update
+
+The previously pending outer-environment coverage is implemented with a viewport-driven procedural patch cache behind the detailed course. Review landscape-wide.png and landscape-portrait.png captures from the new browser test. Remaining art direction concerns are close-range terrain detail and the artistic overlap between the detailed estate and distant procedural scenery, not a plain outer fallback. Validate performance on the target physical display and unusually wide aspect ratios.

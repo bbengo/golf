@@ -188,3 +188,11 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Changed tree shadows, canopy highlights, slope lighting and colour warmth together for each sun position, without resetting the round or changing physical conditions.
 - Daylight uses art-directed presets, not an automatic geographic day/night simulation.
 - Validation: TypeScript and production build pass; the desktop gameplay/options browser flow passes with daylight selection and round-preservation checks. Reviewed the late-afternoon screenshot.
+
+## 2026-10-13 ? Landscape through the full camera range
+
+- Replaced the flat outer fallback with world-anchored procedural grass, water and woodland patches covering the visible viewport.
+- Added a bounded background cache, daylight-aware shadows and a distant blend around the detailed course atlas.
+- Preserved course geometry, physics, camera limits and existing controls.
+- Added camera-coverage unit checks and browser pixel/screenshot checks at rotated pan limits in wide and portrait views.
+- Validation: TypeScript, production build and viewport-coverage unit test pass. Desktop gameplay/options and the new wide/portrait landscape browser checks pass; landscape coverage was rerun after creek continuation. Inspected both viewport screenshots. Existing legacy bundle-size warning remains.

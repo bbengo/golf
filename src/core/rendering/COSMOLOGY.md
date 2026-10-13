@@ -28,8 +28,7 @@ The atlas rebuilds when the course object changes, not during camera motion. It
 uses two pixels per metre with a 350 m decorative surround (roughly 32 MB RGBA for
 this course, excluding browser/GPU copies and a similarly sized temporary water
 mask while rebuilding). The surround does not expand playable
-bounds. Extreme wide/distant views can reach the flat-colour fallback. This is a
-bounded cache, not a streaming world or close-range grass simulation. Display
+bounds. A viewport-driven procedural surround now covers views beyond this detailed cache. The playable world remains bounded; the background is scenery, not additional simulation. Display
 device pixel ratio is capped at two.
 
 ## Camera and animation
@@ -91,10 +90,19 @@ Water uses muted depth colours, broken shoreline grain and small ripples whose f
 
 Two scenic lakes, interrupted woodland clusters and creek continuation occupy the existing 350-metre surround. Scenic tree crowns remain outside the playable rectangle; scenic lakes are also fully outside it. Creek extensions begin at the authored endpoints beyond playable bounds. These decorations are built only in the renderer, never added to the physical snapshot, and do not expand playable space. Within the course, visible trees and surface geometry continue to come from the simulation. Scenery is subordinate in colour and framing to the hole.
 
-Performance: the base cache remains two pixels/metre (roughly 32 MB RGBA); the temporary water mask is similar in size, plus a one-third-resolution material buffer. Distant trees and leaf clusters are bounded. Twelve 128-pixel procedural canopy stamps replace repeated leaf construction; visible physical trees reuse these sharper stamps at close zoom. The per-frame additions are capped, batched ripples, visible close-view crowns and a viewport-limited close-view grass pass. No image assets, external services or new dependencies are needed. The cache still has finite extent; extreme pans/zoom-outs can reveal its fallback. This is an improved overhead 2D renderer, not photorealistic 3D terrain, true volumetric grass or ray-traced reflection. Higher-resolution close-view terrain and tree detail remain future work.
+Performance: the base cache remains two pixels/metre (roughly 32 MB RGBA); the temporary water mask is similar in size, plus a one-third-resolution material buffer. Distant trees and leaf clusters are bounded. Twelve 128-pixel procedural canopy stamps replace repeated leaf construction; visible physical trees reuse these sharper stamps at close zoom. The per-frame additions are capped, batched ripples, visible close-view crowns and a viewport-limited close-view grass pass. No image assets, external services or new dependencies are needed. The detailed cache has finite extent; the viewport-driven surround now covers its outer edges. This is an improved overhead 2D renderer, not photorealistic 3D terrain, true volumetric grass or ray-traced reflection. Higher-resolution close-view terrain and tree detail remain future work.
 
 ## Wind cues and daylight
 
 The renderer samples the same authoritative Wind.atDay(session.day(), 0) presentation used by the live readout. Ripple orientation, drift and intensity follow its toward bearing and fraction; the flag follows that bearing in camera coordinates, with a small flutter. Calm removes drift/flutter. Reduced motion freezes oscillation while retaining directional information. Near-view turf leans with the wind. These cues remain approximate rather than numeric wind-speed instruments.
 
 Game options offers morning, daylight and late-afternoon art-directed sun positions, persisted on this display. Selecting one rebuilds the cached terrain once: physical and scenic tree shadows, canopy highlights, slope illumination and colour grade use the same east/north sun vector. This is an explicit visual preference, not a geographic sun ephemeris, automatic day/night cycle or changed weather/physics. Shadow silhouettes are a 2D approximation; changing light does not restart the round.
+
+## October 13: viewport coverage beyond the detailed atlas
+
+`landscape-surround.ts` inverse-projects all four viewport corners to select 512-metre world patches. This handles rotation, offsets, aspect ratio and the full allowed pan/zoom range without using a screen-sized flat fallback. Each patch is a 256-pixel procedural raster, cached in a 64-entry LRU (16 MiB RGBA maximum, excluding browser/GPU copies). Fully hidden patches are skipped. This is distant scenery; detailed playable terrain retains its existing atlas and physical geometry.
+
+Noise, drainage and woodland placement use global world coordinates and stable hashes. Adjacent patches sample the same fields; neighbouring tree cells are included when crowns or shadows cross an edge. Morning/day/evening selections invalidate this backdrop cache and use the same sun vectors as the course. The outer 100 metres of the 350-metre detailed surround fade into the background, entirely outside playable bounds. This avoids a hard rectangular end to the course canvas. The overlap is an artistic blend, not a newly surveyed or playable landscape.
+
+The new view coverage test checks extreme wide and portrait viewports at minimum zoom, rotated and panned; corner pixels must remain opaque and varied, detecting both holes and the old flat fallback. The unit test independently checks inverse-projected corner coverage at camera limits. Arbitrarily extreme aspect ratios can exceed the tile cache's working set and cause regeneration; typical desktop/phone views remain the intended target.
+`wetness` also continues the remote north/south creek curves from woodland revision 0.2 into the patch field; those artistic endpoint constants must be revisited if that course layout changes.

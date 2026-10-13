@@ -1,3 +1,4 @@
+import { LandscapeSurround } from './landscape-surround';
 import { DAYLIGHT, daylightChoice, type Daylight } from './daylight';
 import { terrainVariation, canopyStamp } from './terrain-detail';
 import { Course } from '../course/course.js';
@@ -19,6 +20,7 @@ const colors: Record<string, string> = {
 
 /** World-anchored colour and texture, cached independently of the camera. */
 export class CourseAtlas {
+   private surround = new LandscapeSurround();
    private canvas = document.createElement('canvas');
    private course: CockpitSession['course'] | null = null;
    private scale = 2;
@@ -41,8 +43,12 @@ export class CourseAtlas {
          this.course = c;
          this.build(c);
       }
-      ctx.fillStyle = colors.rough;
-      ctx.fillRect(0, 0, camera.w, camera.h);
+      this.surround.paint(ctx, camera, daylight, {
+         minX: c.bounds.minX - this.margin + 100,
+         maxX: c.bounds.maxX + this.margin - 100,
+         minY: c.bounds.minY - this.margin + 100,
+         maxY: c.bounds.maxY + this.margin - 100,
+      });
       const p = camera.world({ x: c.bounds.minX - this.margin, y: c.bounds.maxY + this.margin });
       ctx.save();
       ctx.translate(p.x, p.y);
@@ -562,5 +568,22 @@ export class CourseAtlas {
       daylight.addColorStop(1, '#123b3620');
       ctx.fillStyle = daylight;
       ctx.fillRect(0, 0, w, h);
+      // Fade only the remote cache perimeter; the playable course remains fully opaque.
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-in';
+      const fade = 100 * s;
+      for (const [x0, y0, x1, y1] of [
+         [0, 0, fade, 0],
+         [w, 0, w - fade, 0],
+         [0, 0, 0, fade],
+         [0, h, 0, h - fade],
+      ]) {
+         const mask = ctx.createLinearGradient(x0, y0, x1, y1);
+         mask.addColorStop(0, '#0000');
+         mask.addColorStop(1, '#000');
+         ctx.fillStyle = mask;
+         ctx.fillRect(0, 0, w, h);
+      }
+      ctx.restore();
    }
 }
