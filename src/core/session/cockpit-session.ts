@@ -129,7 +129,10 @@ export class CockpitSession {
                if (command.target === 'aim' && this.phase !== 'plan')
                   throw Error('Choose next shot first');
                const point = this[command.target],
-                  b = this.course.bounds;
+                  b =
+                     this.course.boundaryPolicy === 'synthetic-estate-continuation'
+                        ? { minX: -Infinity, maxX: Infinity, minY: -Infinity, maxY: Infinity }
+                        : this.course.bounds;
                const next = {
                   x: Math.max(b.minX, Math.min(b.maxX, point.x + command.dx)),
                   y: Math.max(b.minY, Math.min(b.maxY, point.y + command.dy)),
@@ -206,8 +209,6 @@ export class CockpitSession {
                this.viewRevision++;
                break;
             case 'RENDERER':
-               if (command.renderer === 'photo')
-                  throw Error('The photographic study is available in the original lab.');
                this.renderer = command.renderer;
                break;
          }

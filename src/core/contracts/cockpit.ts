@@ -16,7 +16,7 @@ export type Command = { type: 'COMMAND'; id: string } & (
    | { action: 'NEXT' | 'MULLIGAN' | 'RESET' | 'SKIP' }
    | { action: 'VIEW'; view: 'hole' | 'ball' | 'green' }
    | { action: 'SETUP'; setup: Setup }
-   | { action: 'RENDERER'; renderer: 'procedural' | 'photo' }
+   | { action: 'RENDERER'; renderer: 'procedural' | 'photo' | 'comparison' }
 );
 export type Snapshot = {
    type: 'STATE';
@@ -30,7 +30,7 @@ export type Snapshot = {
    aim: Point;
    probe: Point;
    setup: Setup;
-   renderer: 'procedural' | 'photo';
+   renderer: 'procedural' | 'photo' | 'comparison';
    engine: string;
    wind: { direction: string; strength: string; rotation: number; fraction: number };
    terrain: { surface: string; z: number; gradePercent: number; downhillLabel: string };
@@ -92,7 +92,7 @@ export function validCommand(v: unknown): v is Command {
       case 'VIEW':
          return ['hole', 'ball', 'green'].includes(v.view as string);
       case 'RENDERER':
-         return ['procedural', 'photo'].includes(v.renderer as string);
+         return ['procedural', 'photo', 'comparison'].includes(v.renderer as string);
       case 'NEXT':
       case 'MULLIGAN':
       case 'RESET':

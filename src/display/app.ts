@@ -75,6 +75,7 @@ export async function startDisplay(onFirstFrame?: () => void) {
       setMode,
       (setup) => send({ action: 'SETUP', setup }),
       () => navigate('pair'),
+      (renderer) => send({ action: 'RENDERER', renderer }),
    );
    const openOptions = () => {
       quiet = true;

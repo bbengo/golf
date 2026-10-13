@@ -1,7 +1,7 @@
 # Purity woodland course
 
 `purity-course.ts` clones HoleVisual into a separate synthetic design, versioned
-`purity-woodland/0.2.1`. The original lab and reference HTML stay unchanged.
+`purity-woodland/0.3.0`. The original lab and reference HTML stay unchanged.
 
 The creek banks are interpolated into connected quadrilaterals and extended through
 the surroundings. Water elevations inherit the nearest original segment. Three
@@ -22,3 +22,7 @@ Revision `purity-woodland/0.2.0` adds two curved practice lawns, two lakes, two 
 ## 2026-10-13 - Rounded estate-loop closure
 
 The estate walk repeated its first point but used open-ended spline interpolation and end normals. That produced a sharp bottom-left join. Closed ribbons now interpolate cyclic neighbours on both smoothing passes and use wrapped tangent normals, closing each bank before connecting the polygon. Open lawns retain their existing round caps. This changes shared visual/physical path geometry, so the woodland revision advances to 0.2.1. A regression checks both bank closures, tangent continuity and path/interior surface queries.
+
+## 2026-10-13 - Synthetic estate continuation
+
+Purity 0.3.0 explicitly opts out of the original source-survey termination policy. Boundary crossing no longer ends flight or roll, and supported rest beyond the old rectangle is a playable settled lie. Bounds still define the authored region and renderer cache layout; changing them would shift scenery. Outside the DEM, existing clamped grid sampling supplies approximate ground; undeclared surfaces are rough. Decorative distant lakes/trees are not physical hazards. Legacy courses retain their existing stop/out-of-bounds semantics.

@@ -232,7 +232,7 @@ import * as Fundamentals from './fundamentals.ts';
                   const support = supportAt(course, state.p), g = Q.groundAt(course, state.p, day), s = support.bridge ? { x: 0, y: 0 } : g.slope;
                   if (g.type === 'water' && !support.bridge) { state.p.z = Q.surfaceAt(course, state.p).waterHeight + R; recordEvent('water', state.p); status = 'water'; save(); break; }
                   const forces = rollingForces(course, state.p, state.v, g, !!support.bridge), speed = forces.speed;
-                  if (mode !== 'slide' && speed < 0.025 && forces.canRest) { state.v = { x: 0, y: 0, z: 0 }; status = Q.inBounds(course, state.p) ? 'settled' : 'out-of-bounds'; recordEvent(status, state.p); save(); break; }
+                  if (mode !== 'slide' && speed < 0.025 && forces.canRest) { state.v = { x: 0, y: 0, z: 0 }; status = (course.boundaryPolicy === 'synthetic-estate-continuation' || Q.inBounds(course, state.p)) ? 'settled' : 'out-of-bounds'; recordEvent(status, state.p); save(); break; }
                   let vx = state.v.x + forces.x * dt, vy = state.v.y + forces.y * dt;
                   if (experimental && mode === 'slide') { const sliding = Fundamentals.sliding(state.v, spin, unit({ x: -s.x, y: -s.y, z: 1 }), Fundamentals.friction(g.type), dt); vx = sliding.velocity.x; vy = sliding.velocity.y; spin = sliding.spin; if (sliding.rolling) { mode = 'roll'; recordEvent('rolling-contact', state.p); } }
                   else if (speed > 0 && vx * state.v.x + vy * state.v.y < 0 && forces.canRest) { vx = 0; vy = 0; }

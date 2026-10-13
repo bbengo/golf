@@ -13,6 +13,7 @@ export class CourseCamera {
    offsetX = 0;
    offsetY = 0;
    target = { x: 0, y: 0, zoom: 1 };
+   restrictPan = true;
    private fitScale = 1;
    private ready = false;
    bounds: Bounds = { minX: 0, maxX: 256.8, minY: 0, maxY: 550.8 };
@@ -55,10 +56,11 @@ export class CourseCamera {
       this.target = { x: p.x, y: p.y, zoom: Math.max(0.65, Math.min(zoom, 10)) };
    }
    tick(ms: number, reducedMotion = false) {
-      const a = reducedMotion ? 1 : 1 - Math.exp(-Math.min(ms, 64) / 140);
+      const a = reducedMotion ? 1 : 1 - Math.exp(-Math.min(ms, 64) / 190);
       this.x += (this.target.x - this.x) * a;
       this.y += (this.target.y - this.y) * a;
-      this.zoom += (this.target.zoom - this.zoom) * a;
+      const zoomEase = reducedMotion ? 1 : 1 - Math.exp(-Math.min(ms, 64) / 420);
+      this.zoom += (this.target.zoom - this.zoom) * zoomEase;
       if (Math.abs(this.target.x - this.x) < 0.001) this.x = this.target.x;
       if (Math.abs(this.target.y - this.y) < 0.001) this.y = this.target.y;
       if (Math.abs(this.target.zoom - this.zoom) < 0.0001) this.zoom = this.target.zoom;
@@ -111,6 +113,7 @@ export class CourseCamera {
       this.clamp();
    }
    private clamp() {
+      if (!this.restrictPan) return;
       this.target.x = Math.max(
          this.bounds.minX - 160,
          Math.min(this.bounds.maxX + 160, this.target.x),

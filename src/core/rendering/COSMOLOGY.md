@@ -116,3 +116,15 @@ The new view coverage test checks extreme wide and portrait viewports at minimum
 ## 2026-10-13 - Clearer water, quieter reflections
 
 User review clarified that sky reflection should explain the blue palette, not cover lakes in cloud-like bands. Kept the daylight palettes and bank-following shallows; restricted cloud accents to the highest noise values (above 0.76), squared their falloff and reduced maximum colour mixing from 75% to 10%. Reduced elongated glints from 15 to 4 intensity levels with a tighter falloff, and fine ripple contrast from 1.4 to 0.65. Both scenery layers share this change. The existing animated ripples remain; geometry and physics are untouched.
+
+## 2026-10-13 - Water balance and camera easing
+
+Reduced water blue relative to green for a more muted natural hue, retaining shoreline absorption and sparse reflections. Separated camera translation (190 ms exponential response) from slower zoom (420 ms). Flight zoom now varies smoothly between 1.75 and 2.35 using altitude rather than the steeper clamped 1.65-to-3 range; landing/bounce changes are less abrupt. HUD offsets use elapsed-time easing for consistent response across frame rates.
+
+## 2026-10-13 - Image-era limits audit and environment selection
+
+Removed three additional restrictions for the synthetic estate: controller MOVE clamp (aim and probe), image-frame camera pan clamp, and clipped terrain-inspection mesh bounds. Keeping the initial whole-hole composition based on the image registration is intentional framing, not a movement or simulation boundary. Zoom remains bounded for performance/readability, and the integration time limit remains an explicit unresolved result rather than fabricated rest.
+
+Game options now offers procedural, original image, and both as a split comparison with one shared camera and simulation. Preference persists locally; the additive renderer enum travels through the existing command/snapshot validation. Restored the existing locally served photo assets, fixed both camera offset axes in their adapter, and kept procedural scenery available while assets load. Image landmarks represent the older study and do not overwrite current physics or reset play. Menu/title remain procedural.
+
+Remaining architectural work: distant procedural water/trees are presentation only; promote them to a deterministic shared world sampler before claiming physical parity. The DEM's clamped extension is continuous in height but not necessarily slope; replace it with a smoothly blended authored terrain extension. Photo-only surroundings still have finite texture detail and a plain renderer background; the image cannot supply new detail. These are explicit remaining tasks, not reasons to reimpose image boundaries on Purity.

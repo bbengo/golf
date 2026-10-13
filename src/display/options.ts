@@ -15,6 +15,7 @@ export function startOptions(
    changeMode: (mode: DisplayMode) => void,
    setup: (setup: Setup) => boolean,
    pair: () => void,
+   renderer: (value: Snapshot['renderer']) => boolean,
 ) {
    dialog.innerHTML = `<header><div><p class="hud-eyebrow">MAKE IT YOURS</p><h1 id="optionsTitle">Game options</h1></div><button id="closeGameOptions" aria-label="Close game options">×</button></header>
    <nav class="options-tabs" aria-label="Options sections"><button data-option-tab="experience" aria-pressed="true">Experience</button><button data-option-tab="course" aria-pressed="false">Practice conditions</button></nav>
@@ -26,6 +27,7 @@ export function startOptions(
    <div class="option-row"><div><h3>Phone controller</h3><p id="optionsPhoneStatus">Optional. Same course, touch controls.</p></div><button id="optionsPair">Connect phone</button></div>
    <label class="option-row"><span><strong>Follow the ball</strong><small>Camera follows shots; dragging takes over. Reduced motion takes priority.</small></span><input id="followBall" type="checkbox" checked></label>
    <label class="option-row"><span><strong>Daylight</strong><small>Change the sun direction and warmth. Your round and wind stay the same.</small></span><select id="daylight" aria-label="Daylight"><option value="morning">Morning</option><option value="day">Daylight</option><option value="evening">Late afternoon</option></select></label>
+   <label class="option-row"><span><strong>Environment</strong><small>Choose the living course or compare it with the original image study. Image landmarks may differ from the current course.</small></span><select id="environment" aria-label="Environment"><option value="procedural">Procedural landscape</option><option value="photo">Original image</option><option value="comparison">Both - split comparison</option></select></label>
    <a href="#guide" id="optionsGuide">Controls & how to play ↗</a>
    </section>
    <section data-option-page="course" hidden><h2>A different challenge.</h2><p>Applying these conditions starts a new practice hole.</p><form id="desktopSetup" class="desktop-setup">
@@ -71,6 +73,19 @@ export function startOptions(
          localStorage.setItem('purity-daylight', light.value);
       } catch {}
    };
+   const environment = $<HTMLSelectElement>('environment');
+   try {
+      const saved = localStorage.getItem('purity-environment');
+      if (saved && ['procedural', 'photo', 'comparison'].includes(saved))
+         renderer(saved as Snapshot['renderer']);
+   } catch {}
+   environment.onchange = () => {
+      if (renderer(environment.value as Snapshot['renderer'])) {
+         try {
+            localStorage.setItem('purity-environment', environment.value);
+         } catch {}
+      }
+   };
    $('optionsPair').onclick = () => {
       dialog.close();
       pair();
@@ -92,6 +107,7 @@ export function startOptions(
    };
    return {
       open() {
+         environment.value = state().renderer;
          const s = state().setup;
          for (const [id, value] of [
             ['optionTee', s.tee],

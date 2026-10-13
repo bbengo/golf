@@ -3,7 +3,7 @@ import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.2.1';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.3.0';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -92,6 +92,7 @@ function ribbon(points: Point[], width: number) {
 export function createPurityCourse() {
    const c = Contract.clone(HoleVisual.course);
    c.id = 'purity-creek-woodland';
+   c.boundaryPolicy = 'synthetic-estate-continuation';
    c.revision = PURITY_COURSE_REVISION;
    c.provenance = {
       ...c.provenance,

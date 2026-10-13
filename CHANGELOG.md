@@ -218,3 +218,17 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Reduced stretched highlights and fine ripple contrast for a cleaner water surface.
 - TypeScript and production build pass; existing legacy bundle warning remains.
 - Wide/portrait browser coverage passes; clearer water visually checked in the wide capture.
+
+## 2026-10-13 - Continuous estate shots and calmer presentation
+
+- Muted water to a natural blue-green.
+- Fixed Purity shots terminating at the inherited survey edge; flight, landing and roll continue to rest, and controller aim can move beyond the old rectangle. Original course behaviour remains unchanged.
+- Versioned Purity geometry/policy as 0.3.0; documented approximate terrain continuation and decorative scenery limits.
+- Smoothed camera follow/landing zoom and made HUD framing independent of frame rate.
+- TypeScript, production build and 20 course/camera/flight/contact regression tests pass.
+
+- Removed the image-frame pan clamp and terrain-inspection clipping for Purity; preserved original-course rules.
+- Restored Environment settings: procedural, original image, or split comparison. Preferences persist without resetting the round.
+- Corrected image-camera registration for vertical as well as horizontal HUD offsets.
+- Documented remaining physical/scenic mismatch and DEM extension work in COSMOLOGY.
+- Final validation: all 32 unit tests pass, including legacy parity; environment switching/reload browser test passes. Prior desktop gameplay and wide/portrait landscape checks pass. Split comparison visually inspected.

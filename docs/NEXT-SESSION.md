@@ -108,3 +108,7 @@ Procedural materials and outside-bounds scenery are implemented in course-atlas.
 ## October 13 coverage update
 
 The previously pending outer-environment coverage is implemented with a viewport-driven procedural patch cache behind the detailed course. Review landscape-wide.png and landscape-portrait.png captures from the new browser test. Remaining art direction concerns are close-range terrain detail and the artistic overlap between the detailed estate and distant procedural scenery, not a plain outer fallback. Validate performance on the target physical display and unusually wide aspect ratios.
+
+## 2026-10-13 - Procedural-world audit
+
+Survey-edge flight/roll termination, controller aim/probe clipping, camera pan caps and terrain-inspection clipping have been removed for Purity. Environment selection restored in Game options with image/procedural split comparison. Next architectural priority: one shared deterministic world sampler for distant water, trees and ground, followed by a smooth terrain continuation beyond the DEM. Current distant scenery remains decorative; do not claim full physical parity. Preserve local image study as a presentation option without allowing its dimensions to constrain the synthetic world.

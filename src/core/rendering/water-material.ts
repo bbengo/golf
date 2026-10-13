@@ -31,12 +31,12 @@ export function waterColour(x: number, y: number, shore: number, daylight: Dayli
    const glint = Math.pow(noise((x * sun.x + y * sun.y) / 95, (y * sun.x - x * sun.y) / 12), 7) * 4;
    const deep =
       daylight === 'evening'
-         ? [61, 108, 126]
+         ? [65, 105, 112]
          : daylight === 'morning'
-           ? [65, 125, 146]
-           : [48, 116, 146];
+           ? [66, 119, 126]
+           : [57, 111, 120];
    const reflection = daylight === 'evening' ? [173, 157, 145] : [156, 188, 201];
-   const shallow = [83, 139, 126];
+   const shallow = [82, 130, 118];
    const depth = 1 - Math.exp(-Math.max(0, shore) / 7);
    return deep.map((value, i) => {
       const reflected = value + (reflection[i] - value) * cloud * 0.1;

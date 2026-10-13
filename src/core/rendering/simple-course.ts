@@ -130,18 +130,21 @@ export class SimpleCourse {
       const rect = this.canvas.getBoundingClientRect(),
          dpr = Math.min(devicePixelRatio || 1, 2),
          c = session.course;
+      const frameMs = this.lastTime ? Math.max(0, time - this.lastTime) : 16;
+      const layoutEase = this.reducedMotion.matches
+         ? 1
+         : 1 - Math.exp(-Math.min(frameMs, 64) / 190);
       const desiredOffset =
          rect.width > 900 ? (document.body.classList.contains('controls-open') ? -175 : 0) : 0;
-      this.camera.offsetX +=
-         (desiredOffset - this.camera.offsetX) * (this.reducedMotion.matches ? 1 : 0.08);
+      this.camera.offsetX += (desiredOffset - this.camera.offsetX) * layoutEase;
       const dock = document.querySelector<HTMLElement>('.shot-dock');
       const dockSpace =
          document.body.dataset.displayMode === 'desktop' && document.body.dataset.route === 'play'
             ? (dock?.offsetHeight || 190) + (rect.width < 600 ? 90 : 36)
             : 0;
       const desiredY = -Math.min(rect.height * 0.24, dockSpace / 2);
-      this.camera.offsetY +=
-         (desiredY - this.camera.offsetY) * (this.reducedMotion.matches ? 1 : 0.08);
+      this.camera.offsetY += (desiredY - this.camera.offsetY) * layoutEase;
+      this.camera.restrictPan = c.boundaryPolicy !== 'synthetic-estate-continuation';
       this.camera.resize(rect.width, rect.height, c.plate.worldBounds);
       session.cameraAngle = this.camera.angle;
       if (this.viewRevision !== session.viewRevision) {
@@ -182,7 +185,8 @@ export class SimpleCourse {
          document.body.dataset.followBall !== 'false'
       ) {
          const height = Math.max(0, (ball.z ?? 0) - Course.heightAt(c, ball));
-         this.camera.go(ball, Math.max(1.65, 3 - height * 0.025));
+         // Broad flight framing eases into a modest landing view; avoid aggressive bounce zoom.
+         this.camera.go(ball, 2.35 - 0.6 * (1 - Math.exp(-height / 22)));
          this.canvas.dataset.cameraMode = 'follow';
          if (session.phase !== 'animating') this.following = false;
       }
@@ -215,28 +219,51 @@ export class SimpleCourse {
          this.atlas.paint(ctx, c, view, wind);
          return;
       }
-      if (session.renderer === 'photo' && !this.photoLoading) {
+      if (session.renderer !== 'procedural' && !this.photoLoading) {
          this.photoLoading = true;
          void import('./photo-renderer.js').then(({ PhotoRenderer, PhotoAssets }) => {
             this.photo = PhotoRenderer.create(PhotoAssets, () => {});
          });
       }
-      if (session.renderer === 'photo' && this.photo?.ready())
+      this.atlas.paint(ctx, c, this.camera, wind);
+      this.canvas.dataset.environment = session.renderer;
+      this.canvas.dataset.imageReady = String(!!this.photo?.ready());
+      if (session.renderer !== 'procedural' && this.photo?.ready()) {
+         const cam = this.camera,
+            co = Math.cos(cam.angle),
+            si = Math.sin(cam.angle);
+         ctx.save();
+         if (session.renderer === 'comparison') {
+            ctx.beginPath();
+            ctx.rect(0, 0, rect.width / 2, rect.height);
+            ctx.clip();
+         }
          this.photo.paint(
             ctx,
             c,
             {
-               ...this.camera,
-               x:
-                  this.camera.x -
-                  (Math.cos(this.camera.angle) * this.camera.offsetX) / this.camera.scale,
-               y:
-                  this.camera.y +
-                  (Math.sin(this.camera.angle) * this.camera.offsetX) / this.camera.scale,
+               ...cam,
+               x: cam.x + (-co * cam.offsetX + si * cam.offsetY) / cam.scale,
+               y: cam.y + (si * cam.offsetX + co * cam.offsetY) / cam.scale,
             },
             dpr,
          );
-      else this.atlas.paint(ctx, c, this.camera, wind);
+         ctx.restore();
+         if (session.renderer === 'comparison') {
+            ctx.fillStyle = '#edf0dc';
+            ctx.fillRect(rect.width / 2 - 1, 0, 2, rect.height);
+            ctx.font = '12px Onest, sans-serif';
+            for (const [label, x] of [
+               ['Original image', rect.width / 2 - 130],
+               ['Procedural', rect.width / 2 + 12],
+            ] as const) {
+               ctx.fillStyle = '#13241de6';
+               ctx.fillRect(x - 8, 16, 122, 28);
+               ctx.fillStyle = '#edf0dc';
+               ctx.fillText(label, x, 34);
+            }
+         }
+      }
       const pin = this.world(c.pin);
       ctx.fillStyle = '#263b31';
       ctx.beginPath();

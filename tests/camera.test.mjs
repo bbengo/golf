@@ -87,3 +87,15 @@ test('camera easing is time-based and reduced motion snaps to the requested view
    a.tick(16, true);
    close(a.zoom, 0.65);
 });
+
+test('Purity camera can follow exploration beyond the former image pan cap', () => {
+   const c = camera();
+   c.restrictPan = false;
+   c.pan(3000, 0);
+   c.tick(16, true);
+   assert.ok(c.x < bounds.minX - 160);
+   const p = { x: c.x + 10, y: c.y + 20 };
+   const actual = c.inverse(c.world(p));
+   close(actual.x, p.x);
+   close(actual.y, p.y);
+});
