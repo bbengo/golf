@@ -25,10 +25,10 @@ export function waterColour(x: number, y: number, shore: number, daylight: Dayli
    const sun = DAYLIGHT[daylight];
    const warp = noise(x / 73, y / 91) * 25;
    const sky = noise((x + warp) / 155, y / 110);
-   const cloud = Math.max(0, (sky - 0.42) / 0.58);
-   const ripple = Math.sin(y * 0.48 + noise(x / 18, y / 25) * 8) * 1.4;
-   const glint =
-      Math.pow(noise((x * sun.x + y * sun.y) / 95, (y * sun.x - x * sun.y) / 12), 5) * 15;
+   // Sparse, faint reflection accents leave most of the water clear.
+   const cloud = Math.pow(Math.max(0, (sky - 0.76) / 0.24), 2);
+   const ripple = Math.sin(y * 0.48 + noise(x / 18, y / 25) * 8) * 0.65;
+   const glint = Math.pow(noise((x * sun.x + y * sun.y) / 95, (y * sun.x - x * sun.y) / 12), 7) * 4;
    const deep =
       daylight === 'evening'
          ? [61, 108, 126]
@@ -39,7 +39,7 @@ export function waterColour(x: number, y: number, shore: number, daylight: Dayli
    const shallow = [83, 139, 126];
    const depth = 1 - Math.exp(-Math.max(0, shore) / 7);
    return deep.map((value, i) => {
-      const reflected = value + (reflection[i] - value) * cloud * 0.75;
+      const reflected = value + (reflection[i] - value) * cloud * 0.1;
       return Math.round(shallow[i] + (reflected - shallow[i]) * depth + ripple + glint);
    });
 }

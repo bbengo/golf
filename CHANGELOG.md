@@ -211,3 +211,10 @@ latency and empirical ball/turf/cup calibration remain unverified. See the
 - Versioned the shared course geometry as woodland 0.2.1.
 - TypeScript, production build and all four course regression tests pass.
 - Wide-screen/portrait browser coverage passes; rendered loop visually inspected.
+
+## 2026-10-13 - Clearer procedural water
+
+- Retained the improved blue/daylight palette and shoreline shallows while making cloud accents sparse and faint.
+- Reduced stretched highlights and fine ripple contrast for a cleaner water surface.
+- TypeScript and production build pass; existing legacy bundle warning remains.
+- Wide/portrait browser coverage passes; clearer water visually checked in the wide capture.
