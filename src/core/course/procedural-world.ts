@@ -4,7 +4,7 @@ export const WORLD_VERSION = 'purity-world/1';
 export type WorldBounds = { minX: number; maxX: number; minY: number; maxY: number };
 type Water = { id: string; type: 'water'; polygon: Point[]; waterHeight: number };
 export type WorldCourse = {
-   world?: { version: string; seed: number; waters: Water[] };
+   world?: { version: string; seed: number; waters: Water[]; terrainVersion?: string };
    bounds: WorldBounds;
    surfaces: { polygon: Point[]; type: string }[];
 };

@@ -1,10 +1,11 @@
+import { TERRAIN_VERSION, continuedHeight } from './terrain-continuation';
 import { WORLD_VERSION } from './procedural-world';
 import { Contract } from '../contracts/contract.js';
 import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.4.0';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.5.0';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -281,7 +282,7 @@ export function createPurityCourse() {
          id: `world-lake-${id}`,
          type: 'water',
          polygon,
-         waterHeight: Course.heightAt(c, { x: cx, y: cy }),
+         waterHeight: continuedHeight(c, { x: cx, y: cy }),
       });
    }
    const creek = c.surfaces.filter((s: any) => s.id.startsWith('woodland-creek-'));
@@ -305,6 +306,6 @@ export function createPurityCourse() {
       });
    }
    c.surfaces.unshift(...waters);
-   c.world = { version: WORLD_VERSION, seed: 839, waters };
+   c.world = { version: WORLD_VERSION, seed: 839, waters, terrainVersion: TERRAIN_VERSION };
    return c;
 }

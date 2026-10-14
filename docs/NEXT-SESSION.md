@@ -125,3 +125,10 @@ The restored capability destinations are recorded in the root COSMOLOGY parity i
 The atlas-only lakes/creek extensions are now course surfaces. Remote drainage and tree placement live in `procedural-world.ts`, shared by detailed atlas, distant tiles and physics. Swept tree queries include neighbouring cells and generate only nearby candidates. Physics snapshots save world version/seed and authored water geometry, so camera exploration/cache eviction does not change collisions.
 
 Next: smooth terrain derivatives beyond source coverage, assign physically coherent water elevations/banks rather than terrain-draped remote drainage, and improve shoreline display resolution (currently 2?4 m sampling). Tree trunks/canopies remain simplified cylinder/ellipsoid colliders. Test feel and frame time on the target hardware; renderer noise is no substitute for calibrated terrain or contact physics.
+
+
+## 2026-10-14 - Terrain continuation implemented
+
+Purity 0.5.0 uses opt-in purity-terrain/1: preserved survey heights, saturated exterior derivative continuation, broad procedural relief and outer lake beds/banks. Rendering slope lighting now samples the same outer ground as physics. Existing saved worlds without terrainVersion retain their prior heights.
+
+Next water priority: coherent connected drainage elevations and river beds. Remote implicit water still follows sampled ground; joining that field to fixed lake elevations is not yet physically coherent. Then continue versioned ball/club calibration, shared weather state and evidence-based practice analysis from the engine roadmap. Keep the accepted softer camera timing.

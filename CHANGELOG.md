@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-14: outer terrain slopes and lake banks
+
+- Added opt-in, versioned terrain continuation beyond the source raster, preserving surveyed ground and old saved-course behaviour.
+- Continued boundary slopes into bounded procedural relief, shared by collision, inspection and landscape lighting.
+- Shaped submerged beds and smooth landward banks for the two outer lakes; retained their level water-contact surfaces.
+- Bumped the woodland course to 0.5.0; stored terrain identity in physics evidence.
+- Connected drainage elevations and river beds remain unfinished; see COSMOLOGY for the limits of this pass.
+
+Validation: 49 unit/simulation tests and both paired-play and wide/rotated landscape browser scenarios pass. Production build, typecheck, formatting and diff checks pass. Reviewed the wide landscape capture. The existing large legacy-data chunk warning remains.
+
 ## 2026-10-14: shared procedural surroundings
 
 - Added versioned, camera-independent drainage and tree queries shared by rendering and physics.

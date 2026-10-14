@@ -1,3 +1,4 @@
+import { Course } from '../course/course.js';
 import {
    worldHash as hash,
    worldNoise as noise,
@@ -90,6 +91,22 @@ export class LandscapeSurround {
       const ctx = tile.getContext('2d')!,
          pixels = ctx.createImageData(resolution, resolution);
       const sun = DAYLIGHT[daylight];
+      // Cache a coarse physical slope-light field, interpolated across pixel samples.
+      const lighting = new Float32Array(17 * 17);
+      for (let iy = 0; iy <= 16; iy++)
+         for (let ix = 0; ix <= 16; ix++) {
+            const x = tx * size + ix * 32,
+               y = (ty + 1) * size - iy * 32;
+            const h = (dx: number, dy: number) =>
+               Course.heightAt(this.course!, { x: x + dx, y: y + dy });
+            lighting[iy * 17 + ix] = Math.max(
+               -0.08,
+               Math.min(
+                  0.08,
+                  (-((h(2, 0) - h(-2, 0)) * sun.x + (h(0, 2) - h(0, -2)) * sun.y) * 0.12) / 4,
+               ),
+            );
+         }
       for (let py = 0; py < resolution; py++)
          for (let px = 0; px < resolution; px++) {
             const x = tx * size + (px + 0.5) / factor,
@@ -101,9 +118,24 @@ export class LandscapeSurround {
             if (wet < 0) colour = waterColour(x, y, -wet * 28, daylight);
             else if (wet < 0.12) colour = [114 + n * 20, 121 + n * 20, 90 + n * 15];
             else colour = [75 + n * 35, 111 + n * 38, 57 + n * 23];
+            const lx = (px + 0.5) / 16,
+               ly = (py + 0.5) / 16;
+            const ix = Math.floor(lx),
+               iy = Math.floor(ly),
+               fx = lx - ix,
+               fy = ly - iy;
+            const top = lighting[iy * 17 + ix] * (1 - fx) + lighting[iy * 17 + ix + 1] * fx;
+            const bottom =
+               lighting[(iy + 1) * 17 + ix] * (1 - fx) + lighting[(iy + 1) * 17 + ix + 1] * fx;
+            const shade = wet < 0 ? 0 : (top * (1 - fy) + bottom * fy) * 255;
             const warmth = wet < 0 || daylight === 'day' ? 0 : 5;
             pixels.data.set(
-               [colour[0] + fine + warmth, colour[1] + fine, colour[2] + fine - warmth, 255],
+               [
+                  colour[0] + fine + warmth + shade,
+                  colour[1] + fine + shade,
+                  colour[2] + fine - warmth + shade,
+                  255,
+               ],
                (py * resolution + px) * 4,
             );
          }

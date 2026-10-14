@@ -1,3 +1,4 @@
+import { worldHeight, TERRAIN_VERSION } from './terrain-continuation.ts';
 import { worldWetness, worldTrees, worldWater, worldEnabled } from './procedural-world.ts';
 import { Contract } from '../contracts/contract.js';
 import { DEM } from './dem.js';
@@ -80,7 +81,7 @@ A diagnostic original hole, not a surveyed real course or an architect emulation
          function inBounds(course, q) { const b = course.bounds; return q.x >= b.minX && q.x <= b.maxX && q.y >= b.minY && q.y <= b.maxY; }
          function smooth(t) { t = C.clamp(t, 0, 1); return t * t * (3 - 2 * t); }
          function heightAt(course, q) {
-            const t = course.terrain; if (t.kind === 'government-dem-grid') return DEM.heightAt(t, q); let z = t.base + t.xGrade * q.x + t.yGrade * q.y;
+            const t = course.terrain; if (t.kind === 'government-dem-grid') return course.world?.terrainVersion ? worldHeight(course,q) : DEM.heightAt(t, q); let z = t.base + t.xGrade * q.x + t.yGrade * q.y;
             for (const f of t.features) {
                if (f.kind === 'gaussian') z += f.height * Math.exp(-0.5 * (((q.x - f.x) / f.sx) ** 2 + ((q.y - f.y) / f.sy) ** 2));
                else if (f.kind === 'ramp') z -= f.drop * smooth((q.x - f.x0) / (f.x1 - f.x0)) * Math.exp(-0.5 * ((q.y - f.y) / f.sy) ** 2);
@@ -129,7 +130,7 @@ A diagnostic original hole, not a surveyed real course or an architect emulation
             return { passed: inside && maxSlopeDeg <= maxAllowed, allSamplesOnGreen: inside, maxSlopeDeg, limitDegrees: maxAllowed, radiusM: r, spacingM: spacing, samples: count, worst, method: 'dense disk and perimeter sampling; not a continuous mathematical proof' };
          }
          function validate(course) {
-            const errors = []; if(course.world) { try { worldEnabled(course); } catch { errors.push('procedural_world_version'); } } const num = (v, k) => { if (!C.finite(v)) errors.push(k + ':not_finite'); };
+            const errors = []; if(course.world) { try { worldEnabled(course); if(course.world.terrainVersion && course.world.terrainVersion !== TERRAIN_VERSION) throw Error('Terrain version'); } catch { errors.push('procedural_world_version'); } } const num = (v, k) => { if (!C.finite(v)) errors.push(k + ':not_finite'); };
             if (![VERSION, 'course-contract/0.4.0'].includes(course.schema)) errors.push('schema_version'); if (course.units?.length !== 'm' || course.units?.speed !== 'm/s') errors.push('units');
             if (!course.bounds || course.bounds.maxX <= course.bounds.minX || course.bounds.maxY <= course.bounds.minY) errors.push('bounds');
             if (!Array.isArray(course.route) || course.route.length < 2) errors.push('route');

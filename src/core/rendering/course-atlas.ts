@@ -462,7 +462,7 @@ export class CourseAtlas {
       for (let y = 0; y < light.height; y++)
          for (let x = 0; x < light.width; x++) {
             const p = { x: bounds.minX + (x * 18) / s, y: bounds.maxY - (y * 18) / s };
-            if (!Course.inBounds(c, p)) continue;
+            if (Course.surfaceAt(c, p).type === 'water') continue;
             const slope = Course.slopeAt(c, p),
                shade = Math.max(
                   -0.055,
