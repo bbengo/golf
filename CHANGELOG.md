@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-14: shared procedural surroundings
+
+- Added versioned, camera-independent drainage and tree queries shared by rendering and physics.
+- Promoted atlas-only scenic lakes and creek extensions into physical course surfaces; bumped woodland to 0.4.0.
+- Replaced separate scenic tree placement with shared canopy/trunk definitions and nearby swept-collision queries, including neighbouring cells at tile edges.
+- Preserved original UCG course behaviour and saved the world version/seed with shot course evidence.
+- Outer terrain height continuation remains approximate; remote water follows that terrain until a coherent water/terrain model is developed.
+
+Validation: 40 existing unit/simulation tests and four new shared-world tests pass. Paired-play and wide/rotated landscape browser scenarios pass, along with typecheck, formatting and production build. Remote shoreline geometry remains sampled for rendering; continuous queries govern physical contact.
+
 ## 2026-10-14: softer manual camera movement
 
 - Tuned drag easing from 85 to 160 ms and manual zoom easing from 125 to 280 ms, aiming for the requested 2?2.5 feel between the earlier slow camera and the recent snappy version. These are exponential time constants, not fixed animation durations.

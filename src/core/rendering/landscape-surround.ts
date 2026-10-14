@@ -1,3 +1,10 @@
+import {
+   worldHash as hash,
+   worldNoise as noise,
+   worldWetness,
+   worldTrees,
+   type WorldCourse,
+} from '../course/procedural-world';
 import { waterColour } from './water-material';
 import type { CourseCamera, Bounds } from './camera';
 import { canopyStamp } from './terrain-detail';
@@ -19,49 +26,22 @@ export function surroundTileRange(camera: CourseCamera) {
       maxY: Math.floor(Math.max(...points.map((p) => p.y)) / SURROUND_TILE_SIZE),
    };
 }
-const hash = (x: number, y: number) => {
-   let n = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ 839;
-   n = Math.imul(n ^ (n >>> 13), 1274126177);
-   return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
-};
-const noise = (x: number, y: number) => {
-   const ix = Math.floor(x),
-      iy = Math.floor(y),
-      fx = x - ix,
-      fy = y - iy;
-   const u = fx * fx * (3 - 2 * fx),
-      v = fy * fy * (3 - 2 * fy);
-   const a = hash(ix, iy),
-      b = hash(ix + 1, iy),
-      c = hash(ix, iy + 1),
-      d = hash(ix + 1, iy + 1);
-   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
-};
-// One continuous drainage pattern, sampled identically on both sides of every tile edge.
-const wetness = (x: number, y: number) => {
-   const stream = Math.abs(x + 460 - Math.sin(y * 0.004) * 90 - Math.sin(y * 0.011) * 18);
-   // Continue this estate's remote creek banks with the same curve as the detailed surround.
-   // These starts are already outside the playable bounds of woodland revision 0.2.
-   let creek = Infinity;
-   if (y >= 720 || y <= -190) {
-      const north = y >= 720;
-      const t = north ? (y - 720) / 305 : (-190 - y) / 295;
-      const spread = Math.min(t, 1);
-      const center = (north ? 203.5 : 165.5) + Math.sin(t * 5) * 35 * spread;
-      const halfWidth = (north ? 7.5 : 6.5) + spread * 8;
-      creek = (Math.abs(x - center) - halfWidth) / 18;
-   }
-   return Math.min(creek, (stream - 24) / 35, (noise(x / 240 + 71, y / 240 - 38) - 0.23) * 15);
-};
-
 /** Low-resolution, bounded-memory scenery behind the authoritative course atlas. */
 export class LandscapeSurround {
    private tiles = new Map<string, HTMLCanvasElement>();
    private daylight: Daylight | undefined;
+   private course: WorldCourse | undefined;
    private crowns: HTMLCanvasElement[] = [];
-   paint(ctx: CanvasRenderingContext2D, camera: CourseCamera, daylight: Daylight, core: Bounds) {
-      if (this.daylight !== daylight) {
+   paint(
+      ctx: CanvasRenderingContext2D,
+      camera: CourseCamera,
+      daylight: Daylight,
+      core: Bounds,
+      course: WorldCourse,
+   ) {
+      if (this.daylight !== daylight || this.course !== course) {
          this.daylight = daylight;
+         this.course = course;
          this.tiles.clear();
          this.crowns = Array.from({ length: 6 }, (_, i) => canopyStamp(i, DAYLIGHT[daylight]));
       }
@@ -114,7 +94,7 @@ export class LandscapeSurround {
          for (let px = 0; px < resolution; px++) {
             const x = tx * size + (px + 0.5) / factor,
                y = (ty + 1) * size - (py + 0.5) / factor;
-            const wet = wetness(x, y),
+            const wet = worldWetness(this.course!, x, y),
                n = noise(x / 65, y / 65) - 0.5;
             const fine = (hash(Math.floor(x), Math.floor(y)) - 0.5) * (wet < 0 ? 1.5 : 9);
             let colour: number[];
@@ -128,38 +108,32 @@ export class LandscapeSurround {
             );
          }
       ctx.putImageData(pixels, 0, 0);
-      // Include neighbours so a canopy or shadow crossing a tile edge is rendered on both tiles.
-      for (
-         let gy = Math.floor((ty * size - 70) / 32);
-         gy <= Math.ceil(((ty + 1) * size + 70) / 32);
-         gy++
-      )
-         for (
-            let gx = Math.floor((tx * size - 70) / 32);
-            gx <= Math.ceil(((tx + 1) * size + 70) / 32);
-            gx++
-         ) {
-            const x = gx * 32 + hash(gx, gy) * 26,
-               y = gy * 32 + hash(gx + 27, gy - 18) * 26;
-            if (noise(x / 125, y / 125) < 0.43 || wetness(x, y) < 0.65) continue;
-            const r = 6 + hash(gx - 11, gy + 63) * 9;
-            const px = (x - tx * size) * factor,
-               py = ((ty + 1) * size - y) * factor;
-            ctx.fillStyle = '#10251e45';
-            ctx.beginPath();
-            ctx.ellipse(
-               px - r * sun.x * sun.length * factor,
-               py + r * sun.y * sun.length * factor,
-               r * factor,
-               r * 0.85 * factor,
-               0,
-               0,
-               Math.PI * 2,
-            );
-            ctx.fill();
-            const stamp = this.crowns[Math.floor(hash(gx + 48, gy + 93) * this.crowns.length)];
-            ctx.drawImage(stamp, px - r * factor, py - r * factor, r * 2 * factor, r * 2 * factor);
-         }
+      // Query the same deterministic trees used by swept ball collisions.
+      for (const tree of worldTrees(this.course!, {
+         minX: tx * size - 70,
+         maxX: (tx + 1) * size + 70,
+         minY: ty * size - 70,
+         maxY: (ty + 1) * size + 70,
+      })) {
+         const { x, y, canopyRadius: r } = tree;
+         const px = (x - tx * size) * factor,
+            py = ((ty + 1) * size - y) * factor;
+         ctx.fillStyle = '#10251e45';
+         ctx.beginPath();
+         ctx.ellipse(
+            px - r * sun.x * sun.length * factor,
+            py + r * sun.y * sun.length * factor,
+            r * factor,
+            r * 0.85 * factor,
+            0,
+            0,
+            Math.PI * 2,
+         );
+         ctx.fill();
+         const stamp =
+            this.crowns[Math.floor(hash(Math.floor(x), Math.floor(y)) * this.crowns.length)];
+         ctx.drawImage(stamp, px - r * factor, py - r * factor, r * 2 * factor, r * 2 * factor);
+      }
       return tile;
    }
 }

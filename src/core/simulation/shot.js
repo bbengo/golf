@@ -153,7 +153,7 @@ import * as Fundamentals from './fundamentals.ts';
             if (!normal || lo < 0 || lo > 1) return null; return { t: lo, p: add(a, mul(d, lo)), normal };
          }
          function objectHit(course, a, b, ignored = new Set(), experimental = false) {
-            const hits = []; for (const o of course.objects) {
+            const hits = []; for (const o of Q.objectsAlong(course,a,b)) {
                if (ignored.has(o.id)) continue;
                if (o.kind === 'bridge') { const h = boxHit(a, b, { ...o, minZ: o.deckZ - o.thickness, maxZ: o.deckZ }); if (h) hits.push({ ...h, id: o.id, kind: 'bridge', restitution: 0.45, tangent: 0.8 }); }
                else if (o.kind === 'tree') {

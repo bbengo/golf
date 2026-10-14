@@ -110,12 +110,18 @@ The previously pending outer-environment coverage is implemented with a viewport
 
 ## 2026-10-13 - Procedural-world audit
 
-Survey-edge flight/roll termination, controller aim/probe clipping, camera pan caps and terrain-inspection clipping have been removed for Purity. Environment selection restored in Game options with image/procedural split comparison. Next architectural priority: one shared deterministic world sampler for distant water, trees and ground, followed by a smooth terrain continuation beyond the DEM. Current distant scenery remains decorative; do not claim full physical parity. Preserve local image study as a presentation option without allowing its dimensions to constrain the synthetic world.
+Survey-edge flight/roll termination, controller aim/probe clipping, camera pan caps and terrain-inspection clipping have been removed for Purity. Environment selection restored in Game options with image/procedural split comparison. The 14 October world sampler now supplies distant water and tree positions to rendering, collision and saved course evidence. Next priority: smooth height/slope continuation beyond the DEM and consistent water elevations/banks; this first world version does not supply hydrology or excavated lake beds. Preserve local image study as a presentation option without allowing its dimensions to constrain the synthetic world.
 
 ## 2026-10-13 - Engine foundation pass
 
-Camera response modes, ball renderer, recorded-shot effects, validated presentation preferences and viewport allocation are implemented. Settings split into four sections. Follow the ordered engine roadmap in COSMOLOGY: shared procedural world physics first, versioned calibrated ball/club profiles second, shared weather/environment state third, evidence-based practice analysis fourth. Do not describe decorative distant water/trees as physical yet.
+Camera response modes, ball renderer, recorded-shot effects, validated presentation preferences and viewport allocation are implemented. Settings split into four sections. Follow the ordered engine roadmap in COSMOLOGY: shared procedural world physics first, versioned calibrated ball/club profiles second, shared weather/environment state third, evidence-based practice analysis fourth. Distant water/tree queries are implemented in world version 1; terrain continuation and calibrated profiles remain unfinished.
 
 ## 2026-10-13 - UCG feature parity
 
 The restored capability destinations are recorded in the root COSMOLOGY parity inventory. Terrain layers/mesh, profile charts, stock yardages, player allocation/files/variance, recorded replay, journal/actions/export, concessions, study starts, ground comparison and research exports are implemented. Review discoverability with the golfing team and exercise these on real paired devices. Continue the shared physical-world and physics-calibration work; exposing tools does not validate the coefficients.
+
+## 2026-10-14 ? Shared outer world, first implementation
+
+The atlas-only lakes/creek extensions are now course surfaces. Remote drainage and tree placement live in `procedural-world.ts`, shared by detailed atlas, distant tiles and physics. Swept tree queries include neighbouring cells and generate only nearby candidates. Physics snapshots save world version/seed and authored water geometry, so camera exploration/cache eviction does not change collisions.
+
+Next: smooth terrain derivatives beyond source coverage, assign physically coherent water elevations/banks rather than terrain-draped remote drainage, and improve shoreline display resolution (currently 2?4 m sampling). Tree trunks/canopies remain simplified cylinder/ellipsoid colliders. Test feel and frame time on the target hardware; renderer noise is no substitute for calibrated terrain or contact physics.

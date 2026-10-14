@@ -1,3 +1,4 @@
+import { worldWetness, worldTrees, worldWater, worldEnabled } from './procedural-world.ts';
 import { Contract } from '../contracts/contract.js';
 import { DEM } from './dem.js';
 
@@ -74,7 +75,8 @@ A diagnostic original hole, not a surveyed real course or an architect emulation
             firm: { id: 'firm', name: 'Dry', greenStimpFt: 11.5, moisture: 0.12, rollFactor: 0.74, bounceFactor: 1.14, wind: { x: 0, y: 0, z: 0 }, airDensity: 1.225 },
             soft: { id: 'soft', name: 'Wet', greenStimpFt: 9, moisture: 0.75, rollFactor: 1.85, bounceFactor: 0.65, wind: { x: 0, y: 0, z: 0 }, airDensity: 1.225 }
          };
-         function surfaceAt(course, q) { for (let i = course.surfaces.length - 1; i >= 0; i--)if (C.inside(q, course.surfaces[i].polygon)) return course.surfaces[i]; return { id: 'rough', type: 'rough' }; }
+         function surfaceAt(course, q) { for (let i = course.surfaces.length - 1; i >= 0; i--)if (C.inside(q, course.surfaces[i].polygon)) return course.surfaces[i]; if (course.world && worldWetness(course,q.x,q.y) < 0) return { id: 'world-water', type: 'water', waterHeight: worldWater(course,q)?.waterHeight ?? heightAt(course,q) }; return { id: 'rough', type: 'rough' }; }
+         function objectsAlong(course,a,b) { return course.world ? [...course.objects,...worldTrees(course,{minX:Math.min(a.x,b.x),maxX:Math.max(a.x,b.x),minY:Math.min(a.y,b.y),maxY:Math.max(a.y,b.y)})] : course.objects; }
          function inBounds(course, q) { const b = course.bounds; return q.x >= b.minX && q.x <= b.maxX && q.y >= b.minY && q.y <= b.maxY; }
          function smooth(t) { t = C.clamp(t, 0, 1); return t * t * (3 - 2 * t); }
          function heightAt(course, q) {
@@ -127,7 +129,7 @@ A diagnostic original hole, not a surveyed real course or an architect emulation
             return { passed: inside && maxSlopeDeg <= maxAllowed, allSamplesOnGreen: inside, maxSlopeDeg, limitDegrees: maxAllowed, radiusM: r, spacingM: spacing, samples: count, worst, method: 'dense disk and perimeter sampling; not a continuous mathematical proof' };
          }
          function validate(course) {
-            const errors = []; const num = (v, k) => { if (!C.finite(v)) errors.push(k + ':not_finite'); };
+            const errors = []; if(course.world) { try { worldEnabled(course); } catch { errors.push('procedural_world_version'); } } const num = (v, k) => { if (!C.finite(v)) errors.push(k + ':not_finite'); };
             if (![VERSION, 'course-contract/0.4.0'].includes(course.schema)) errors.push('schema_version'); if (course.units?.length !== 'm' || course.units?.speed !== 'm/s') errors.push('units');
             if (!course.bounds || course.bounds.maxX <= course.bounds.minX || course.bounds.maxY <= course.bounds.minY) errors.push('bounds');
             if (!Array.isArray(course.route) || course.route.length < 2) errors.push('route');
@@ -162,7 +164,7 @@ A diagnostic original hole, not a surveyed real course or an architect emulation
             };
          }
          function holeLength(course) { return course.route.slice(1).reduce((v, p, i) => v + C.hypot(course.route[i], p), 0); }
-         return { selectSetup, holeLength, VERSION, G, STIMP_REFERENCE_MPS, greenRoll, slopeDegrees, pinAreaReport, demo, materials, days, ellipse, surfaceAt, inBounds, heightAt, slopeAt, groundAt, routeProgress, yardageBookAim, defaultAim, inspectLine, validate, physicsSnapshot, plateContract };
+         return { selectSetup, holeLength, VERSION, G, STIMP_REFERENCE_MPS, greenRoll, slopeDegrees, pinAreaReport, demo, materials, days, ellipse, surfaceAt, objectsAlong, inBounds, heightAt, slopeAt, groundAt, routeProgress, yardageBookAim, defaultAim, inspectLine, validate, physicsSnapshot, plateContract };
       });
 
 export { Course };

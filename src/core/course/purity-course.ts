@@ -1,9 +1,10 @@
+import { WORLD_VERSION } from './procedural-world';
 import { Contract } from '../contracts/contract.js';
 import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.3.0';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.4.0';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -265,5 +266,45 @@ export function createPurityCourse() {
             provenance: 'Purity authored woodland; physical trunk and canopy',
          });
       }
+   // Promote the former atlas-only lakes and creek extensions into the saved course contract.
+   const waters: any[] = [];
+   for (const [id, cx, cy, rx, ry] of [
+      ['west', c.bounds.minX - 175, 400, 115, 240],
+      ['east', c.bounds.maxX + 220, -20, 95, 180],
+   ] as const) {
+      const polygon = Array.from({ length: 100 }, (_, i) => {
+         const a = (i / 100) * Math.PI * 2,
+            r = 1 + 0.08 * Math.sin(a * 5) + 0.045 * Math.cos(a * 9);
+         return { x: cx + Math.cos(a) * rx * r, y: cy + Math.sin(a) * ry * r };
+      });
+      waters.push({
+         id: `world-lake-${id}`,
+         type: 'water',
+         polygon,
+         waterHeight: Course.heightAt(c, { x: cx, y: cy }),
+      });
+   }
+   const creek = c.surfaces.filter((s: any) => s.id.startsWith('woodland-creek-'));
+   for (const [left, right, endY, id] of [
+      [creek[0].polygon[0], creek[0].polygon[3], c.bounds.maxY + 350, 'north'],
+      [creek.at(-1).polygon[1], creek.at(-1).polygon[2], c.bounds.minY - 350, 'south'],
+   ] as const) {
+      const a: Point[] = [],
+         b: Point[] = [];
+      for (let i = 0; i <= 40; i++) {
+         const t = i / 40,
+            drift = Math.sin(t * 5) * 35 * t;
+         a.push({ x: left.x + drift - t * 8, y: left.y + (endY - left.y) * t });
+         b.push({ x: right.x + drift + t * 8, y: right.y + (endY - right.y) * t });
+      }
+      waters.push({
+         id: `world-creek-${id}`,
+         type: 'water',
+         polygon: [...a, ...b.reverse()],
+         waterHeight: Course.heightAt(c, left),
+      });
+   }
+   c.surfaces.unshift(...waters);
+   c.world = { version: WORLD_VERSION, seed: 839, waters };
    return c;
 }

@@ -1,3 +1,4 @@
+import { worldTrees, worldWetness } from '../course/procedural-world';
 import { waterColour } from './water-material';
 import { LandscapeSurround } from './landscape-surround';
 import { DAYLIGHT, daylightChoice, type Daylight } from './daylight';
@@ -44,12 +45,18 @@ export class CourseAtlas {
          this.course = c;
          this.build(c);
       }
-      this.surround.paint(ctx, camera, daylight, {
-         minX: c.bounds.minX - this.margin + 100,
-         maxX: c.bounds.maxX + this.margin - 100,
-         minY: c.bounds.minY - this.margin + 100,
-         maxY: c.bounds.maxY + this.margin - 100,
-      });
+      this.surround.paint(
+         ctx,
+         camera,
+         daylight,
+         {
+            minX: c.bounds.minX - this.margin + 100,
+            maxX: c.bounds.maxX + this.margin - 100,
+            minY: c.bounds.minY - this.margin + 100,
+            maxY: c.bounds.maxY + this.margin - 100,
+         },
+         c,
+      );
       const p = camera.world({ x: c.bounds.minX - this.margin, y: c.bounds.maxY + this.margin });
       ctx.save();
       ctx.translate(p.x, p.y);
@@ -204,63 +211,38 @@ export class CourseAtlas {
       for (const surface of c.surfaces.filter(
          (surface: { type: string }) => surface.type === 'water',
       )) {
-         surface.polygon.forEach((p: Point, i: number) => {
-            const q = point(p);
-            if (i) water.lineTo(q.x, q.y);
-            else water.moveTo(q.x, q.y);
-         });
-         water.closePath();
-      }
-      const scenicWater: Point[][] = [];
-      for (const [cx, cy, rx, ry] of [
-         [c.bounds.minX - 175, 400, 115, 240],
-         [c.bounds.maxX + 220, -20, 95, 180],
-      ]) {
-         scenicWater.push(
-            Array.from({ length: 100 }, (_, i) => {
-               const a = (i / 100) * Math.PI * 2;
-               const r = 1 + 0.08 * Math.sin(a * 5) + 0.045 * Math.cos(a * 9);
-               return { x: cx + Math.cos(a) * rx * r, y: cy + Math.sin(a) * ry * r };
-            }),
+         const area = surface.polygon.reduce(
+            (sum: number, p: Point, i: number, points: Point[]) => {
+               const q = points[(i + 1) % points.length];
+               return sum + p.x * q.y - q.x * p.y;
+            },
+            0,
          );
-      }
-      for (const polygon of scenicWater) {
-         polygon.forEach((p, i) => {
+         // World Y is flipped on the canvas: clockwise world polygons match positive canvas rectangles.
+         const polygon = area > 0 ? [...surface.polygon].reverse() : surface.polygon;
+         polygon.forEach((p: Point, i: number) => {
             const q = point(p);
             if (i) water.lineTo(q.x, q.y);
             else water.moveTo(q.x, q.y);
          });
          water.closePath();
       }
-      // Continue the authored creek beyond its endpoints, never inside playable bounds.
-      const creek = c.surfaces.filter((v: { id: string }) => v.id.startsWith('woodland-creek-'));
-      if (creek.length) {
-         const ends = [
-            [creek[0].polygon[0], creek[0].polygon[3], bounds.maxY, 1],
-            [creek.at(-1).polygon[1], creek.at(-1).polygon[2], bounds.minY, -1],
-         ] as const;
-         for (const [left, right, endY, direction] of ends) {
-            const bankA: Point[] = [],
-               bankB: Point[] = [];
-            for (let i = 0; i <= 40; i++) {
-               const t = i / 40,
-                  drift = Math.sin(t * 5) * 35 * t;
-               bankA.push({ x: left.x + drift - t * 8, y: left.y + (endY - left.y) * t });
-               bankB.push({ x: right.x + drift + t * 8, y: right.y + (endY - right.y) * t });
-            }
+      // Remote drainage is sampled from the same world field as the ball.
+      // Four-metre raster cells affect presentation resolution only.
+      for (let y = bounds.minY; y < bounds.maxY; y += 4)
+         for (let x = bounds.minX; x < bounds.maxX; x += 4) {
             if (
-               (direction > 0 && left.y > c.bounds.maxY) ||
-               (direction < 0 && left.y < c.bounds.minY)
-            ) {
-               [...bankA, ...bankB.reverse()].forEach((p, i) => {
-                  const q = point(p);
-                  if (i) water.lineTo(q.x, q.y);
-                  else water.moveTo(q.x, q.y);
-               });
-               water.closePath();
+               x >= c.bounds.minX &&
+               x <= c.bounds.maxX &&
+               y >= c.bounds.minY &&
+               y <= c.bounds.maxY
+            )
+               continue;
+            if (worldWetness(c, x + 2, y + 2) < 0) {
+               const p = point({ x, y: y + 4 });
+               water.rect(p.x, p.y, 4 * s, 4 * s);
             }
          }
-      }
 
       this.ripples = [];
       for (let i = 0; i < 900; i++) {
@@ -439,11 +421,11 @@ export class CourseAtlas {
       ctx.globalAlpha = 0.65;
       ctx.drawImage(waterLayer, 0, 0);
       ctx.globalAlpha = 1;
+      // Remote lakes can merge with drainage; only authored banks receive rock outlines.
       for (const polygon of [
          ...c.surfaces
             .filter((v: { id: string }) => v.id.startsWith('estate-lake-'))
             .map((v: { polygon: Point[] }) => v.polygon),
-         ...scenicWater,
       ]) {
          for (let i = 0; i < polygon.length; i++) {
             const a = point(polygon[i]),
@@ -501,24 +483,7 @@ export class CourseAtlas {
          ctx.fillStyle = i % 2 ? '#fff5ca0b' : '#143e3210';
          ctx.fillRect(random() * w, random() * h, 0.5 + random() * 2, 0.5 + random() * 2);
       }
-      const scenicTrees: { kind: string; x: number; y: number; canopyRadius: number }[] = [];
-      for (let i = 0; i < 1400; i++) {
-         const x = bounds.minX + random() * (bounds.maxX - bounds.minX);
-         const y = bounds.minY + random() * (bounds.maxY - bounds.minY);
-         const radius = 5 + random() * 10;
-         if (
-            x > c.bounds.minX - radius - 8 &&
-            x < c.bounds.maxX + radius + 8 &&
-            y > c.bounds.minY - radius - 8 &&
-            y < c.bounds.maxY + radius + 8
-         )
-            continue;
-         const p = point({ x, y });
-         if (ctx.isPointInPath(water, p.x, p.y)) continue;
-         // Broad glades interrupt the forest, avoiding a uniform ring around the bounds.
-         if (Math.sin(x * 0.018 + Math.cos(y * 0.009)) + Math.cos(y * 0.025) < -0.45) continue;
-         scenicTrees.push({ kind: 'tree', x, y, canopyRadius: radius });
-      }
+      const scenicTrees = worldTrees(c, bounds);
       for (const object of [...scenicTrees, ...c.objects]) {
          if (object.kind === 'tree') {
             const p = point(object),
