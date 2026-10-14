@@ -8,6 +8,14 @@ Implementation, sources, assumptions and limitations live in the
 implementation after the original study-gate email. This does not imply empirical
 validation of the resulting model.
 
+## Implemented foundations (14 October 2026)
+
+- Versioned ball/aerodynamic/contact profiles are consumed by the fundamentals engine and captured in shot evidence; coefficients remain explicitly uncalibrated.
+- Shared procedural terrain, outer water elevation and bed queries participate in collision. The water model is authored geometry, not a fluid solver.
+- One weather epoch supplies seeded wind and moisture, with sunlight preset identity captured for shot playback.
+- Recorded landing/rollout analysis and a bounded repeatable dispersion study expose model outcomes without claiming real-player calibration.
+- One full-shot timestep-halving regression complements existing isolated mechanics tests. Wider convergence coverage remains necessary.
+
 ## Remaining essential research
 
 - Flight: select measured lift/drag curves, preserve their provenance and validity

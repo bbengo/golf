@@ -1,3 +1,4 @@
+import { physicsProfiles, validatePhysicsProfiles } from './physics-profiles.ts';
 import { Contract } from '../contracts/contract.js';
 import { Course } from '../course/course.js';
 import { Player } from './player.js';
@@ -261,9 +262,9 @@ import * as Fundamentals from './fundamentals.ts';
          }
          function run(course, day, golfer, intent, seed, options = {}) {
             const gate = Q.validate(course); if (!gate.passed) throw Error('Course contract rejected: ' + gate.errors.join(', ')); const launch = buildLaunch(course, day, golfer, intent, seed), result = simulate(course, day, launch, options);
-            return { schema: 'shot-record/0.3.0', version: options.model === 'fundamentals' ? Fundamentals.VERSION : VERSION, seed, course: C.clone(Q.physicsSnapshot(course)), day: C.clone(day), golfer: C.clone(golfer), intent: C.clone(intent), launch, result, provenance: { kind: 'simulation', quality: 'experimental_uncalibrated', notPhysicalGolferMeasurement: true } };
+            return { ...(options.model === 'fundamentals' ? {physicsProfiles:physicsProfiles()} : {}), schema: 'shot-record/0.3.0', version: options.model === 'fundamentals' ? Fundamentals.VERSION : VERSION, seed, course: C.clone(Q.physicsSnapshot(course)), day: C.clone(day), golfer: C.clone(golfer), intent: C.clone(intent), launch, result, provenance: { kind: 'simulation', quality: 'experimental_uncalibrated', notPhysicalGolferMeasurement: true } };
          }
-         function replay(record) { if (![VERSION, Fundamentals.VERSION].includes(record.version)) throw Error('Engine version mismatch'); return simulate(record.course, record.day, record.launch, { model: record.version === Fundamentals.VERSION ? 'fundamentals' : 'baseline' }); }
+         function replay(record) { if(record.physicsProfiles) validatePhysicsProfiles(record.physicsProfiles); if (![VERSION, Fundamentals.VERSION].includes(record.version)) throw Error('Engine version mismatch'); return simulate(record.course, record.day, record.launch, { model: record.version === Fundamentals.VERSION ? 'fundamentals' : 'baseline' }); }
          function apparentRadius(clearance, zoom) { return C.clamp(3.5 + Math.sqrt(Math.max(0, clearance)) * 1.35, 3.5, 16) * C.clamp(Math.sqrt(zoom), 0.8, 1.3); }
          function learning(records) {
             const eligible = records.filter(r => r.provenance?.kind === 'simulation'); const n = eligible.length; if (n < 5) return { n, status: 'insufficient_sample', text: `${n} simulated decisions recorded. No tendency inferred before five shots.`, scope: 'game_decisions_only' };

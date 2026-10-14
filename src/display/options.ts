@@ -4,7 +4,7 @@ import {
    presentationChoice,
    type Presentation,
 } from '../core/rendering/presentation';
-import { daylightChoice } from '../core/rendering/daylight';
+import { daylightChoice, type Daylight } from '../core/rendering/daylight';
 import type { Setup, Snapshot } from '../core/contracts/cockpit';
 export type DisplayMode = 'desktop' | 'minimal' | 'clear';
 export function savedDisplayMode(fallback: DisplayMode): DisplayMode {
@@ -22,6 +22,7 @@ export function startOptions(
    setup: (setup: Setup) => boolean,
    pair: () => void,
    renderer: (value: Snapshot['renderer']) => boolean,
+   sunlight: (value: Daylight) => void,
 ) {
    dialog.innerHTML = `<header><div><p class="hud-eyebrow">MAKE IT YOURS</p><h1 id="optionsTitle">Game options</h1></div><button id="closeGameOptions" aria-label="Close game options">×</button></header>
    <nav class="options-tabs" aria-label="Options sections"><button data-option-tab="experience" aria-pressed="true">Controls</button><button data-option-tab="camera" aria-pressed="false">Camera & ball</button><button data-option-tab="world" aria-pressed="false">Environment</button><button data-option-tab="course" aria-pressed="false">Practice conditions</button></nav>
@@ -101,8 +102,10 @@ export function startOptions(
       light.value = 'day';
    }
    document.body.dataset.daylight = light.value;
+   sunlight(daylightChoice(light.value));
    light.onchange = () => {
       document.body.dataset.daylight = daylightChoice(light.value);
+      sunlight(daylightChoice(light.value));
       try {
          localStorage.setItem('purity-daylight', light.value);
       } catch {}

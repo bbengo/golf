@@ -1,3 +1,4 @@
+import { WATER_VERSION } from './water-system';
 import { TERRAIN_VERSION, continuedHeight } from './terrain-continuation';
 import { WORLD_VERSION } from './procedural-world';
 import { Contract } from '../contracts/contract.js';
@@ -5,7 +6,7 @@ import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.5.0';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.6.0';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -96,6 +97,11 @@ export function createPurityCourse() {
    c.id = 'purity-creek-woodland';
    c.boundaryPolicy = 'synthetic-estate-continuation';
    c.revision = PURITY_COURSE_REVISION;
+   c.architecture = {
+      ...c.architecture,
+      thesis:
+         'Woodland practice with three tees, sand hazards and a winding creek. Explore landing positions, the shaped receiving shoulder and the next-shot angle across a continuous procedural estate.',
+   };
    c.provenance = {
       ...c.provenance,
       kind: 'synthetic_design',
@@ -307,5 +313,23 @@ export function createPurityCourse() {
    }
    c.surfaces.unshift(...waters);
    c.world = { version: WORLD_VERSION, seed: 839, waters, terrainVersion: TERRAIN_VERSION };
+   const north = waters.find((w) => w.id === 'world-creek-north'),
+      south = waters.find((w) => w.id === 'world-creek-south');
+   c.world.hydrology = {
+      version: WATER_VERSION,
+      level: 189.2,
+      north: {
+         y: c.bounds.maxY,
+         level:
+            Course.surfaceAt(c, { x: 203.5, y: c.bounds.maxY }).waterHeight ?? north.waterHeight,
+      },
+      south: {
+         y: c.bounds.minY,
+         level:
+            Course.surfaceAt(c, { x: 165.5, y: c.bounds.minY }).waterHeight ?? south.waterHeight,
+      },
+   };
+   for (const lake of waters.filter((w) => w.id.startsWith('world-lake-')))
+      lake.waterHeight = c.world.hydrology.level;
    return c;
 }

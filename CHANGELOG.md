@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-15: water, physics profiles, environment and practice engines
+
+- Unified outer water elevations across lake/drainage intersections and extended bed/bank shaping to remote waterways; woodland revision 0.6.0.
+- Extracted consumed ball/aero/contact baseline profiles and captured them in shot records with replay validation.
+- Centralized weather time and sunlight state; recorded weather follows the same accelerated timeline as ball playback.
+- Added recorded landing angle, post-landing travel and previous-shot comparison to Shot analysis.
+- Added a cancellable, exportable 12-shot seeded consistency study under Course & player tools / Research.
+- Documented remaining empirical calibration, rim physics, rainfall and broader numerical-validation work.
+
+Validation: all 56 unit/simulation tests pass; the seven engine checks were rerun after the final timing adjustment. All 12 browser scenarios passed across the full existing suite and focused new/changed-feature runs. Build, typecheck, formatting and diff checks pass. Reviewed analysis and study captures. The existing large legacy-data chunk warning remains.
+
 ## 2026-10-14: outer terrain slopes and lake banks
 
 - Added opt-in, versioned terrain continuation beyond the source raster, preserving surveyed ground and old saved-course behaviour.

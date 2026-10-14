@@ -1,10 +1,17 @@
+import type { Hydrology } from './water-system';
 import { Contract } from '../contracts/contract.js';
 import type { Point } from '../contracts/cockpit';
 export const WORLD_VERSION = 'purity-world/1';
 export type WorldBounds = { minX: number; maxX: number; minY: number; maxY: number };
 type Water = { id: string; type: 'water'; polygon: Point[]; waterHeight: number };
 export type WorldCourse = {
-   world?: { version: string; seed: number; waters: Water[]; terrainVersion?: string };
+   world?: {
+      version: string;
+      seed: number;
+      waters: Water[];
+      hydrology?: Hydrology;
+      terrainVersion?: string;
+   };
    bounds: WorldBounds;
    surfaces: { polygon: Point[]; type: string }[];
 };
@@ -85,6 +92,9 @@ export function worldWater(course: WorldCourse, p: Point): Water | null {
 export function worldWetness(course: WorldCourse, x: number, y: number) {
    if (!worldEnabled(course)) return 1;
    if (worldWater(course, { x, y })) return -1;
+   return drainageWetness(course, x, y);
+}
+export function drainageWetness(course: WorldCourse, x: number, y: number) {
    return Math.max(drainage(x, y), (28 - clearance(course, { x, y })) / 28);
 }
 export function worldTree(course: WorldCourse, gx: number, gy: number) {

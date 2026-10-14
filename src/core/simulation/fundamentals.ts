@@ -1,9 +1,10 @@
+import { BALL_PROFILE, AERO_PROFILE, TURF_PROFILE } from './physics-profiles';
 /** Experimental rigid-sphere mechanics. SI units throughout; see docs/physics-roadmap.md. */
 export type Vec3 = { x: number; y: number; z: number };
 export const G = 9.80665,
-   R = 0.02135,
-   M = 0.04593,
-   INERTIA = 0.4 * M * R * R;
+   R = BALL_PROFILE.radiusM,
+   M = BALL_PROFILE.massKg,
+   INERTIA = BALL_PROFILE.inertiaFactor * M * R * R;
 export const VERSION = 'purity-rigid-sphere/0.1.0';
 export const add = (a: Vec3, b: Vec3): Vec3 => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z });
 export const scale = (a: Vec3, s: number): Vec3 => ({ x: a.x * s, y: a.y * s, z: a.z * s });
@@ -66,20 +67,7 @@ export function sliding(v: Vec3, spin: Vec3, normal: Vec3, friction: number, dt:
 export function friction(surface: string) {
    // Declared trial coefficients, NOT fitted turf measurements. Moisture affects
    // existing restitution/rolling resistance; no invented wet-green spin bonus.
-   return (
-      (
-         {
-            green: 0.25,
-            fairway: 0.3,
-            fringe: 0.3,
-            tee: 0.3,
-            rough: 0.45,
-            'deep-rough': 0.5,
-            sand: 0.6,
-            path: 0.2,
-         } as Record<string, number>
-      )[surface] ?? 0.3
-   );
+   return (TURF_PROFILE.friction as Record<string, number>)[surface] ?? TURF_PROFILE.fallback;
 }
 
 type FlightState = { p: Vec3; v: Vec3; spin: Vec3 };
@@ -102,8 +90,8 @@ export function flightStep(
             transverse = sub(s.spin, scale(axis, dot(s.spin, axis)));
          const spinRatio = (length(transverse) * R) / speed;
          // Baseline coefficient family retained and explicitly uncalibrated.
-         const cd = 0.235 + 0.04 * Math.min(spinRatio, 1),
-            cl = Math.min(0.29, 1.8 * spinRatio);
+         const cd = AERO_PROFILE.dragBase + AERO_PROFILE.dragSpin * Math.min(spinRatio, 1),
+            cl = Math.min(AERO_PROFILE.liftCap, AERO_PROFILE.liftSpin * spinRatio);
          const q = ((0.5 * density * Math.PI * R * R) / M) * speed * speed;
          acceleration = add(
             acceleration,
@@ -111,7 +99,7 @@ export function flightStep(
          );
          // Smits/Smith spin-down as reported by Nathan (2008), eq.5 and SI footnote:
          // dω/dt = -2e-5 |v_air| ω/R. Integrated with velocity at every RK4 stage.
-         torque = scale(s.spin, (-2e-5 * speed) / R);
+         torque = scale(s.spin, (-AERO_PROFILE.spinDecay * speed) / R);
       }
       return { p: s.v, v: acceleration, spin: torque };
    }

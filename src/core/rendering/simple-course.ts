@@ -184,7 +184,7 @@ export class SimpleCourse {
                !this.reducedMotion.matches && document.body.dataset.followBall !== 'false';
          }
          const trace = session.last.result.trajectory,
-            elapsed = ((time - session.animationStarted) / 1000) * 3;
+            elapsed = session.shotTime(time);
          if (elapsed >= session.last.result.duration) {
             session.finish();
             ball = session.ball;
@@ -221,8 +221,10 @@ export class SimpleCourse {
       const ctx = this.ctx;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
-      const wind = Wind.presentation(Wind.atDay(session.day(), 0));
-      this.canvas.dataset.daylight = document.body.dataset.daylight || 'day';
+      const day = session.viewDay();
+      const wind = Wind.presentation(Wind.atDay(day, 0));
+      const daylight = daylightChoice(day.environment?.daylight ?? session.environment.daylight);
+      this.canvas.dataset.daylight = daylight;
       const route = document.body.dataset.route || 'title';
       if (!['play', 'pair'].includes(route)) {
          const view = this.menuCamera;
@@ -232,7 +234,7 @@ export class SimpleCourse {
          view.resize(rect.width, rect.height, c.plate.worldBounds);
          view.go({ x: 155 + drift * 8, y: 355 }, 1.45);
          view.tick(16, this.reducedMotion.matches);
-         this.atlas.paint(ctx, c, view, wind);
+         this.atlas.paint(ctx, c, view, wind, daylight);
          return;
       }
       if (session.renderer !== 'procedural' && !this.photoLoading) {
@@ -241,7 +243,7 @@ export class SimpleCourse {
             this.photo = PhotoRenderer.create(PhotoAssets, () => {});
          });
       }
-      this.atlas.paint(ctx, c, this.camera, wind);
+      this.atlas.paint(ctx, c, this.camera, wind, daylight);
       this.canvas.dataset.environment = session.renderer;
       this.canvas.dataset.imageReady = String(!!this.photo?.ready());
       if (session.renderer !== 'procedural' && this.photo?.ready()) {
@@ -350,7 +352,7 @@ export class SimpleCourse {
          }
       }
       if (session.last && document.body.dataset.displayMode !== 'clear') {
-         const elapsed = Math.max(0, ((time - session.animationStarted) / 1000) * 3);
+         const elapsed = session.shotTime(time, false);
          this.effects.paint(
             ctx,
             this.camera,
@@ -368,7 +370,7 @@ export class SimpleCourse {
             ball,
             Course.heightAt(c, ball),
             settings,
-            daylightChoice(document.body.dataset.daylight),
+            daylight,
          );
       }
    }

@@ -1,3 +1,4 @@
+import { waterShore, waterElevation } from './water-system';
 import { DEM } from './dem.js';
 import { Contract } from '../contracts/contract.js';
 import { worldNoise, type WorldCourse } from './procedural-world';
@@ -56,6 +57,32 @@ export function worldHeight(course: TerrainCourse, p: Point): number {
       Math.max(b.minY - p.y, 0, p.y - b.maxY),
    );
    if (!clearance) return base;
+   if (course.world.hydrology) {
+      const distance = waterShore(course, p);
+      if (distance >= 30) return base;
+      const target = waterElevation(course, p) + 2 * Math.tanh(distance / 12);
+      const weight =
+         (distance < 0 ? 1 : 1 - smooth(distance / 30)) *
+         smooth(
+            Math.hypot(
+               Math.max(
+                  course.terrain.grid.originX - p.x,
+                  0,
+                  p.x -
+                     course.terrain.grid.originX -
+                     (course.terrain.grid.width - 1) * course.terrain.grid.step,
+               ),
+               Math.max(
+                  course.terrain.grid.originY - p.y,
+                  0,
+                  p.y -
+                     course.terrain.grid.originY -
+                     (course.terrain.grid.height - 1) * course.terrain.grid.step,
+               ),
+            ) / 24,
+         );
+      return base + (target - base) * weight;
+   }
    let bed = base,
       influence = 0;
    for (const lake of course.world.waters) {

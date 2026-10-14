@@ -1657,7 +1657,8 @@ html:has(body.experience) {
    background: #d8e0c5;
    color: #17281d;
 }
-#groundComparison {
+#groundComparison,
+#dispersionResult {
    white-space: pre-wrap;
    font:
       12px/1.8 Onest,

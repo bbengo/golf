@@ -1,5 +1,11 @@
 # Next session: unfinished work
 
+## Current position - 14 October 2026
+
+The four engine implementation tracks now have working foundations: shared procedural world and outer-water elevations/beds; versioned baseline ball/aero/contact profiles; shared weather/sunlight shot snapshots; recorded-shot comparison and a seeded 12-shot consistency study. Older notes below are chronological history, not the current completion checklist.
+
+Remaining research: measured drag/lift datasets and independent flight validation; calibrated moisture/turf response and compliance; validated cup rim/lip-out dynamics; broader full-shot numerical convergence. No commercial ball variants or rainfall physics should be claimed without evidence. Remaining presentation work includes finer shoreline sampling, smooth time-of-day transitions and target-device performance review. The DEM protection collar remains a blended bed transition. Preserve the accepted softer camera timing.
+
 ## Desktop interface and player choice
 
 Desktop now has its own HUD and horizontal shot dock; the phone retains its touch

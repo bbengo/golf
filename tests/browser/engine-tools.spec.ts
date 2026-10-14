@@ -1,0 +1,24 @@
+import { test, expect } from '@playwright/test';
+test('analysis and seeded study are accessible without changing the round', async ({ page }) => {
+   test.setTimeout(120000);
+   const errors: string[] = [];
+   page.on('pageerror', (e) => errors.push(e.message));
+   await page.emulateMedia({ reducedMotion: 'reduce' });
+   await page.goto('/#play');
+   await expect(page.locator('#desktopPlay')).toBeVisible({ timeout: 30000 });
+   await page.locator('#desktopPlay').click();
+   await page.locator('#desktopPlay').click();
+   await page.keyboard.press('Escape');
+   await page.locator('#openShotAnalysis').click();
+   await expect(page.locator('#analysisMetrics')).toContainText('purity-ball/1');
+   await expect(page.locator('#analysisMetrics')).toContainText('Landing angle');
+   await page.screenshot({ path: 'test-results/engine-analysis.png' });
+   await page.locator('#closeShotAnalysis').click();
+   await page.locator('#openStudyTools').click();
+   await page.locator('[data-study=research]').click();
+   await page.locator('#runDispersion').click();
+   await expect(page.locator('#exportDispersion')).toBeEnabled({ timeout: 60000 });
+   await expect(page.locator('#dispersionResult')).toContainText('12 simulated shots');
+   await page.screenshot({ path: 'test-results/engine-dispersion.png' });
+   expect(errors).toEqual([]);
+});

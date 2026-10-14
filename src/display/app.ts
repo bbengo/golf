@@ -1,3 +1,4 @@
+import { analyseShot, compareShots } from '../core/simulation/shot-analysis';
 import { InputTrace } from '../lab/input-trace.js';
 import { startStudyTools } from './study-tools';
 import QRCode from 'qrcode';
@@ -80,6 +81,9 @@ export async function startDisplay(onFirstFrame?: () => void) {
       (setup) => send({ action: 'SETUP', setup }),
       () => navigate('pair'),
       (renderer) => send({ action: 'RENDERER', renderer }),
+      (daylight) => {
+         session.environment.daylight = daylight;
+      },
    );
    const openOptions = () => {
       quiet = true;
@@ -118,10 +122,32 @@ export async function startDisplay(onFirstFrame?: () => void) {
       $<HTMLButtonElement>('exportShotEvidence').disabled = !record;
       $<HTMLButtonElement>('replayShot').disabled = session.phase !== 'resolved' || !record;
       if (result) {
+         const analysis = analyseShot(result);
+         const previous = session.records.at(-2)?.result;
+         const comparison = previous ? compareShots(result, previous) : null;
          for (const [label, value] of [
             ['Carry', `${(result.carry / 0.9144).toFixed(1)} yd`],
             ['Start to finish', `${(result.total / 0.9144).toFixed(1)} yd`],
             ['Apex above launch', `${(result.apexAboveLaunch / 0.3048).toFixed(1)} ft`],
+            [
+               'Landing angle',
+               analysis.landingAngleDeg === null
+                  ? 'Not recorded'
+                  : `${analysis.landingAngleDeg.toFixed(1)} degrees down`,
+            ],
+            [
+               'Travel after landing (includes bounces)',
+               analysis.rolloutM === null
+                  ? 'No ground landing'
+                  : `${(analysis.rolloutM / 0.9144).toFixed(1)} yd`,
+            ],
+            [
+               'Carry vs previous shot',
+               comparison
+                  ? `${comparison.carryM >= 0 ? '+' : ''}${(comparison.carryM / 0.9144).toFixed(1)} yd (conditions may differ)`
+                  : 'First recorded shot',
+            ],
+            ['Physics profile', record?.physicsProfiles?.ball.id ?? 'Legacy evidence'],
             ['Simulation duration', `${result.duration.toFixed(2)} s`],
          ]) {
             const row = document.createElement('div'),

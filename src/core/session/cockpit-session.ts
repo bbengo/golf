@@ -1,8 +1,8 @@
+import { Environment } from '../course/environment';
 import { PracticeVisual as Practice } from './practice.js';
 import { Contract } from '../contracts/contract.js';
 import { Player } from '../simulation/player.js';
 import { Course } from '../course/course.js';
-import { Conditions } from '../course/conditions.js';
 import { createPurityCourse } from '../course/purity-course';
 import { Terrain } from '../course/terrain.js';
 import { Wind } from '../course/wind.js';
@@ -45,7 +45,7 @@ export class CockpitSession {
    records: ReturnType<typeof Shot.run>[] = [];
    last: ReturnType<typeof Shot.run> | null = null;
    animationStarted = 0;
-   private weatherStarted = performance.now();
+   readonly environment = new Environment();
    private seed = 270919;
    private acknowledgements = new Map<string, Reply>();
    private undoAvailable = false;
@@ -54,13 +54,22 @@ export class CockpitSession {
       this.reset();
    }
    day() {
-      return Conditions.makeDay(
-         this.course,
-         Conditions.setup(this.setup),
-         270919,
-         (performance.now() - this.weatherStarted) / 1000,
-      );
+      return this.environment.day(this.course, this.setup);
    }
+   shotTime(now = performance.now(), clampToShot = true) {
+      if (!this.last) return 0;
+      const elapsed = Math.max(0, (now - this.animationStarted) / 1000) * 3;
+      return clampToShot ? Math.min(this.last.result.duration, elapsed) : elapsed;
+   }
+   viewDay() {
+      if (this.phase !== 'animating' || !this.last) return this.day();
+      const elapsed = this.shotTime();
+      return {
+         ...this.last.day,
+         windStartSeconds: (this.last.day.windStartSeconds || 0) + elapsed,
+      };
+   }
+
    reset() {
       this.course = Course.selectSetup(createPurityCourse(), this.setup);
       this.course.terrain.authoredLayer.enabled = this.shapedGround;
@@ -73,7 +82,7 @@ export class CockpitSession {
       this.records = [];
       this.practice = Practice.begin();
       this.undoAvailable = false;
-      this.weatherStarted = performance.now();
+      this.environment.reset();
       this.intent = { club: 'D', effort: 1, shape: 0, height: 0 };
       this.revision++;
       this.view = 'hole';
@@ -116,7 +125,7 @@ export class CockpitSession {
       });
    }
    snapshot(): Snapshot {
-      const wind = Wind.presentation(Wind.atDay(this.day(), 0));
+      const wind = Wind.presentation(Wind.atDay(this.viewDay(), 0));
       return {
          type: 'STATE',
          revision: this.revision,
@@ -155,6 +164,9 @@ export class CockpitSession {
    }
    finish() {
       if (this.phase === 'animating') {
+         this.environment.advanceTo(
+            (this.last!.day.windStartSeconds || 0) + this.last!.result.duration,
+         );
          this.phase = 'resolved';
          this.ball = { ...this.last!.result.finish };
          this.revision++;

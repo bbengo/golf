@@ -1,7 +1,7 @@
 import { worldTrees, worldWetness } from '../course/procedural-world';
 import { waterColour } from './water-material';
 import { LandscapeSurround } from './landscape-surround';
-import { DAYLIGHT, daylightChoice, type Daylight } from './daylight';
+import { DAYLIGHT, type Daylight } from './daylight';
 import { terrainVariation, canopyStamp } from './terrain-detail';
 import { Course } from '../course/course.js';
 import type { CockpitSession } from '../session/cockpit-session';
@@ -37,8 +37,8 @@ export class CourseAtlas {
       c: CockpitSession['course'],
       camera: CourseCamera,
       wind: Snapshot['wind'],
+      daylight: Daylight,
    ) {
-      const daylight = daylightChoice(document.body.dataset.daylight);
       if (this.course !== c || daylight !== this.daylight) {
          this.daylight = daylight;
          this.crowns = Array.from({ length: 12 }, (_, i) => canopyStamp(i, DAYLIGHT[daylight]));
