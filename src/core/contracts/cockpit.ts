@@ -13,7 +13,7 @@ export type Command = { type: 'COMMAND'; id: string } & (
    | { action: 'INTENT'; intent: Intent }
    | { action: 'MOVE'; target: 'aim' | 'probe'; dx: number; dy: number }
    | { action: 'PLAY'; shot: number; intent: Intent }
-   | { action: 'NEXT' | 'MULLIGAN' | 'RESET' | 'SKIP' }
+   | { action: 'NEXT' | 'MULLIGAN' | 'RESET' | 'SKIP' | 'REPLAY' | 'CONCEDE' }
    | { action: 'VIEW'; view: 'hole' | 'ball' | 'green' }
    | { action: 'SETUP'; setup: Setup }
    | { action: 'RENDERER'; renderer: 'procedural' | 'photo' | 'comparison' }
@@ -93,6 +93,8 @@ export function validCommand(v: unknown): v is Command {
          return ['hole', 'ball', 'green'].includes(v.view as string);
       case 'RENDERER':
          return ['procedural', 'photo', 'comparison'].includes(v.renderer as string);
+      case 'CONCEDE':
+      case 'REPLAY':
       case 'NEXT':
       case 'MULLIGAN':
       case 'RESET':

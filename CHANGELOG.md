@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-14: restore UCG tools and clarify control choices
+
+- Compared the original sidebar and research menus against Purity; documented capability destinations in COSMOLOGY.
+- Restored pin distance, tee yardages, live wind indicator, zoom buttons and stock-shot reset/reference on desktop.
+- Added Course & player tools: terrain contours/slope/mesh, route and boundary layers, shot profile, stock yardages, validated player allocation/import/export/local persistence, practice journal and starting points.
+- Added recorded-trajectory replay and original practice-ledger accounting for mulligans and concessions. Physical shot records remain intact.
+- Restored source/shaped-ground study, four-way ground-response comparison, course/plate exports and bounded local input diagnostics.
+- Consolidated desktop mode under Controls; replaced short presentation dropdowns with visible native radio choices. Wide desktop controls remain distributed.
+
+Validation: 40 unit/simulation tests pass. All 11 browser scenarios were verified across the full run and focused reruns after correcting a broad dialog selector and startup readiness waits. Build, typecheck and formatting pass. Reviewed desktop and shot-profile captures. Physical-device trials remain necessary; the existing large legacy-data chunk warning remains.
+
+
 ## 2026-09-19: distinct desktop HUD and player-controlled interface
 
 - Replaced the embedded phone controller with desktop round information, camera

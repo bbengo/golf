@@ -11,17 +11,29 @@ test('environment choices load, align with the same camera and persist', async (
    await page.keyboard.press('Escape');
    await page.locator('#openGameOptions').click();
    await page.locator('[data-option-tab=camera]').click();
-   await page.getByLabel('Camera response', { exact: true }).selectOption('responsive');
-   await page.getByLabel('Ball visibility', { exact: true }).selectOption('enhanced');
-   await page.getByLabel('Ball finish', { exact: true }).selectOption('yellow');
-   await page.getByLabel('Last-shot trace', { exact: true }).selectOption('last');
+   await page
+      .getByRole('group', { name: 'Camera response', exact: true })
+      .getByRole('radio', { name: 'Responsive', exact: true })
+      .check();
+   await page
+      .getByRole('group', { name: 'Ball visibility', exact: true })
+      .getByRole('radio', { name: 'Enhanced', exact: true })
+      .check();
+   await page
+      .getByRole('group', { name: 'Ball finish', exact: true })
+      .getByRole('radio', { name: 'Tour yellow', exact: true })
+      .check();
+   await page
+      .getByRole('group', { name: 'Last-shot trace', exact: true })
+      .getByRole('radio', { name: 'Show last shot', exact: true })
+      .check();
    await page.screenshot({ path: 'test-results/camera-ball-options.png' });
    await page.locator('[data-option-tab=world]').click();
-   const selection = page.getByLabel('Environment', { exact: true });
-   await selection.selectOption('photo');
+   const selection = page.getByRole('group', { name: 'Environment', exact: true });
+   await selection.getByRole('radio', { name: 'Original image', exact: true }).check();
    await expect(canvas).toHaveAttribute('data-image-ready', 'true', { timeout: 30000 });
    await expect(canvas).toHaveAttribute('data-environment', 'photo');
-   await selection.selectOption('comparison');
+   await selection.getByRole('radio', { name: 'Both - split comparison', exact: true }).check();
    await page.locator('#closeGameOptions').click();
    await expect(canvas).toHaveAttribute('data-environment', 'comparison');
    await page.screenshot({ path: 'test-results/environment-comparison.png' });

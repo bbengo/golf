@@ -1,3 +1,6 @@
+import { PracticeVisual as Practice } from './practice.js';
+import { Contract } from '../contracts/contract.js';
+import { Player } from '../simulation/player.js';
 import { Course } from '../course/course.js';
 import { Conditions } from '../course/conditions.js';
 import { createPurityCourse } from '../course/purity-course';
@@ -16,6 +19,10 @@ import {
 } from '../contracts/cockpit';
 
 export class CockpitSession {
+   golfer = structuredClone(Shot.player);
+   variance = true;
+   practice = Practice.begin();
+   shapedGround = true;
    course = createPurityCourse();
    setup: Setup = {
       tee: 'white',
@@ -56,6 +63,7 @@ export class CockpitSession {
    }
    reset() {
       this.course = Course.selectSetup(createPurityCourse(), this.setup);
+      this.course.terrain.authoredLayer.enabled = this.shapedGround;
       this.ball = { ...this.course.tee };
       this.aim = Course.defaultAim(this.course, this.ball).point;
       this.probe = { ...this.aim };
@@ -63,6 +71,7 @@ export class CockpitSession {
       this.shot = 1;
       this.last = null;
       this.records = [];
+      this.practice = Practice.begin();
       this.undoAvailable = false;
       this.weatherStarted = performance.now();
       this.intent = { club: 'D', effort: 1, shape: 0, height: 0 };
@@ -70,13 +79,50 @@ export class CockpitSession {
       this.view = 'hole';
       this.viewRevision++;
    }
+   configurePlayer(player: ReturnType<typeof Player.build>, variance: boolean) {
+      if (this.phase === 'animating') throw Error('Wait for this shot to finish');
+      Player.validateModel(player);
+      this.golfer = structuredClone(player);
+      this.variance = variance;
+      this.revision++;
+   }
+   study(kind: 'tee' | 'approach' | 'frontApproach' | 'putt') {
+      if (this.phase === 'animating') throw Error('Wait for this shot to finish');
+      this.reset();
+      if (kind !== 'tee') {
+         const fixture =
+            kind === 'putt' ? this.course.fixtures.greenStart : this.course.fixtures.approach;
+         this.ball = { ...fixture };
+         if (kind === 'frontApproach')
+            this.ball = { x: this.course.pin.x, y: this.course.pin.y - 35 };
+         this.aim = { ...this.course.pin };
+         this.probe = { ...this.aim };
+         this.intent = { club: kind === 'putt' ? 'PUTT' : 'PW', effort: 1, shape: 0, height: 0 };
+         this.view = 'ball';
+         this.viewRevision++;
+         this.revision++;
+      }
+   }
+   chooseGround(enabled: boolean) {
+      if (this.phase === 'animating') throw Error('Wait for this shot to finish');
+      this.shapedGround = enabled;
+      this.reset();
+   }
+   canConcede() {
+      return Practice.canConcede(this.practice, {
+         phase: this.phase,
+         surface: Course.surfaceAt(this.course, this.ball).type,
+         status: this.last?.result.status,
+      });
+   }
    snapshot(): Snapshot {
       const wind = Wind.presentation(Wind.atDay(this.day(), 0));
       return {
          type: 'STATE',
          revision: this.revision,
          phase: this.phase,
-         canMulligan: this.undoAvailable && this.phase !== 'animating',
+         canMulligan:
+            !Practice.closed(this.practice) && this.undoAvailable && this.phase !== 'animating',
          cameraAngle: this.cameraAngle,
          shot: this.shot,
          intent: { ...this.intent },
@@ -95,14 +141,16 @@ export class CockpitSession {
          terrain: Terrain.point(this.course, this.probe),
          lie: Course.surfaceAt(this.course, this.ball).type,
          distance: Math.hypot(this.aim.x - this.ball.x, this.aim.y - this.ball.y),
-         result: this.last
-            ? {
-                 status: this.last.result.status,
-                 carry: this.last.result.carry,
-                 total: this.last.result.total,
-                 surface: this.last.result.finalSurface,
-              }
-            : null,
+         result: Practice.closed(this.practice)
+            ? { status: 'conceded', carry: 0, total: 0, surface: 'green' }
+            : this.last
+              ? {
+                   status: this.last.result.status,
+                   carry: this.last.result.carry,
+                   total: this.last.result.total,
+                   surface: this.last.result.finalSurface,
+                }
+              : null,
       };
    }
    finish() {
@@ -152,13 +200,14 @@ export class CockpitSession {
                   ...command.intent,
                   start: { ...this.ball },
                   aim: { ...this.aim },
-                  variance: true,
+                  variance: this.variance,
                };
-               const shot = Shot.run(this.course, this.day(), Shot.player, intent, ++this.seed, {
+               const shot = Shot.run(this.course, this.day(), this.golfer, intent, ++this.seed, {
                   model: 'fundamentals',
                });
                this.intent = { ...command.intent };
                this.last = shot;
+               this.practice = Practice.appendShot(this.practice, this.records.length, shot);
                this.records.push(shot);
                this.undoAvailable = true;
                this.lastShotNumber = this.shot;
@@ -166,7 +215,29 @@ export class CockpitSession {
                this.animationStarted = performance.now();
                break;
             }
+            case 'CONCEDE':
+               this.practice = Practice.concede(this.practice, {
+                  phase: this.phase,
+                  surface: Course.surfaceAt(this.course, this.ball).type,
+                  status: this.last?.result.status,
+                  lie: this.ball,
+                  pin: this.course.pin,
+                  courseFingerprint: Contract.fingerprint(Course.physicsSnapshot(this.course)),
+               });
+               this.phase = 'resolved';
+               this.undoAvailable = false;
+               break;
+            case 'REPLAY':
+               if (Practice.closed(this.practice))
+                  throw Error('Start a new practice after a concession');
+               if (this.phase !== 'resolved' || !this.last)
+                  throw Error('Finish a shot before replaying it');
+               this.phase = 'animating';
+               this.animationStarted = performance.now();
+               break;
             case 'NEXT':
+               if (Practice.closed(this.practice))
+                  throw Error('Start a new practice after a concession');
                if (this.phase !== 'resolved') throw Error('Play a shot first');
                if (this.last!.result.status !== 'settled')
                   throw Error('Restart the hole or take a mulligan after this result');
@@ -180,6 +251,12 @@ export class CockpitSession {
                break;
             case 'MULLIGAN':
                if (!this.last || !this.undoAvailable) throw Error('No shot available to undo');
+               this.practice = Practice.mulligan(
+                  this.practice,
+                  this.phase,
+                  this.last,
+                  this.records.length - 1,
+               );
                this.ball = { ...this.last.intent.start };
                this.aim = { ...this.last.intent.aim };
                this.intent = {

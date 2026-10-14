@@ -60,3 +60,7 @@ The HTML provides a styled, locally-fonted initial screen before JavaScript arri
 ## Daylight preference
 
 Experience options includes Morning / Daylight / Late afternoon. The value is validated and saved locally as purity-daylight, independently of practice conditions and pairing. Selecting it does not issue a SETUP command or change the current shot. The canvas reports the active choice for browser verification.
+
+## UCG tool restoration, 13 October 2026
+
+Controls is now the first Game options tab and owns desktop/minimal/clear choices and phone pairing. Short presentation settings use native radio choices. Course & player tools is a separate menu destination with terrain, shot profile, yardages, player, journal and research tabs. Shared session/player/terrain/shot APIs provide the behaviour; research controls are not duplicated throughout the settings pages. See the root COSMOLOGY parity table for original-to-Purity destinations and model-reference limits.

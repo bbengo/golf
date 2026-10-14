@@ -1,3 +1,5 @@
+import { InputTrace } from '../lab/input-trace.js';
+import { startStudyTools } from './study-tools';
 import QRCode from 'qrcode';
 import { CockpitSession } from '../core/session/cockpit-session';
 import { SimpleCourse } from '../core/rendering/simple-course';
@@ -45,9 +47,11 @@ export async function startDisplay(onFirstFrame?: () => void) {
       desktop.render(state);
       relay?.send(state);
    }
+   const inputTrace = InputTrace.create(512);
    let commandSequence = 0;
    function send(action: DesktopAction) {
       const ack = session.apply({ type: 'COMMAND', id: `desktop-${++commandSequence}`, ...action });
+      inputTrace.append('desktop-command', { action, ack });
       desktop.notice(ack.ok ? '' : ack.error || 'Could not apply that action.');
       publish();
       return ack.ok;
@@ -60,7 +64,7 @@ export async function startDisplay(onFirstFrame?: () => void) {
       for (let i = 0; i < steps; i++)
          if (!send({ action: 'MOVE', target, dx: dx / steps, dy: dy / steps })) break;
    }
-   const desktop = startDesktop(controls, send, aimAt);
+   const desktop = startDesktop(controls, send, aimAt, session);
    function setMode(mode: DisplayMode) {
       displayMode = mode;
       try {
@@ -83,6 +87,25 @@ export async function startDisplay(onFirstFrame?: () => void) {
       options.open();
    };
    $('openGameOptions').onclick = openOptions;
+   const studyTools = startStudyTools(session, publish, () => ({
+      schema: 'purity-input-diagnostic/1',
+      state: session.snapshot(),
+      camera: {
+         x: renderer.camera.x,
+         y: renderer.camera.y,
+         zoom: renderer.camera.zoom,
+         angle: renderer.camera.angle,
+      },
+      events: inputTrace.read(),
+   }));
+   $('openStudyTools').onclick = () => studyTools.open();
+   $('replayShot').onclick = () => {
+      if (send({ action: 'REPLAY' })) {
+         $<HTMLDialogElement>('shotAnalysis').close();
+         quiet = true;
+         renderRoute();
+      }
+   };
    $('closeShotAnalysis').onclick = () => $<HTMLDialogElement>('shotAnalysis').close();
    $('openShotAnalysis').onclick = () => {
       const record = session.last,
@@ -93,6 +116,7 @@ export async function startDisplay(onFirstFrame?: () => void) {
       $('analysisMetrics').replaceChildren();
       $('analysisEvents').replaceChildren();
       $<HTMLButtonElement>('exportShotEvidence').disabled = !record;
+      $<HTMLButtonElement>('replayShot').disabled = session.phase !== 'resolved' || !record;
       if (result) {
          for (const [label, value] of [
             ['Carry', `${(result.carry / 0.9144).toFixed(1)} yd`],
@@ -144,6 +168,25 @@ export async function startDisplay(onFirstFrame?: () => void) {
    };
    $('desktopNorth').onclick = () => renderer.setView('north');
    const canvas = $<HTMLCanvasElement>('course');
+   for (const kind of ['pointerdown', 'pointerup', 'pointercancel', 'wheel'])
+      canvas.addEventListener(
+         kind,
+         (event) => {
+            const e = event as PointerEvent;
+            inputTrace.append(kind, {
+               x: e.clientX,
+               y: e.clientY,
+               button: e.button,
+               camera: {
+                  x: renderer.camera.x,
+                  y: renderer.camera.y,
+                  zoom: renderer.camera.zoom,
+                  angle: renderer.camera.angle,
+               },
+            });
+         },
+         { passive: true },
+      );
    let down: { x: number; y: number; moved: boolean } | null = null;
    let pendingAim: ReturnType<typeof setTimeout> | undefined;
    canvas.addEventListener('dblclick', () => clearTimeout(pendingAim));
@@ -298,11 +341,8 @@ export async function startDisplay(onFirstFrame?: () => void) {
          quiet = true;
          setMode('desktop');
       });
-   $('useDesktopControls').onclick = () => {
-      quiet = true;
-      setMode('desktop');
-      navigate('play');
-   };
+   $('desktopZoomIn').onclick = () => renderer.setView('in');
+   $('desktopZoomOut').onclick = () => renderer.setView('out');
    $('playHere').onclick = () => {
       quiet = true;
       setMode('desktop');
@@ -387,7 +427,9 @@ export async function startDisplay(onFirstFrame?: () => void) {
          token,
          (message) => {
             if (message.type === 'COMMAND') {
-               relay?.send(session.apply(message));
+               const reply = session.apply(message);
+               inputTrace.append('phone-command', { message, reply });
+               relay?.send(reply);
                publish();
             } else if (message.type === 'PEERS') {
                const joined = message.cockpit && !phoneConnected;

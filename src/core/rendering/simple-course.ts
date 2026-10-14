@@ -1,3 +1,4 @@
+import { CourseStudyLayers } from './course-study-layers';
 import { paintTarget } from './target-reticle';
 import { ViewportSurface } from './viewport';
 import { BallRenderer } from './ball-renderer';
@@ -18,6 +19,7 @@ export class SimpleCourse {
    private ctx: CanvasRenderingContext2D;
    private ballRenderer = new BallRenderer();
    private effects = new ShotEffects();
+   private studyLayers = new CourseStudyLayers();
    private atlas = new CourseAtlas();
    private lastTime = 0;
    private viewRevision = -1;
@@ -127,10 +129,15 @@ export class SimpleCourse {
    private world(p: Point) {
       return this.camera.world(p);
    }
-   setView(action: 'north' | 'fit' | 'left' | 'right') {
+   setView(action: 'north' | 'fit' | 'left' | 'right' | 'in' | 'out') {
       this.following = false;
       this.canvas.dataset.cameraMode = 'manual';
-      if (action === 'north') this.camera.north();
+      if (action === 'in' || action === 'out')
+         this.camera.zoomAt(
+            { x: this.camera.w / 2, y: this.camera.h / 2 },
+            action === 'in' ? 1.25 : 0.8,
+         );
+      else if (action === 'north') this.camera.north();
       else if (action === 'fit') {
          this.camera.north();
          this.camera.fit();
@@ -273,6 +280,8 @@ export class SimpleCourse {
             }
          }
       }
+      if (document.body.dataset.displayMode !== 'clear')
+         this.studyLayers.paint(ctx, session, this.camera, document.body.dataset);
       const pin = this.world(c.pin);
       ctx.fillStyle = '#263b31';
       ctx.beginPath();
@@ -320,7 +329,7 @@ export class SimpleCourse {
                this.preview = Shot.buildLaunch(
                   c,
                   session.day(),
-                  Shot.player,
+                  session.golfer,
                   { ...session.intent, start: session.ball, aim: session.aim, variance: false },
                   0,
                ).velocity;

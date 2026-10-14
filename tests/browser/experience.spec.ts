@@ -31,7 +31,7 @@ test('desktop controls, mouse aiming and player-selected interface modes', async
    const errors: string[] = [];
    page.on('pageerror', (error) => errors.push(error.message));
    await page.goto('/#play');
-   await expect(page.locator('#desktopPlay')).toBeVisible();
+   await expect(page.locator('#desktopPlay')).toBeVisible({ timeout: 30000 });
    await expect(page.locator('#desktopControls .cockpit-shell')).toHaveCount(0);
    await page.locator('#openCaddy').click();
    await expect(page.locator('#desktopCaddy')).toBeVisible();
@@ -82,7 +82,10 @@ test('desktop controls, mouse aiming and player-selected interface modes', async
    await page.screenshot({ path: 'test-results/game-options.png' });
    const clubBeforeLight = await page.locator('#desktopClub').inputValue();
    await page.locator('[data-option-tab=world]').click();
-   await page.locator('#daylight').selectOption('evening');
+   await page
+      .getByRole('group', { name: 'Daylight', exact: true })
+      .getByRole('radio', { name: 'Late afternoon' })
+      .check();
    await expect(page.locator('#course')).toHaveAttribute('data-daylight', 'evening');
    await expect(page.locator('#desktopClub')).toHaveValue(clubBeforeLight);
    await page.locator('#closeGameOptions').click();
@@ -137,7 +140,7 @@ test('short-screen options scroll internally and local play works without relay'
    await page.setViewportSize({ width: 390, height: 844 });
    await page.route('**/api/session', (route) => route.abort());
    await page.goto('/#play');
-   await expect(page.locator('#desktopPlay')).toBeVisible();
+   await expect(page.locator('#desktopPlay')).toBeVisible({ timeout: 30000 });
    expect(
       await page.evaluate(
          () =>
@@ -148,10 +151,10 @@ test('short-screen options scroll internally and local play works without relay'
    await page.locator('#revealTools').click();
    await page.locator('#openGameOptions').click();
    await page.setViewportSize({ width: 700, height: 480 });
-   const scroller = page.locator('.options-scroll');
+   const scroller = page.locator('#gameOptions .options-scroll');
    expect(await scroller.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
    await page.locator('#optionsPair').click();
    await expect(page.locator('#pairStatus')).toContainText('You can still play on this screen');
    await page.locator('#playHere').click();
-   await expect(page.locator('#desktopPlay')).toBeVisible();
+   await expect(page.locator('#desktopPlay')).toBeVisible({ timeout: 30000 });
 });

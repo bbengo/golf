@@ -1,3 +1,4 @@
+import { exposeChoices } from './choice-control';
 import {
    DEFAULT_PRESENTATION,
    presentationChoice,
@@ -23,7 +24,7 @@ export function startOptions(
    renderer: (value: Snapshot['renderer']) => boolean,
 ) {
    dialog.innerHTML = `<header><div><p class="hud-eyebrow">MAKE IT YOURS</p><h1 id="optionsTitle">Game options</h1></div><button id="closeGameOptions" aria-label="Close game options">×</button></header>
-   <nav class="options-tabs" aria-label="Options sections"><button data-option-tab="experience" aria-pressed="true">Experience</button><button data-option-tab="camera" aria-pressed="false">Camera & ball</button><button data-option-tab="world" aria-pressed="false">Environment</button><button data-option-tab="course" aria-pressed="false">Practice conditions</button></nav>
+   <nav class="options-tabs" aria-label="Options sections"><button data-option-tab="experience" aria-pressed="true">Controls</button><button data-option-tab="camera" aria-pressed="false">Camera & ball</button><button data-option-tab="world" aria-pressed="false">Environment</button><button data-option-tab="course" aria-pressed="false">Practice conditions</button></nav>
    <div class="options-scroll">
    <section data-option-page="experience"><h2>Your screen, your choice.</h2><p>Choose how much interface accompanies your round. Phone controls work with every view.</p><fieldset class="display-choices"><legend>Display interface</legend>
    <label><input type="radio" name="displayMode" value="desktop"><span><strong>Desktop controls</strong><small>Mouse aiming, a shot dock and separate course readouts.</small></span></label>
@@ -138,10 +139,14 @@ export function startOptions(
          ? 'New practice ready.'
          : 'Could not apply conditions. Try again.';
    };
+   const syncChoices = Array.from(
+      dialog.querySelectorAll<HTMLSelectElement>('[data-presentation], #daylight, #environment'),
+   ).map(exposeChoices);
    return {
       open() {
          dialog.querySelector<HTMLButtonElement>('[data-option-tab="experience"]')!.click();
          environment.value = state().renderer;
+         syncChoices.forEach((sync) => sync());
          const s = state().setup;
          for (const [id, value] of [
             ['optionTee', s.tee],

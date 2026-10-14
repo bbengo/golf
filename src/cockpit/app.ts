@@ -190,25 +190,30 @@ export function startCockpit(root: HTMLElement = document.body, transport?: Cont
             $('terrain').textContent =
                `${state.terrain.surface} · ${state.terrain.gradePercent.toFixed(1)}% slope · falls ${state.terrain.downhillLabel} · ${(state.terrain.z / 0.3048).toFixed(0)} ft elevation`;
             const status = state.result?.status;
+            const conceded = status === 'conceded';
             const recover = state.phase === 'resolved' && status !== 'settled';
             $('phaseTitle').textContent =
                state.phase === 'plan'
                   ? 'Your next shot.'
                   : state.phase === 'animating'
                     ? 'Watch it fly.'
-                    : status === 'holed'
-                      ? 'That’s the hole.'
-                      : status === 'water'
-                        ? 'A little too wet.'
-                        : 'Take it from here.';
+                    : conceded
+                      ? 'Practice conceded.'
+                      : status === 'holed'
+                        ? 'That’s the hole.'
+                        : status === 'water'
+                          ? 'A little too wet.'
+                          : 'Take it from here.';
             $('phaseHint').textContent =
                state.phase === 'plan'
                   ? 'Set your line, then make your move.'
                   : state.phase === 'animating'
                     ? 'Eyes on the course. We’ll follow the ball.'
-                    : status === 'settled'
-                      ? 'Your ball is down. Ready for the next one?'
-                      : 'Try a mulligan, or start a fresh hole.';
+                    : conceded
+                      ? 'One practice stroke conceded. The ball was not physically holed.'
+                      : status === 'settled'
+                        ? 'Your ball is down. Ready for the next one?'
+                        : 'Try a mulligan, or start a fresh hole.';
             $('play').textContent =
                state.phase === 'animating'
                   ? 'Show result'

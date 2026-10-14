@@ -181,28 +181,47 @@ Deferred systems above are not claimed implemented. In particular, distant scene
 
 The controls were not removed: the lobby's on-screen-controls entry retained a saved Minimal/Clear preference, making them effectively undiscoverable. Explicit local-play links now select desktop mode, and Game menu has a direct Use desktop controls action. The preference still persists for ordinary reload/resume. Phone pairing remains optional.
 
-The default desktop layout distributes the same live DOM controls at 1200px and above: round info left, aim/inspection/shaping right, club/effort/commit below. No duplicate inputs, command routes or mobile cockpit were added. Resizing or selecting Single dock reparents the existing header and tuning controls; focus/state and the authoritative session remain shared. Clear and Minimal suppress the strategy panel. Layout selection lives in Experience settings.
+The default desktop layout distributes the same live DOM controls at 1200px and above: round info left, aim/inspection/shaping right, club/effort/commit below. No duplicate inputs, command routes or mobile cockpit were added. Resizing or selecting Single dock reparents the existing header and tuning controls; focus/state and the authoritative session remain shared. Clear and Minimal suppress the strategy panel. Layout selection lives in Controls settings.
 
 Target reticle is a presentation-only module with a slow rotating four-arm crosshair, restrained radius breathing, and yards from the ball beside the chosen target. Reduced motion removes both animations; Clear course hides the reticle. Distance is intent, not a predicted carry/landing promise, and the camera is never animated by the reticle. Offscreen targets do not acquire misleading edge labels.
 
-Shot analysis is a direct menu destination, with actual recorded carry, start-to-finish distance, apex, simulation duration and ordered contact events. Export downloads the full recorded shot JSON, preserving engine/course/intent/seed evidence. It does not replay or resimulate the shot.
+Shot analysis is a direct menu destination, with actual recorded carry, start-to-finish distance, apex, simulation duration and ordered contact events. Export downloads the full recorded shot JSON, preserving engine/course/intent/seed evidence. Replay animates this same record; it does not resimulate the shot.
 
-### UCG-50 parity inventory
+### UCG-50 parity inventory (reviewed 14 October 2026)
 
-| Original capability | Purity destination/status |
+Compared the original controls in `index.html` and `src/lab/play.js` against the Purity shell, including tools below the fold in the supplied screenshot.
+
+| Original capability | Purity destination |
 | --- | --- |
-| Target crosshair and distance | Restored beside the course target; restrained optional-motion behaviour |
-| Club/effort/shape/height | Caddy, shot dock and separate desktop strategy panel; phone retains touch controls |
-| Desktop local play | Lobby local-play entry and direct Game menu action; no phone requirement |
-| Wind, moisture, tees and pin difficulty | Game options / Practice conditions |
-| Camera framing, north, image view | Course toolbar and Game options / Camera & ball / Environment |
-| Carry/total/apex/contact evidence and export | Game menu / Shot analysis; current-shot evidence export implemented |
-| Probe elevation/slope/lie | Existing Inspect ground; richer contour/slope layers and terrain mesh remain queued for a dedicated Course study panel |
-| Stock club yardages | Queue within the caddy: clearly label calm flat model reference rather than a promise for current conditions |
-| Player fitting, variance and saved player files | Queue Player profile settings with versioned import/export validation; current Purity uses the baseline player |
-| Replay, terrain/shot profile chart | Queue in Shot analysis; playback must reuse recorded trajectory rather than consume a new shot/seed |
-| Learning record and full round export | Queue Practice journal, distinguish simulated choices from real player measurement |
-| Approach/front-slope/putting studies and ground zones | Queue Practice conditions / Study presets; changing start must be explicit and auditable |
-| Source provenance/research limits | Existing original lab and COSMOLOGY; queue readable About the model page inside Purity |
+| Target crosshair, aim and pin distances | Course reticle and left round panel |
+| Club, effort, curve, flight and stock reset | Caddy, shot dock, distributed strategy panel |
+| Tee yardages and live wind strength/direction | Left round panel; changes in Practice conditions |
+| Desktop/phone choice | Game options / Controls; no separate desktop-mode shortcut |
+| Framing, zoom, north and follow | Course toolbar and Camera & ball options |
+| Image/procedural view and comparison | Environment options |
+| Terrain point, contours, slope shading, rotatable exaggerated mesh | Course & player tools / Read terrain; overlays stay visible during aiming |
+| Yardage route, surface outlines and study zones | Read terrain layer switches; hidden in Clear course |
+| Stock carry/total yardages | Club yardages; explicitly original flat-calm model reference |
+| Player presets, 100-point allocation, stock style, variance, files | Player; validated local persistence and import/export |
+| Carry/total/apex/contact evidence and recorded replay | Shot analysis; replay animates saved trajectory without another simulated shot |
+| Terrain and shot elevation profile | Course & player tools / Shot profile; recorded terrain for recorded flight |
+| Mulligan and gimme accounting | Dock and Journal; shared original practice ledger preserves physical records |
+| Learning record and full round export | Journal & studies; attempt records plus practice actions |
+| Tee/approach/front-slope/putting starts | Journal & studies; explicit new practice |
+| Source/shaped ground and ground-response comparison | Research; uses current experimental fundamentals, labels outcomes as model results |
+| Course and plate contracts, local input diagnostics | Research exports; bounded 512-event trace, no automatic upload |
+| Course design notes and research limits | Research, with original lab retained as a prominent experience |
 
-This inventory is a delivery checklist, not a claim of full UCG feature parity. Retain the original lab as a first-class experience while each remaining capability gets a discoverable Purity home.
+Functional destinations replace the old sidebar arrangement; this is not a pixel-for-pixel port. The original lab retains its historical presentation and reference equations. Purity's stock-yardage table is deliberately labelled as an original-model reference, while played shots and ground-response comparisons use fundamentals. Current-conditions carry prediction/calibration is not established by exposing that table. Physical phone trials and professional golfer review remain necessary.
+
+### Why this restoration uses existing contracts
+
+The simplified shell had omitted working research and player tools, not merely relocated them. `study-tools.ts` adapts the existing Player, Terrain, Shot and Practice APIs. Native radio groups expose short presentation choices without changing their validated backing values; native selects remain for practice condition forms. Desktop mode belongs under Controls. Wide screens distribute the same live control elements rather than duplicate state or embed the phone.
+
+`course-study-layers.ts` caches sampled contour geometry until the course or inspected point changes. `shot-profile.ts` draws a section from actual records or the unsolved aim line. Neither changes physics. Selecting a study origin synchronises the inspected point. Clear-course mode suppresses diagnostic overlays as well as controls.
+
+The session now owns the selected golfer and variance, and each shot retains that profile. Player changes affect future shots and save locally; they do not rewrite prior evidence. Replay restarts animation of an existing record, with no new seed, attempt or stroke. The original practice ledger separately records mulligans and one-stroke concessions. A gimme leaves the true ball location untouched, closes the practice, and is never presented as physical cup capture. Practice resets intentionally clear the in-memory journal; the interface explains this beside study/ground actions and provides an export.
+
+Input diagnostics contain only recent course input/command events, camera values and current state; the 512-row buffer stays local until explicitly exported. Reference images remain ignored and are not added to Git.
+
+Stock-reference calculation is debounced by 180 ms so slider movement coalesces and initial control construction does not synchronously wait for the original flat-calm solve. The reference is still computed on the display; moving expensive calculations to workers remains a profiling decision.

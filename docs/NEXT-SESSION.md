@@ -68,8 +68,7 @@ checks are not a substitute for iOS/Safari testing.
 
 ## Interaction and implementation follow-up
 
-- Paired mode currently fixes the balanced golfer; decide which player-builder
-  controls belong on the phone after trying the core loop.
+- Display-owned player profiles now affect both desktop and paired shots. Decide which profile-editing controls should also be exposed on the phone after physical-device trials.
 - Inspect paired-mode practice accounting and result flows with several consecutive
   shots, mulligans, water and holed outcomes on real devices.
 - Profile simulation duration on the display before deciding whether it needs a
@@ -119,4 +118,4 @@ Camera response modes, ball renderer, recorded-shot effects, validated presentat
 
 ## 2026-10-13 - UCG feature parity
 
-See the explicit parity inventory in COSMOLOGY. Target reticle/distance, direct desktop recovery, distributed desktop controls and Shot analysis/export are implemented. Remaining: Course study contours/mesh, caddy stock yardages, player profiles/variance/files, recorded replay/profile charts, journal export and practice study presets. These remain queued alongside the shared physical-world work.
+The restored capability destinations are recorded in the root COSMOLOGY parity inventory. Terrain layers/mesh, profile charts, stock yardages, player allocation/files/variance, recorded replay, journal/actions/export, concessions, study starts, ground comparison and research exports are implemented. Review discoverability with the golfing team and exercise these on real paired devices. Continue the shared physical-world and physics-calibration work; exposing tools does not validate the coefficients.
