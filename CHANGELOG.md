@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-14: softer manual camera movement
+
+- Tuned drag easing from 85 to 160 ms and manual zoom easing from 125 to 280 ms, aiming for the requested 2?2.5 feel between the earlier slow camera and the recent snappy version. These are exponential time constants, not fixed animation durations.
+- Retained existing camera-response choices, input distances, zoom limits, ball-follow timing and reduced-motion behaviour.
+- Validation: existing camera/presentation regression checks, typecheck and production build.
+
 ## 2026-10-14: restore UCG tools and clarify control choices
 
 - Compared the original sidebar and research menus against Purity; documented capability destinations in COSMOLOGY.

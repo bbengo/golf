@@ -225,3 +225,7 @@ The session now owns the selected golfer and variance, and each shot retains tha
 Input diagnostics contain only recent course input/command events, camera values and current state; the 512-row buffer stays local until explicitly exported. Reference images remain ignored and are not added to Git.
 
 Stock-reference calculation is debounced by 180 ms so slider movement coalesces and initial control construction does not synchronously wait for the original flat-calm solve. The reference is still computed on the display; moving expensive calculations to workers remains a profiling decision.
+
+### Softer manual camera response ? 14 October 2026
+
+The owner preferred a return toward the earlier glide, around 2?2.5 on their slow-to-fast scale rather than the recent 5. Manual pan now uses a 160 ms exponential time constant (previously 85); manual zoom uses 280 ms (previously 125). This softens the approach to the target without reducing gesture travel or adding artificial momentum. Shot follow retains 190/420 ms; response presets still scale these values and reduced motion still snaps. The subjective target needs the owner?s feel check; it is not a calibrated five-point speed scale.

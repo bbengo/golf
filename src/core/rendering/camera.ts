@@ -60,8 +60,9 @@ export class CourseCamera {
    }
    tick(ms: number, reducedMotion = false) {
       const factor = this.feel === 'responsive' ? 0.65 : this.feel === 'cinematic' ? 1.4 : 1;
-      const moveMs = (this.motion === 'follow' ? 190 : 85) * factor;
-      const zoomMs = (this.motion === 'follow' ? 420 : 125) * factor;
+      // Give manual gestures a gentle settling tail while remaining quicker than shot follow.
+      const moveMs = (this.motion === 'follow' ? 190 : 160) * factor;
+      const zoomMs = (this.motion === 'follow' ? 420 : 280) * factor;
       const a = reducedMotion ? 1 : 1 - Math.exp(-Math.max(0, Math.min(ms, 64)) / moveMs);
       this.x += (this.target.x - this.x) * a;
       this.y += (this.target.y - this.y) * a;
