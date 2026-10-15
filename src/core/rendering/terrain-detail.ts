@@ -67,7 +67,42 @@ export function canopyStamp(variant: number, sun = { x: -0.45, y: 0.8 }) {
    ctx.fillStyle = light;
    ctx.fill();
    ctx.clip();
-   for (let i = 0; i < 260; i++) {
+   // Connected boughs and overlapping leaf masses give the crown structure before fine texture.
+   const boughs = 7 + (variant % 4);
+   for (let i = 0; i < boughs; i++) {
+      const a = (i * Math.PI * 2) / boughs + phase,
+         r = 28 + random() * 16;
+      const x = 64 + Math.cos(a) * r,
+         y = 64 + Math.sin(a) * r;
+      ctx.strokeStyle = '#33412cc0';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(64, 68);
+      ctx.quadraticCurveTo(
+         64 + Math.cos(a - 0.2) * r * 0.45,
+         64 + Math.sin(a - 0.2) * r * 0.45,
+         x,
+         y,
+      );
+      ctx.stroke();
+      const radius = 17 + random() * 10;
+      const lobe = ctx.createRadialGradient(
+         x + sun.x * radius * 0.4,
+         y - sun.y * radius * 0.4,
+         1,
+         x,
+         y,
+         radius,
+      );
+      lobe.addColorStop(0, variant % 3 ? '#91a569' : '#acac77');
+      lobe.addColorStop(0.65, '#526f43');
+      lobe.addColorStop(1, '#294c36');
+      ctx.fillStyle = lobe;
+      ctx.beginPath();
+      ctx.ellipse(x, y, radius, radius * 0.82, a, 0, Math.PI * 2);
+      ctx.fill();
+   }
+   for (let i = 0; i < 160; i++) {
       const a = random() * Math.PI * 2,
          r = Math.sqrt(random()) * 58;
       const x = 64 + Math.cos(a) * r,

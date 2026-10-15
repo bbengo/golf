@@ -7,6 +7,7 @@ export const PRESENTATION_CHOICES = {
    ballVisibility: ['standard', 'enhanced'],
    shotTrace: ['off', 'last'],
    impactCue: ['subtle', 'off'],
+   ambientLife: ['subtle', 'off'],
 } as const;
 export type Presentation = {
    [K in keyof typeof PRESENTATION_CHOICES]: (typeof PRESENTATION_CHOICES)[K][number];
@@ -19,6 +20,7 @@ export const DEFAULT_PRESENTATION: Presentation = {
    ballVisibility: 'standard',
    shotTrace: 'off',
    impactCue: 'subtle',
+   ambientLife: 'subtle',
 };
 export function presentationChoice<K extends keyof Presentation>(
    key: K,

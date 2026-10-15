@@ -13,6 +13,10 @@ Remaining research: measured drag/lift datasets and independent flight validatio
 
 First slice implemented: deterministic surface-specific contact particles, water rings and cup capture feedback, respecting existing visibility/motion preferences. Next visual steps: coordinated natural material contrast across core/surround; deliberate loading-to-play transitions and control confirmation; then a separate angled terrain-renderer prototype using the same physics/world data. Keep top-down available. An angled view is feasible in a browser but has not been implemented. See root COSMOLOGY for reference observations, architecture and acceptance criteria.
 
+## Regional landscape follow-up
+
+Implemented in woodland 0.7.0: shared woodland/clearing/dry-grass distribution, denser authored groves, structured crown foliage and optional ambient birds. Remaining structural work: physical ridges/mountains; sand/desert regions with ground response; route-connected camps, pavilions and branded places; close-range grass/tree geometry. Keep coherent regional transitions and test reachable landmarks against collision. The current dry-grass palette is not a sand/desert surface.
+
 ## Desktop interface and player choice
 
 Desktop now has its own HUD and horizontal shot dock; the phone retains its touch

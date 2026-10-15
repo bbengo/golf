@@ -1,3 +1,4 @@
+import { landscapeRegion } from '../course/landscape-regions';
 import { Course } from '../course/course.js';
 import {
    worldHash as hash,
@@ -117,7 +118,10 @@ export class LandscapeSurround {
             let colour: number[];
             if (wet < 0) colour = waterColour(x, y, -wet * 28, daylight);
             else if (wet < 0.12) colour = [114 + n * 20, 121 + n * 20, 90 + n * 15];
-            else colour = [75 + n * 35, 111 + n * 38, 57 + n * 23];
+            else
+               colour = this.course?.world?.ecologyVersion
+                  ? landscapeRegion(x, y).colour.map((value) => value + n * 32)
+                  : [75 + n * 35, 111 + n * 38, 57 + n * 23];
             const lx = (px + 0.5) / 16,
                ly = (py + 0.5) / 16;
             const ix = Math.floor(lx),

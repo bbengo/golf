@@ -1,3 +1,4 @@
+import { ECOLOGY_VERSION } from './landscape-regions';
 import { WATER_VERSION } from './water-system';
 import { TERRAIN_VERSION, continuedHeight } from './terrain-continuation';
 import { WORLD_VERSION } from './procedural-world';
@@ -6,7 +7,7 @@ import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.6.0';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.7.0';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -236,9 +237,9 @@ export function createPurityCourse() {
    ];
    let n = 0;
    for (const [x, y, rx, ry] of clusters)
-      for (let i = 0; i < 48; i++) {
+      for (let i = 0; i < 96; i++) {
          const a = random() * Math.PI * 2,
-            r = Math.sqrt(random()),
+            r = random() ** 0.8,
             p = { x: x + Math.cos(a) * rx * r, y: y + Math.sin(a) * ry * r };
          const radius = 4 + random() * 5.5;
          if (
@@ -250,7 +251,7 @@ export function createPurityCourse() {
             c.objects.some(
                (o: { kind: string; x: number; y: number; canopyRadius: number }) =>
                   o.kind === 'tree' &&
-                  Math.hypot(o.x - p.x, o.y - p.y) < (o.canopyRadius + radius) * 0.72,
+                  Math.hypot(o.x - p.x, o.y - p.y) < (o.canopyRadius + radius) * 0.56,
             )
          )
             continue;
@@ -312,7 +313,13 @@ export function createPurityCourse() {
       });
    }
    c.surfaces.unshift(...waters);
-   c.world = { version: WORLD_VERSION, seed: 839, waters, terrainVersion: TERRAIN_VERSION };
+   c.world = {
+      version: WORLD_VERSION,
+      seed: 839,
+      waters,
+      terrainVersion: TERRAIN_VERSION,
+      ecologyVersion: ECOLOGY_VERSION,
+   };
    const north = waters.find((w) => w.id === 'world-creek-north'),
       south = waters.find((w) => w.id === 'world-creek-south');
    c.world.hydrology = {

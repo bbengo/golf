@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-15: regional woodland and ambient life
+
+- Added `purity-ecology/1` and woodland revision 0.7.0: broad woodland stands, open clearings and warmer dry-grass areas share a continuous distribution/colour field.
+- Concentrated course-side groves and overlapped remote crowns more naturally; shared tree queries continue to drive both rendering and collisions. Older snapshots retain their prior generator.
+- Built larger connected foliage masses into procedural crowns and retained finer meadow variation across the surround.
+- Added sparse decorative birds and Environment / Wildlife controls, respecting reduced motion and image-view isolation.
+- Documented the next structural layers: physical ridges, sand/desert regions, route-connected camps/pavilions and branded places. Those landmarks and the optional angled renderer are not implemented in this pass.
+
+Validation: the 65-test suite passed after the distribution change; two additional regional tests and focused collision/presentation reruns passed. Typecheck, formatting, production build and diff checks pass. Browser validation covers desktop controls/Wildlife, paired gameplay and wide/rotated landscape coverage. Meadow texture was refined after capture review. The coverage test now rejects opaque flat fallback patches rather than requiring 13 distinct colours in every corner: quiet meadow/water patches legitimately contained 10-11. Opacity and non-flat coverage remain checked in all corners. Existing legacy-data bundle warning remains.
+
 ## 2026-10-15: surface feedback and visual reference study
 
 - Added replay-stable turf/sand impact particles, water droplets and spreading rings, and a restrained cup-capture cue from recorded simulation events.

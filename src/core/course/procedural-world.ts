@@ -1,3 +1,4 @@
+import { ECOLOGY_VERSION, standAccepts } from './landscape-regions';
 import type { Hydrology } from './water-system';
 import { Contract } from '../contracts/contract.js';
 import type { Point } from '../contracts/cockpit';
@@ -11,6 +12,7 @@ export type WorldCourse = {
       waters: Water[];
       hydrology?: Hydrology;
       terrainVersion?: string;
+      ecologyVersion?: string;
    };
    bounds: WorldBounds;
    surfaces: { polygon: Point[]; type: string }[];
@@ -54,6 +56,8 @@ export function worldEnabled(course: WorldCourse) {
    if (!course.world) return false;
    if (course.world.version !== WORLD_VERSION || course.world.seed !== 839)
       throw Error('Unsupported procedural world contract');
+   if (course.world.ecologyVersion && course.world.ecologyVersion !== ECOLOGY_VERSION)
+      throw Error('Unsupported ecology contract');
    return true;
 }
 /** Positive distance outside the authored estate. Keep the playing layout authoritative. */
@@ -99,12 +103,18 @@ export function drainageWetness(course: WorldCourse, x: number, y: number) {
 }
 export function worldTree(course: WorldCourse, gx: number, gy: number) {
    if (!worldEnabled(course)) return null;
-   const x = gx * 32 + worldHash(gx, gy) * 26,
-      y = gy * 32 + worldHash(gx + 27, gy - 18) * 26;
-   const canopyRadius = 6 + worldHash(gx - 11, gy + 63) * 9;
+   const ecology = course.world?.ecologyVersion === ECOLOGY_VERSION,
+      cell = ecology ? 20 : 32;
+   const x = gx * cell + worldHash(gx, gy) * (ecology ? cell : cell - 6),
+      y = gy * cell + worldHash(gx + 27, gy - 18) * (ecology ? cell : cell - 6);
+   const canopyRadius = ecology
+      ? 6 + worldHash(gx - 11, gy + 63) * 7
+      : 6 + worldHash(gx - 11, gy + 63) * 9;
    if (
       clearance(course, { x, y }) < canopyRadius + 8 ||
-      worldNoise(x / 125, y / 125) < 0.43 ||
+      (ecology
+         ? !standAccepts(x, y, worldHash(gx + 57, gy - 83))
+         : worldNoise(x / 125, y / 125) < 0.43) ||
       worldWetness(course, x, y) < 0.65
    )
       return null;
@@ -129,14 +139,15 @@ export function worldTree(course: WorldCourse, gx: number, gy: number) {
 export function worldTrees(course: WorldCourse, bounds: WorldBounds) {
    const trees: NonNullable<ReturnType<typeof worldTree>>[] = [];
    if (!worldEnabled(course)) return trees;
+   const cell = course.world?.ecologyVersion === ECOLOGY_VERSION ? 20 : 32;
    for (
-      let gy = Math.floor((bounds.minY - 16) / 32);
-      gy <= Math.floor((bounds.maxY + 16) / 32);
+      let gy = Math.floor((bounds.minY - 16) / cell);
+      gy <= Math.floor((bounds.maxY + 16) / cell);
       gy++
    )
       for (
-         let gx = Math.floor((bounds.minX - 16) / 32);
-         gx <= Math.floor((bounds.maxX + 16) / 32);
+         let gx = Math.floor((bounds.minX - 16) / cell);
+         gx <= Math.floor((bounds.maxX + 16) / cell);
          gx++
       ) {
          const tree = worldTree(course, gx, gy);

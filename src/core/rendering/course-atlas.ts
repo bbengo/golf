@@ -1,3 +1,4 @@
+import { landscapeRegion } from '../course/landscape-regions';
 import { wetCell } from './shoreline';
 import { worldTrees, worldWetness } from '../course/procedural-world';
 import { waterColour } from './water-material';
@@ -196,6 +197,30 @@ export class CourseAtlas {
       };
       ctx.fillStyle = colors.rough;
       ctx.fillRect(0, 0, w, h);
+      if (c.world?.ecologyVersion) {
+         const regions = document.createElement('canvas');
+         regions.width = Math.ceil(w / 8);
+         regions.height = Math.ceil(h / 8);
+         const rc = regions.getContext('2d')!,
+            pixels = rc.createImageData(regions.width, regions.height);
+         for (let py = 0; py < regions.height; py++)
+            for (let px = 0; px < regions.width; px++) {
+               const x = bounds.minX + ((px + 0.5) * 8) / s,
+                  y = bounds.maxY - ((py + 0.5) * 8) / s;
+               const clearance = Math.hypot(
+                  Math.max(c.bounds.minX - x, 0, x - c.bounds.maxX),
+                  Math.max(c.bounds.minY - y, 0, y - c.bounds.maxY),
+               );
+               if (!clearance) continue;
+               const colour = landscapeRegion(x, y).colour;
+               pixels.data.set(
+                  [...colour, Math.min(1, clearance / 24) * 255],
+                  (py * regions.width + px) * 4,
+               );
+            }
+         rc.putImageData(pixels, 0, 0);
+         ctx.drawImage(regions, 0, 0, w, h);
+      }
       // Quiet meadow variation, kept subordinate to the authored hole.
       for (let i = 0; i < 220; i++) {
          const x = random() * w,

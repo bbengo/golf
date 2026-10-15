@@ -1,3 +1,4 @@
+import { paintBirds } from './ambient-life';
 import { CourseStudyLayers } from './course-study-layers';
 import { paintTarget } from './target-reticle';
 import { ViewportSurface } from './viewport';
@@ -235,6 +236,8 @@ export class SimpleCourse {
          view.go({ x: 155 + drift * 8, y: 355 }, 1.45);
          view.tick(16, this.reducedMotion.matches);
          this.atlas.paint(ctx, c, view, wind, daylight);
+         if (settings.ambientLife === 'subtle' && !this.reducedMotion.matches)
+            paintBirds(ctx, view, time);
          return;
       }
       if (session.renderer !== 'procedural' && !this.photoLoading) {
@@ -244,6 +247,12 @@ export class SimpleCourse {
          });
       }
       this.atlas.paint(ctx, c, this.camera, wind, daylight);
+      if (
+         session.renderer === 'procedural' &&
+         settings.ambientLife === 'subtle' &&
+         !this.reducedMotion.matches
+      )
+         paintBirds(ctx, this.camera, time);
       this.canvas.dataset.environment = session.renderer;
       this.canvas.dataset.imageReady = String(!!this.photo?.ready());
       if (session.renderer !== 'procedural' && this.photo?.ready()) {

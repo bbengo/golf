@@ -10,6 +10,12 @@ test('desktop controls are recoverable and distribute without duplicating inputs
    await page.keyboard.press('Escape');
    await page.locator('#openGameOptions').click();
    await page.locator('[name=displayMode][value=desktop]').check();
+   await page.locator('[data-option-tab=world]').click();
+   await page
+      .getByRole('group', { name: 'Wildlife', exact: true })
+      .getByRole('radio', { name: 'Off', exact: true })
+      .check();
+   await expect(page.locator('body')).toHaveAttribute('data-ambient-life', 'off');
    await page.locator('#closeGameOptions').click();
    await expect(page.locator('.shot-dock')).toBeVisible();
    await expect(page.locator('#desktopStrategy')).toBeVisible();
