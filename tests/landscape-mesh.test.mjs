@@ -22,3 +22,35 @@ test('preview mesh uses physical terrain and structures without changing the cou
       /closed/,
    );
 });
+
+test('adaptive terrain shares every interior edge without cracks or unmatched coarse edges', async () => {
+   const c = createPurityCourse();
+   const bounds = { minX: -250, maxX: -100, minY: -160, maxY: 0 };
+   const mesh = await landscapeMesh(c, bounds, 10);
+   assert.ok(mesh.refinedCells > 0 && mesh.refinedCells < 240);
+   const edges = new Map();
+   for (let t = 0; t < mesh.terrainTriangles; t++) {
+      const ps = [0, 1, 2].map((i) =>
+         Array.from(mesh.vertices.slice(t * 27 + i * 9, t * 27 + i * 9 + 3)),
+      );
+      for (let i = 0; i < 3; i++) {
+         const a = ps[i],
+            b = ps[(i + 1) % 3];
+         const key = [a.join(','), b.join(',')].sort().join('|');
+         const old = edges.get(key);
+         edges.set(key, { count: (old?.count ?? 0) + 1, a, b });
+      }
+   }
+   for (const { count, a, b } of edges.values()) {
+      if (count === 2) continue;
+      assert.equal(count, 1);
+      assert.ok(
+         [0, 1].some((axis) =>
+            [axis ? bounds.minY : bounds.minX, axis ? bounds.maxY : bounds.maxX].some(
+               (v) => a[axis] === v && b[axis] === v,
+            ),
+         ),
+         `unmatched interior edge ${a} -> ${b}`,
+      );
+   }
+});

@@ -1,3 +1,5 @@
+import { pickLandscape } from './landscape-projection';
+import { Course } from '../course/course.js';
 import { CourseAtlas } from './course-atlas';
 import { landscapeMesh } from './landscape-mesh';
 import { DAYLIGHT, type Daylight } from './daylight';
@@ -10,7 +12,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
    dialog.id = 'landscapePreview';
    dialog.className = 'landscape-preview';
    dialog.setAttribute('aria-labelledby', 'landscapePreviewTitle');
-   dialog.innerHTML = `<canvas tabindex="0" aria-label="Angled landscape preview. Drag to orbit; scroll to zoom. Use arrow keys to orbit, plus or minus to zoom."></canvas><header><div><p class="hud-eyebrow">LANDSCAPE STUDY</p><h1 id="landscapePreviewTitle">A different perspective.</h1><p>Preview only. Your round stays in the overhead view.</p></div><button type="button" aria-label="Return to game options">Back to options</button></header><nav aria-label="Landscape viewpoints"></nav><p class="preview-status" role="status">Preparing terrain and woodland...</p><footer>Drag to orbit &middot; Scroll to zoom &middot; Arrow keys to orbit &middot; + / - to zoom &middot; Escape to return</footer>`;
+   dialog.innerHTML = `<canvas tabindex="0" aria-label="Angled landscape preview. Drag to orbit; scroll to zoom. Use arrow keys to orbit, plus or minus to zoom."></canvas><header><div><p class="hud-eyebrow">LANDSCAPE STUDY</p><h1 id="landscapePreviewTitle">A different perspective.</h1><p>Preview only. Your round stays in the overhead view.</p></div><button type="button" aria-label="Return to game options">Back to options</button></header><nav aria-label="Landscape viewpoints"></nav><p class="preview-status" role="status">Preparing terrain and woodland...</p><footer>Double-click ground to explore &middot; Drag to orbit &middot; Scroll to zoom &middot; Arrow keys to orbit &middot; + / - to zoom &middot; Escape to return</footer>`;
    document.body.append(dialog);
    dialog.showModal();
    const canvas = dialog.querySelector('canvas')!,
@@ -204,6 +206,35 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
       status.textContent = 'Preview ready. Choose a viewpoint or orbit the estate.';
       canvas.dataset.ready = 'true';
       canvas.dataset.triangles = String(mesh.triangles);
+      canvas.ondblclick = (event) => {
+         const rect = canvas.getBoundingClientRect();
+         const hit = pickLandscape(
+            { x: event.clientX - rect.left, y: event.clientY - rect.top },
+            { ...current, width: rect.width, height: rect.height },
+            (p) => {
+               const surface = Course.surfaceAt(course, p);
+               return surface.type === 'water' ? surface.waterHeight : Course.heightAt(course, p);
+            },
+         );
+         if (
+            !hit ||
+            hit.x < ground.bounds.minX ||
+            hit.x > ground.bounds.maxX ||
+            hit.y < ground.bounds.minY ||
+            hit.y > ground.bounds.maxY
+         ) {
+            status.textContent =
+               'Outside this preview. Choose a viewpoint to return to the estate.';
+            return;
+         }
+         Object.assign(target, { x: hit.x, y: hit.y, z: hit.z, span: Math.min(target.span, 100) });
+         const material = Course.surfaceAt(course, hit).type.replaceAll('-', ' ');
+         status.textContent = `Ground: ${material}. Elevation ${hit.z.toFixed(1)} m. Your shot target is unchanged.`;
+         canvas.dataset.pickX = hit.x.toFixed(4);
+         canvas.dataset.pickY = hit.y.toFixed(4);
+         for (const button of nav.querySelectorAll('button'))
+            button.setAttribute('aria-pressed', 'false');
+      };
       const reduce = matchMedia('(prefers-reduced-motion: reduce)');
       let last = performance.now();
       let firstFrame = true;

@@ -23,6 +23,11 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    await canvas.press('ArrowLeft');
    await canvas.press('+');
    await page.screenshot({ path: 'test-results/landscape-preview-pavilion.png' });
+   const box = await canvas.boundingBox();
+   await canvas.dblclick({ position: { x: box!.width * 0.52, y: box!.height * 0.55 } });
+   await expect(canvas).toHaveAttribute('data-pick-x', /^-?\d/);
+   await expect(dialog.locator('[role=status]')).toContainText('Your shot target is unchanged');
+
    await page.setViewportSize({ width: 390, height: 844 });
    await page.screenshot({ path: 'test-results/landscape-preview-phone.png' });
    await page.keyboard.press('Escape');

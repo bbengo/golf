@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-15: adaptive preview terrain, vegetation and ground picking
+
+- Added stitched terrain refinement around landmarks and elevation changes.
+- Added lobed canopy variation and rough-grass tufts near estate places.
+- Added shared projection/ray helpers and double-click ground exploration with surface/elevation readouts; shot aim stays unchanged.
+- Four focused tests and two browser tests passed, alongside typecheck, formatting and build. Angled gameplay remains a separate unfinished integration.
+
 ## 2026-10-15: estate landmarks and optional WebGL landscape preview
 
 - Added connected welcome and pavilion courts plus a small cabin camp, with shared rigid structures and roof support.

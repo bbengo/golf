@@ -1,8 +1,14 @@
+import type { Point } from '../contracts/cockpit';
 import { Course } from '../course/course.js';
 import { worldTrees, worldGroundColour, worldHash } from '../course/procedural-world';
 import type { CockpitSession } from '../session/cockpit-session';
 import type { Bounds } from './camera';
-export type Mesh = { vertices: Float32Array; triangles: number };
+export type Mesh = {
+   vertices: Float32Array;
+   triangles: number;
+   terrainTriangles: number;
+   refinedCells: number;
+};
 const palette: Record<string, number[]> = {
    fairway: [0.46, 0.61, 0.27],
    green: [0.63, 0.74, 0.38],
@@ -57,7 +63,10 @@ export async function landscapeMesh(
             const length = Math.hypot(...n) || 1;
             n = n.map((v) => v / length);
          }
-         data.push(...p, ...n, ...colour);
+         const tint = canopyNormal
+            ? 0.86 + 0.24 * worldHash(Math.floor(p[0] * 2), Math.floor(p[1] * 2 + p[2]))
+            : 1;
+         data.push(...p, ...n, ...colour.map((v) => v * tint));
       }
    };
    const quad = (a: V, b: V, d: V, e: V, colour: number[]) => {
@@ -81,19 +90,86 @@ export async function landscapeMesh(
       points.push(row);
       if (j % 24 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
    }
+   // Shared half-grid samples stitch every refined edge to its coarse neighbour.
+   const samples = new Map<string, V>();
+   const sample = (i: number, j: number): V => {
+      if (Number.isInteger(i) && Number.isInteger(j)) return points[j][i];
+      const key = `${i}:${j}`;
+      const existing = samples.get(key);
+      if (existing) return existing;
+      const x = bounds.minX + ((bounds.maxX - bounds.minX) * i) / nx,
+         y = bounds.minY + ((bounds.maxY - bounds.minY) * j) / ny;
+      const surface = Course.surfaceAt(c, { x, y });
+      const p: V = [
+         x,
+         y,
+         surface.type === 'water' ? surface.waterHeight : Course.heightAt(c, { x, y }),
+      ];
+      samples.set(key, p);
+      return p;
+   };
+   const refined = new Uint8Array(nx * ny);
+   let refinedCells = 0;
    for (let j = 0; j < ny; j++)
       for (let i = 0; i < nx; i++) {
-         const a = points[j][i],
-            b = points[j][i + 1],
-            d = points[j + 1][i + 1],
-            e = points[j + 1][i];
-         const x = (a[0] + d[0]) / 2,
-            y = (a[1] + d[1]) / 2;
-         const type = Course.surfaceAt(c, { x, y }).type;
-         const colour = palette[type] ?? worldGroundColour(c, x, y).map((v: number) => v / 255);
-         const variation = type === 'water' ? 1 : 0.95 + worldHash(i, j) * 0.1;
-         quad(a, b, d, e, textured ? [-1, 0, 0] : colour.map((v) => v * variation));
+         const centre = sample(i + 0.5, j + 0.5);
+         const average =
+            (points[j][i][2] +
+               points[j][i + 1][2] +
+               points[j + 1][i][2] +
+               points[j + 1][i + 1][2]) /
+            4;
+         const nearPlace = (c.places ?? []).some(
+            (p: Point) => Math.hypot(p.x - centre[0], p.y - centre[1]) < 45,
+         );
+         if (refinedCells < 12000 && (nearPlace || Math.abs(centre[2] - average) > 0.18)) {
+            refined[j * nx + i] = 1;
+            refinedCells++;
+         }
       }
+   const detail = (i: number, j: number) =>
+      i >= 0 && i < nx && j >= 0 && j < ny && refined[j * nx + i] === 1;
+   for (let j = 0; j < ny; j++) {
+      if (cancelled()) throw Error('Preview closed');
+      for (let i = 0; i < nx; i++) {
+         const a = sample(i, j),
+            b = sample(i + 1, j),
+            d = sample(i + 1, j + 1),
+            e = sample(i, j + 1),
+            centre = sample(i + 0.5, j + 0.5);
+         const own = detail(i, j);
+         const edges = [
+            own || detail(i, j - 1),
+            own || detail(i + 1, j),
+            own || detail(i, j + 1),
+            own || detail(i - 1, j),
+         ];
+         let colour: number[] = [-1, 0, 0];
+         if (!textured) {
+            const type = Course.surfaceAt(c, { x: centre[0], y: centre[1] }).type;
+            colour =
+               palette[type] ??
+               worldGroundColour(c, centre[0], centre[1]).map((v: number) => v / 255);
+         }
+         if (!edges.some(Boolean)) quad(a, b, d, e, colour);
+         else {
+            const ring = [
+               a,
+               ...(edges[0] ? [sample(i + 0.5, j)] : []),
+               b,
+               ...(edges[1] ? [sample(i + 1, j + 0.5)] : []),
+               d,
+               ...(edges[2] ? [sample(i + 0.5, j + 1)] : []),
+               e,
+               ...(edges[3] ? [sample(i, j + 0.5)] : []),
+            ];
+            for (let k = 0; k < ring.length; k++)
+               triangle(centre, ring[k], ring[(k + 1) % ring.length], colour);
+         }
+      }
+      if (j % 24 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+   }
+   const terrainTriangles = data.length / 27;
    const box = (
       x0: number,
       y0: number,
@@ -136,11 +212,16 @@ export async function landscapeMesh(
       );
       const centre = z + (tree.height + tree.canopyBase) / 2,
          rz = (tree.height - tree.canopyBase) / 2;
-      const crown = (latitude: number, angle: number): V => [
-         tree.x + Math.cos(latitude) * Math.cos(angle) * r,
-         tree.y + Math.cos(latitude) * Math.sin(angle) * r,
-         centre + Math.sin(latitude) * rz,
-      ];
+      const phase = worldHash(Math.floor(tree.x), Math.floor(tree.y)) * Math.PI * 2;
+      const crown = (latitude: number, angle: number): V => {
+         const lobe =
+            0.83 + 0.17 * (0.5 + 0.5 * Math.cos(angle * 4 + phase) * Math.cos(latitude * 3));
+         return [
+            tree.x + Math.cos(latitude) * Math.cos(angle) * r * lobe,
+            tree.y + Math.cos(latitude) * Math.sin(angle) * r * lobe,
+            centre + Math.sin(latitude) * rz,
+         ];
+      };
       const tint = worldHash(Math.floor(tree.x), Math.floor(tree.y));
       const col = [0.23 + tint * 0.09, 0.37 + tint * 0.14, 0.18 + tint * 0.05];
       canopyNormal = { centre: [tree.x, tree.y, centre], r, rz };
@@ -169,5 +250,47 @@ export async function landscapeMesh(
                  ? [0.35, 0.29, 0.19]
                  : [0.46, 0.5, 0.39],
          );
-   return { vertices: new Float32Array(data), triangles: data.length / 27 };
+   const seenGrass = new Set<string>();
+   for (const place of c.places ?? [])
+      for (let gy = Math.floor((place.y - 42) / 3); gy <= Math.ceil((place.y + 42) / 3); gy++)
+         for (let gx = Math.floor((place.x - 42) / 3); gx <= Math.ceil((place.x + 42) / 3); gx++) {
+            const key = `${gx}:${gy}`;
+            if (seenGrass.has(key)) continue;
+            seenGrass.add(key);
+            const x = gx * 3 + worldHash(gx, gy) * 2,
+               y = gy * 3 + worldHash(gx + 41, gy - 12) * 2;
+            if (
+               x < bounds.minX ||
+               x > bounds.maxX ||
+               y < bounds.minY ||
+               y > bounds.maxY ||
+               Course.surfaceAt(c, { x, y }).type !== 'rough'
+            )
+               continue;
+            const z = Course.heightAt(c, { x, y }),
+               height = 0.25 + worldHash(gx - 31, gy + 9) * 0.4;
+            for (let blade = 0; blade < 3; blade++) {
+               const angle = (blade * Math.PI) / 3 + worldHash(gx, gy) * 2,
+                  dx = Math.cos(angle) * 0.07,
+                  dy = Math.sin(angle) * 0.07;
+               triangle(
+                  [x - dx, y - dy, z],
+                  [x + dx, y + dy, z],
+                  [x + dx * 2, y + dy * 2, z + height],
+                  [0.4, 0.51, 0.23],
+               );
+               triangle(
+                  [x + dx, y + dy, z],
+                  [x - dx, y - dy, z],
+                  [x + dx * 2, y + dy * 2, z + height],
+                  [0.37, 0.48, 0.21],
+               );
+            }
+         }
+   return {
+      vertices: new Float32Array(data),
+      triangles: data.length / 27,
+      terrainTriangles,
+      refinedCells,
+   };
 }
