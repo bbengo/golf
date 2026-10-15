@@ -1,6 +1,5 @@
-import { landscapeRegion } from '../course/landscape-regions';
 import { wetCell } from './shoreline';
-import { worldTrees, worldWetness } from '../course/procedural-world';
+import { worldTrees, worldWetness, worldGroundColour } from '../course/procedural-world';
 import { waterColour } from './water-material';
 import { LandscapeSurround } from './landscape-surround';
 import { DAYLIGHT, type Daylight } from './daylight';
@@ -212,7 +211,7 @@ export class CourseAtlas {
                   Math.max(c.bounds.minY - y, 0, y - c.bounds.maxY),
                );
                if (!clearance) continue;
-               const colour = landscapeRegion(x, y).colour;
+               const colour = worldGroundColour(c, x, y);
                pixels.data.set(
                   [...colour, Math.min(1, clearance / 24) * 255],
                   (py * regions.width + px) * 4,

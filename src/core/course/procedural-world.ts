@@ -1,8 +1,9 @@
-import { ECOLOGY_VERSION, standAccepts } from './landscape-regions';
+import { ECOLOGY_VERSION, landscapeRegion, standAccepts } from './landscape-regions';
 import type { Hydrology } from './water-system';
 import { Contract } from '../contracts/contract.js';
 import type { Point } from '../contracts/cockpit';
 export const WORLD_VERSION = 'purity-world/1';
+export const GROUND_VERSION = 'purity-ground/1';
 export type WorldBounds = { minX: number; maxX: number; minY: number; maxY: number };
 type Water = { id: string; type: 'water'; polygon: Point[]; waterHeight: number };
 export type WorldCourse = {
@@ -13,6 +14,7 @@ export type WorldCourse = {
       hydrology?: Hydrology;
       terrainVersion?: string;
       ecologyVersion?: string;
+      groundVersion?: string;
    };
    bounds: WorldBounds;
    surfaces: { polygon: Point[]; type: string }[];
@@ -58,6 +60,8 @@ export function worldEnabled(course: WorldCourse) {
       throw Error('Unsupported procedural world contract');
    if (course.world.ecologyVersion && course.world.ecologyVersion !== ECOLOGY_VERSION)
       throw Error('Unsupported ecology contract');
+   if (course.world.groundVersion && course.world.groundVersion !== GROUND_VERSION)
+      throw Error('Unsupported ground contract');
    return true;
 }
 /** Positive distance outside the authored estate. Keep the playing layout authoritative. */
@@ -101,6 +105,23 @@ export function worldWetness(course: WorldCourse, x: number, y: number) {
 export function drainageWetness(course: WorldCourse, x: number, y: number) {
    return Math.max(drainage(x, y), (28 - clearance(course, { x, y })) / 28);
 }
+/** Sand-heath clearings only outside the protected estate. Zero retains legacy rough.
+ * Positive values are sand; a small negative collar blends the material edge visually.
+ */
+export function worldSand(course: WorldCourse, x: number, y: number): number {
+   if (!worldEnabled(course) || course.world?.groundVersion !== GROUND_VERSION) return -1;
+   const region = landscapeRegion(x, y);
+   return Math.min(
+      region.dry - 0.64,
+      (clearance(course, { x, y }) - 90) / 160,
+      worldWetness(course, x, y) - 0.5,
+   );
+}
+export function worldGroundColour(course: WorldCourse, x: number, y: number): number[] {
+   const colour = landscapeRegion(x, y).colour;
+   const sand = Math.max(0, Math.min(1, (worldSand(course, x, y) + 0.025) / 0.05));
+   return colour.map((value, i) => value + ([199, 184, 143][i] - value) * sand);
+}
 export function worldTree(course: WorldCourse, gx: number, gy: number) {
    if (!worldEnabled(course)) return null;
    const ecology = course.world?.ecologyVersion === ECOLOGY_VERSION,
@@ -115,7 +136,8 @@ export function worldTree(course: WorldCourse, gx: number, gy: number) {
       (ecology
          ? !standAccepts(x, y, worldHash(gx + 57, gy - 83))
          : worldNoise(x / 125, y / 125) < 0.43) ||
-      worldWetness(course, x, y) < 0.65
+      worldWetness(course, x, y) < 0.65 ||
+      worldSand(course, x, y) > -0.04
    )
       return null;
    if (

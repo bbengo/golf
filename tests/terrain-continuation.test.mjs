@@ -124,3 +124,32 @@ test('unknown terrain contracts are rejected instead of silently changing saved 
    assert.equal(Course.validate(c).passed, false);
    assert.throws(() => Course.heightAt(c, { x: 1000, y: 1000 }), /Unsupported procedural terrain/);
 });
+
+test('uplands are physical, continuous and preserve legacy terrain snapshots', () => {
+   const current = createPurityCourse();
+   const legacy = JSON.parse(JSON.stringify(Course.physicsSnapshot(current)));
+   legacy.world.terrainVersion = 'purity-terrain/1';
+   for (const [x, height] of [
+      [-800, 191.75338841034215],
+      [900, 188.08053655039362],
+      [1400, 188.58056321481783],
+   ]) {
+      assert.ok(Math.abs(Course.heightAt(legacy, { x, y: 1100 }) - height) < 1e-9);
+   }
+   let raised = 0;
+   for (let x = -1400; x <= 1400; x += 37) {
+      for (let y = -1400; y <= 1400; y += 41) {
+         const p = { x, y };
+         const difference = Course.heightAt(current, p) - Course.heightAt(legacy, p);
+         assert.ok(difference >= -1e-9 && difference <= 22.000001);
+         if (difference > 8) raised++;
+      }
+   }
+   assert.ok(raised > 100, 'substantial uplands must exist outside the protected playing ground');
+   // Cross render tile boundaries at 512 m: no tile-local height seams.
+   for (const x of [-1024, -512, 512, 1024]) {
+      const a = Course.heightAt(current, { x: x - 0.001, y: 1100 });
+      const b = Course.heightAt(current, { x: x + 0.001, y: 1100 });
+      assert.ok(Math.abs(a - b) < 0.01);
+   }
+});

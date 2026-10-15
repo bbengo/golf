@@ -1,13 +1,13 @@
 import { ECOLOGY_VERSION } from './landscape-regions';
 import { WATER_VERSION } from './water-system';
 import { TERRAIN_VERSION, continuedHeight } from './terrain-continuation';
-import { WORLD_VERSION } from './procedural-world';
+import { WORLD_VERSION, GROUND_VERSION } from './procedural-world';
 import { Contract } from '../contracts/contract.js';
 import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.7.0';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.8.0';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -319,6 +319,7 @@ export function createPurityCourse() {
       waters,
       terrainVersion: TERRAIN_VERSION,
       ecologyVersion: ECOLOGY_VERSION,
+      groundVersion: GROUND_VERSION,
    };
    const north = waters.find((w) => w.id === 'world-creek-north'),
       south = waters.find((w) => w.id === 'world-creek-south');

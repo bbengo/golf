@@ -4,7 +4,9 @@ import { Contract } from '../contracts/contract.js';
 import { worldNoise, type WorldCourse } from './procedural-world';
 import type { Point } from '../contracts/cockpit';
 
-export const TERRAIN_VERSION = 'purity-terrain/1';
+export const TERRAIN_VERSION = 'purity-terrain/2';
+export const supportedTerrain = (version: string) =>
+   version === 'purity-terrain/1' || version === TERRAIN_VERSION;
 const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
 const smooth = (x: number) => {
    const t = clamp(x, 0, 1);
@@ -15,6 +17,18 @@ const lakeBounds = new WeakMap<
    { minX: number; maxX: number; minY: number; maxY: number }
 >();
 type TerrainCourse = WorldCourse & { terrain: Parameters<typeof DEM.heightAt>[0] };
+
+/** Continuous, bounded uplands: broad winding spines with smaller branching folds.
+ * Coordinates are physical metres, independent of render tiles and view scale.
+ */
+export function ridgeRelief(x: number, y: number): number {
+   const warp = (worldNoise(x / 510 + 83, y / 510 - 23) - 0.5) * 180;
+   const spine = Math.sin((x + warp + y * 0.38) / 185);
+   const envelope = smooth((worldNoise(x / 720 - 43, y / 720 + 71) - 0.28) / 0.44);
+   const ridge = Math.pow(1 - spine * spine, 3);
+   const folds = 0.82 + 0.18 * Math.sin(y / 47 + Math.sin(x / 95));
+   return 22 * envelope * ridge * folds;
+}
 
 /** Preserve the source exactly, then continue its one-sided edge derivatives. */
 export function continuedHeight(course: TerrainCourse, p: Point): number {
@@ -43,12 +57,18 @@ export function continuedHeight(course: TerrainCourse, p: Point): number {
    const ex = reach(dx),
       ey = reach(dy);
    const relief = (worldNoise(p.x / 260 + 19, p.y / 260 - 7) - 0.5) * 7;
-   return z + gx * ex + gy * ey + mixed * ex * ey + smooth(Math.hypot(dx, dy) / 180) * relief;
+   const hills =
+      course.world?.terrainVersion === TERRAIN_VERSION
+         ? ridgeRelief(p.x, p.y) * smooth(Math.hypot(dx, dy) / 240)
+         : 0;
+   return (
+      z + gx * ex + gy * ey + mixed * ex * ey + smooth(Math.hypot(dx, dy) / 180) * relief + hills
+   );
 }
 
 /** Outer lake beds and banks; authored playing terrain and creek elevations stay intact. */
 export function worldHeight(course: TerrainCourse, p: Point): number {
-   if (course.world?.terrainVersion !== TERRAIN_VERSION)
+   if (!course.world || !supportedTerrain(course.world.terrainVersion ?? ''))
       throw Error('Unsupported procedural terrain contract');
    const base = continuedHeight(course, p),
       b = course.bounds;

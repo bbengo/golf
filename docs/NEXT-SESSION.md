@@ -15,7 +15,7 @@ First slice implemented: deterministic surface-specific contact particles, water
 
 ## Regional landscape follow-up
 
-Implemented in woodland 0.7.0: shared woodland/clearing/dry-grass distribution, denser authored groves, structured crown foliage and optional ambient birds. Remaining structural work: physical ridges/mountains; sand/desert regions with ground response; route-connected camps, pavilions and branded places; close-range grass/tree geometry. Keep coherent regional transitions and test reachable landmarks against collision. The current dry-grass palette is not a sand/desert surface.
+Implemented in woodland 0.7.0: shared woodland/clearing/dry-grass distribution, denser authored groves, structured crown foliage and optional ambient birds. Woodland 0.8.0 now adds physical upland ridges (terrain/2) and sand-heath clearings with sand response (ground/1), retaining legacy snapshot behaviour. Remaining structural work: mountain silhouettes through an angled renderer; route-connected camps, pavilions and branded places; close-range grass/tree geometry. Keep coherent regional transitions and test reachable landmarks against collision. Dry grass remains rough; only the new signed sand field changes ground material. A desert biome or dune simulation is not implemented.
 
 ## Desktop interface and player choice
 
