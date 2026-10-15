@@ -7,7 +7,7 @@ import { createPurityCourse } from '../course/purity-course';
 import { Terrain } from '../course/terrain.js';
 import { Wind } from '../course/wind.js';
 import { Shot } from '../simulation/shot.js';
-import { VERSION } from '../simulation/fundamentals';
+import { INTEGRATOR_VERSION as VERSION } from '../simulation/integrator';
 import {
    validCommand,
    type Command,

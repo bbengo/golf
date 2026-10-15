@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-15: contact continuation, cup interactions and scenery transitions
+
+- Added the versioned 0.2.0 Purity integrator: fractional collision continuation, bounded repeated impacts, smaller ground steps and rolling-spin consistency.
+- Added slope-aware circular-rim contact with falling capture and moving lip exits; trial coefficients remain explicitly uncalibrated.
+- Preserved the original UCG solver and the 0.1.0 replay path.
+- Replaced rectangular outer-water shoreline cells with interpolated wetness contours.
+- Added a 650 ms world-aligned daylight crossfade with reduced-motion support and temporary-cache cleanup; retained camera timings.
+- Added analytic collision-remainder, four-material timestep refinement, cup refinement, complete flat/sloped putt, deadline, old-replay and shoreline geometry checks.
+- Updated cosmologies and the remaining-work ledger. Empirical aero/turf/cup calibration, optional rainfall and physical-device/performance review remain open.
+
+Validation: 63 unit/simulation tests pass; all 12 browser scenarios passed across the full run and focused reruns. The first browser run hit a five-second readiness timeout on daylight; focused runs also exposed cold-load timing on return from the original experience. Those two readiness assertions now allow up to 30 seconds, with an additional immediate settings-state check. This is not a claim that generation latency is solved. Typecheck, formatting, production build and diff checks pass. Reviewed the late-afternoon capture. The existing legacy-data chunk warning remains; daylight transitions temporarily retain two terrain caches.
+
 ## 2026-10-15: water, physics profiles, environment and practice engines
 
 - Unified outer water elevations across lake/drainage intersections and extended bed/bank shaping to remote waterways; woodland revision 0.6.0.

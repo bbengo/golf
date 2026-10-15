@@ -1,3 +1,4 @@
+import { wetCell } from './shoreline';
 import { worldTrees, worldWetness } from '../course/procedural-world';
 import { waterColour } from './water-material';
 import { LandscapeSurround } from './landscape-surround';
@@ -227,10 +228,19 @@ export class CourseAtlas {
          });
          water.closePath();
       }
-      // Remote drainage is sampled from the same world field as the ball.
-      // Four-metre raster cells affect presentation resolution only.
-      for (let y = bounds.minY; y < bounds.maxY; y += 4)
-         for (let x = bounds.minX; x < bounds.maxX; x += 4) {
+      // Interpolate the shared field's zero contour instead of painting square shoreline cells.
+      const spacing = 4,
+         columns = Math.ceil((bounds.maxX - bounds.minX) / spacing);
+      const row = (y: number) =>
+         Array.from({ length: columns + 1 }, (_, i) => {
+            const x = bounds.minX + i * spacing;
+            return { x, y, value: worldWetness(c, x, y) };
+         });
+      let bottom = row(bounds.minY);
+      for (let y = bounds.minY; y < bounds.maxY; y += spacing) {
+         const top = row(y + spacing);
+         for (let i = 0; i < columns; i++) {
+            const x = bottom[i].x;
             if (
                x >= c.bounds.minX &&
                x <= c.bounds.maxX &&
@@ -238,11 +248,17 @@ export class CourseAtlas {
                y <= c.bounds.maxY
             )
                continue;
-            if (worldWetness(c, x + 2, y + 2) < 0) {
-               const p = point({ x, y: y + 4 });
-               water.rect(p.x, p.y, 4 * s, 4 * s);
+            for (const polygon of wetCell([bottom[i], top[i], top[i + 1], bottom[i + 1]])) {
+               polygon.forEach((p, j) => {
+                  const q = point(p);
+                  if (j) water.lineTo(q.x, q.y);
+                  else water.moveTo(q.x, q.y);
+               });
+               water.closePath();
             }
          }
+         bottom = top;
+      }
 
       this.ripples = [];
       for (let i = 0; i < 900; i++) {

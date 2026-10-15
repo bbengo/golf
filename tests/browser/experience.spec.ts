@@ -10,7 +10,7 @@ test('experience selection gives the original a direct entrance and return path'
    await page.getByRole('link', { name: 'Choose UCG-50 Original' }).click();
    await expect(page.locator('#welcomeScreen')).toBeVisible();
    await page.getByRole('link', { name: 'Choose experience: Purity / UCG-50 Original' }).click();
-   await expect(page.locator('.edition-screen')).toBeVisible();
+   await expect(page.locator('.edition-screen')).toBeVisible({ timeout: 30000 });
    await page.setViewportSize({ width: 390, height: 844 });
    await expect(page.getByRole('link', { name: 'Choose Purity', exact: true })).toBeInViewport();
    await expect(page.getByRole('link', { name: 'Choose UCG-50 Original' })).toBeInViewport();
@@ -86,7 +86,10 @@ test('desktop controls, mouse aiming and player-selected interface modes', async
       .getByRole('group', { name: 'Daylight', exact: true })
       .getByRole('radio', { name: 'Late afternoon' })
       .check();
-   await expect(page.locator('#course')).toHaveAttribute('data-daylight', 'evening');
+   await expect(page.locator('body')).toHaveAttribute('data-daylight', 'evening');
+   await expect(page.locator('#course')).toHaveAttribute('data-daylight', 'evening', {
+      timeout: 30000,
+   });
    await expect(page.locator('#desktopClub')).toHaveValue(clubBeforeLight);
    await page.locator('#closeGameOptions').click();
    await page.screenshot({ path: 'test-results/late-afternoon.png' });

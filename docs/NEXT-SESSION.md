@@ -1,10 +1,12 @@
 # Next session: unfinished work
 
-## Current position - 14 October 2026
+## Current position - 15 October 2026
 
 The four engine implementation tracks now have working foundations: shared procedural world and outer-water elevations/beds; versioned baseline ball/aero/contact profiles; shared weather/sunlight shot snapshots; recorded-shot comparison and a seeded 12-shot consistency study. Older notes below are chronological history, not the current completion checklist.
 
-Remaining research: measured drag/lift datasets and independent flight validation; calibrated moisture/turf response and compliance; validated cup rim/lip-out dynamics; broader full-shot numerical convergence. No commercial ball variants or rainfall physics should be claimed without evidence. Remaining presentation work includes finer shoreline sampling, smooth time-of-day transitions and target-device performance review. The DEM protection collar remains a blended bed transition. Preserve the accepted softer camera timing.
+New implementation: version 0.2.0 preserves contact-time remainders, bounds repeated impacts, adds slope-aware rigid-rim cup contact and retains 0.1.0 replay. Four-material full-shot and cup timestep refinements pass. Outer shorelines now interpolate wetness contours instead of rectangular cells. Daylight presets crossfade with camera alignment and reduced-motion support.
+
+Remaining research: measured drag/lift datasets and independent flight validation; calibrated moisture/turf response and compliance; measurement validation of the implemented rim/lip-out model; more complex object-contact and airborne-cup numerical cases. No commercial ball variants or rainfall physics should be claimed without evidence. Remaining presentation work includes sub-grid shoreline details, optional rainfall presentation and target-device performance review (including transition peak memory). The DEM protection collar remains a blended bed transition. Preserve the accepted softer camera timing.
 
 ## Desktop interface and player choice
 

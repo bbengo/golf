@@ -6,7 +6,7 @@ import { ShotEffects } from './shot-effects';
 import { readPresentation } from './presentation';
 import { daylightChoice } from './daylight';
 import { Wind } from '../course/wind.js';
-import { CourseAtlas } from './course-atlas';
+import { EnvironmentRenderer } from './environment-renderer';
 import { CourseCamera } from './camera';
 import { Course } from '../course/course.js';
 import { Shot } from '../simulation/shot.js';
@@ -20,7 +20,7 @@ export class SimpleCourse {
    private ballRenderer = new BallRenderer();
    private effects = new ShotEffects();
    private studyLayers = new CourseStudyLayers();
-   private atlas = new CourseAtlas();
+   private atlas = new EnvironmentRenderer();
    private lastTime = 0;
    private viewRevision = -1;
    private shotStarted = -1;

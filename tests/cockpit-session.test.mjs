@@ -28,7 +28,7 @@ test('one committed shot survives duplicate commands and can be replayed', () =>
    assert.equal(s.apply(play).ok, true);
    assert.equal(s.records.length, 1);
    assert.equal(s.apply({ ...play, id: 'shot-2' }).ok, false);
-   assert.equal(s.last.version, 'purity-rigid-sphere/0.1.0');
+   assert.equal(s.last.version, 'purity-rigid-sphere/0.2.0');
    assert.deepEqual(Shot.replay(s.last), s.last.result);
    s.finish();
    assert.equal(s.phase, 'resolved');
