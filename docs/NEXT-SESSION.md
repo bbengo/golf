@@ -8,6 +8,11 @@ New implementation: version 0.2.0 preserves contact-time remainders, bounds repe
 
 Remaining research: measured drag/lift datasets and independent flight validation; calibrated moisture/turf response and compliance; measurement validation of the implemented rim/lip-out model; more complex object-contact and airborne-cup numerical cases. No commercial ball variants or rainfall physics should be claimed without evidence. Remaining presentation work includes sub-grid shoreline details, optional rainfall presentation and target-device performance review (including transition peak memory). The DEM protection collar remains a blended bed transition. Preserve the accepted softer camera timing.
 
+
+## Visual direction - My Little Universe references (15 October)
+
+First slice implemented: deterministic surface-specific contact particles, water rings and cup capture feedback, respecting existing visibility/motion preferences. Next visual steps: coordinated natural material contrast across core/surround; deliberate loading-to-play transitions and control confirmation; then a separate angled terrain-renderer prototype using the same physics/world data. Keep top-down available. An angled view is feasible in a browser but has not been implemented. See root COSMOLOGY for reference observations, architecture and acceptance criteria.
+
 ## Desktop interface and player choice
 
 Desktop now has its own HUD and horizontal shot dock; the phone retains its touch

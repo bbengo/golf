@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-15: surface feedback and visual reference study
+
+- Added replay-stable turf/sand impact particles, water droplets and spreading rings, and a restrained cup-capture cue from recorded simulation events.
+- Suppressed tiny rebound particles and bounded active effects; preserved effects-off, reduced-motion and Clear course behaviour.
+- Documented lessons from the owner's My Little Universe references, a natural colour direction and the requirements for a future optional 2.5D renderer. No renderer migration or global palette change is claimed in this pass; reference images remain ignored.
+
+Validation: two focused effects tests pass, including determinism, preference suppression and event budgets. Paired browser gameplay/reconnection scenario passes. Typecheck, formatting, production build and diff checks pass. Existing legacy-data bundle warning remains.
+
 ## 2026-10-15: contact continuation, cup interactions and scenery transitions
 
 - Added the versioned 0.2.0 Purity integrator: fractional collision continuation, bounded repeated impacts, smaller ground steps and rolling-spin consistency.

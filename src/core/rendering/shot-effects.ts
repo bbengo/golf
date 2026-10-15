@@ -1,8 +1,9 @@
+import { impactParticles, type ImpactEvent } from './impact-particles';
 import type { CourseCamera } from './camera';
 import type { Point } from '../contracts/cockpit';
 import type { Presentation } from './presentation';
 type TracePoint = Point & { t: number; mode?: string };
-type Event = { type: string; t: number; position: Point };
+type Event = ImpactEvent;
 /** Consumes recorded simulation evidence only. Never predicts or modifies a shot. */
 export class ShotEffects {
    paint(
@@ -31,16 +32,49 @@ export class ShotEffects {
          ctx.stroke();
       }
       if (settings.impactCue === 'subtle' && !reducedMotion) {
-         for (const event of events) {
-            const age = elapsed - event.t;
-            if (event.type !== 'landing' || age < 0 || age > 1.8) continue;
-            const p = camera.world(event.position),
-               progress = age / 1.8;
-            ctx.strokeStyle = `rgba(247,236,200,${(1 - progress) * 0.55})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.ellipse(p.x, p.y, 5 + progress * 15, 3 + progress * 9, 0, 0, Math.PI * 2);
-            ctx.stroke();
+         // Bound per-frame work even for recordings containing many small rebounds.
+         const recent = events
+            .filter((event) => elapsed >= event.t && elapsed - event.t <= 2.4)
+            .slice(-12);
+         for (const event of recent) {
+            const age = elapsed - event.t,
+               p = camera.world(event.position);
+            for (const particle of impactParticles(event, age)) {
+               const q = camera.world(particle);
+               ctx.globalAlpha = particle.alpha;
+               ctx.fillStyle = particle.colour;
+               ctx.beginPath();
+               ctx.ellipse(
+                  q.x,
+                  q.y - Math.min(14, particle.lift * camera.scale),
+                  particle.size,
+                  particle.size * 0.65,
+                  0,
+                  0,
+                  Math.PI * 2,
+               );
+               ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            const water = event.type === 'water',
+               cup = event.type === 'cup-capture';
+            if (!water && !cup && event.type !== 'landing') continue;
+            const duration = water ? 2.4 : 1.8,
+               progress = age / duration;
+            if (progress > 1) continue;
+            const rings = water ? 2 : 1;
+            for (let i = 0; i < rings; i++) {
+               const phase = Math.max(0, progress - i * 0.18);
+               if (i && phase === 0) continue;
+               ctx.strokeStyle = water
+                  ? `rgba(192,220,212,${(1 - progress) * 0.5})`
+                  : `rgba(247,236,200,${(1 - progress) * 0.55})`;
+               ctx.lineWidth = 1;
+               const radius = cup ? 4 + (1 - progress) * 9 : 4 + phase * (water ? 23 : 15);
+               ctx.beginPath();
+               ctx.ellipse(p.x, p.y, radius, radius * 0.62, 0, 0, Math.PI * 2);
+               ctx.stroke();
+            }
          }
       }
       ctx.restore();
