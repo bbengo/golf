@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-15: estate landmarks and optional WebGL landscape preview
+
+- Added connected welcome and pavilion courts plus a small cabin camp, with shared rigid structures and roof support.
+- Added Environment / Explore landscape: an isolated angled estate preview with procedural texture, upright trees, orbit/zoom, place shortcuts and keyboard return. Gameplay remains overhead.
+- Added bounded GPU resources, draw-on-change behaviour, cleanup and WebGL fallback.
+- Added saved-geometry, structural-contact and preview tests. All 74 unit tests passed; focused tests passed after rendering refinements. Final browser checks passed for the angled preview, missing-WebGL recovery, paired gameplay and landscape coverage; typecheck, formatting, build and diff checks passed. See COSMOLOGY for design, validation and remaining angled-gameplay work.
+
 ## 2026-10-15: physical uplands and sandy clearings
 
 Woodland 0.8.0 adds two explicitly versioned world layers. `purity-terrain/2` supplies broad winding uplands with smaller folds outside the surveyed DEM. Relief is bounded to 22 additional metres and blends in with zero edge derivative. The existing water-bed solver still owns submerged ground and shoreline transitions. The height field is shared by lighting, inspection, ball support and tree collision elevations; these are not painted mountain silhouettes. Version 1 remains supported without the additional relief, and recorded snapshots retain their version.

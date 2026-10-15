@@ -84,6 +84,11 @@ export async function startDisplay(onFirstFrame?: () => void) {
       (daylight) => {
          session.environment.daylight = daylight;
       },
+      () => {
+         void import('../core/rendering/landscape-preview').then(({ openLandscapePreview }) =>
+            openLandscapePreview(session.course, session.environment.daylight),
+         );
+      },
    );
    const openOptions = () => {
       quiet = true;

@@ -157,7 +157,7 @@ import * as Fundamentals from './fundamentals.ts';
          function objectHit(course, a, b, ignored = new Set(), experimental = false) {
             const hits = []; for (const o of Q.objectsAlong(course,a,b)) {
                if (ignored.has(o.id)) continue;
-               if (o.kind === 'bridge') { const h = boxHit(a, b, { ...o, minZ: o.deckZ - o.thickness, maxZ: o.deckZ }); if (h) hits.push({ ...h, id: o.id, kind: 'bridge', restitution: 0.45, tangent: 0.8 }); }
+               if (o.kind === 'bridge' || o.kind === 'structure') { const h = boxHit(a, b, { ...o, minZ: o.deckZ - o.thickness, maxZ: o.deckZ }); if (h) hits.push({ ...h, id: o.id, kind: o.kind, restitution: 0.45, tangent: 0.8 }); }
                else if (o.kind === 'tree') {
                   const ground = Q.heightAt(course, o); let hit = sphereHit(a, b, { x: o.x, y: o.y, z: ground + (o.height + o.canopyBase) / 2 }, { x: o.canopyRadius + R, y: o.canopyRadius + R, z: (o.height - o.canopyBase) / 2 + R });
                   if (hit) hits.push({ ...hit, id: o.id, kind: 'canopy', restitution: 0.09, tangent: 0.36 });
@@ -174,7 +174,7 @@ import * as Fundamentals from './fundamentals.ts';
             for (let i = 1; i <= steps; i++) { const t = i / steps, p = add(a, mul(sub(b, a), t)); if (gap(p) <= 0) { let lo = prev, hi = t; for (let j = 0; j < 20; j++) { const m = (lo + hi) / 2; if (gap(add(a, mul(sub(b, a), m))) > 0) lo = m; else hi = m; } const h = add(a, mul(sub(b, a), hi)), s = Q.slopeAt(course, h); return { t: hi, p: h, normal: unit({ x: -s.x, y: -s.y, z: 1 }), kind: Q.surfaceAt(course, h).type === 'water' ? 'water' : 'ground' }; } prev = t; }
             return null;
          }
-         function supportAt(course, p) { let z = Q.heightAt(course, p), bridge = null; for (const o of course.objects) if (o.kind === 'bridge' && p.x >= o.minX && p.x <= o.maxX && p.y >= o.minY && p.y <= o.maxY && p.z >= o.deckZ - 0.08) { z = Math.max(z, o.deckZ); bridge = o; } return { z, bridge }; }
+         function supportAt(course, p) { let z = Q.heightAt(course, p), bridge = null; for (const o of course.objects) if ((o.kind === 'bridge' || o.kind === 'structure') && p.x >= o.minX && p.x <= o.maxX && p.y >= o.minY && p.y <= o.maxY && p.z >= o.deckZ - 0.08) { z = Math.max(z, o.deckZ); bridge = o; } return { z, bridge }; }
          function contactVelocity(v, n, e, tangent) { const vn = dot(v, n); if (vn >= 0) return v; return add(mul(sub(v, mul(n, vn)), tangent), mul(n, -e * vn)); }
          // Rolling sphere on z=h(x,y), I/(m r^2)=2/5. The metric term prevents
          // tan(theta) being treated as sin(theta), and the connection term accounts
@@ -227,7 +227,7 @@ import * as Fundamentals from './fundamentals.ts';
                         if (dot(state.v, h.normal) < (experimental ? .2 : 1.05)) { mode = experimental ? 'slide' : 'roll'; state.v = sub(state.v, mul(h.normal, dot(state.v, h.normal))); }
                      } else {
                         recordEvent(h.kind, state.p, { objectId: h.id }); state.v = contactVelocity(state.v, h.normal, h.restitution, h.tangent); state.p = add(state.p, mul(h.normal, 0.01)); cooldown[h.id] = t + 0.18; spin = mul(spin, 0.5);
-                        if (h.kind === 'bridge' && h.normal.z > 0.5 && state.v.z < 1.05) { mode = 'roll'; state.p.z = course.objects.find(o => o.id === h.id).deckZ + R; state.v.z = 0; }
+                        if ((h.kind === 'bridge' || h.kind === 'structure') && h.normal.z > 0.5 && state.v.z < 1.05) { mode = 'roll'; state.p.z = course.objects.find(o => o.id === h.id).deckZ + R; state.v.z = 0; }
                      }
                   } else state = next;
                   if (!experimental && !options.vacuum) spin = mul(spin, Math.exp(-0.035 * dt));

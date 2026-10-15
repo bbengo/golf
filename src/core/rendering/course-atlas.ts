@@ -1,3 +1,4 @@
+import { paintEstateLandmarks } from './estate-landmarks';
 import { wetCell } from './shoreline';
 import { worldTrees, worldWetness, worldGroundColour } from '../course/procedural-world';
 import { waterColour } from './water-material';
@@ -154,7 +155,20 @@ export class CourseAtlas {
       }
       ctx.restore();
    }
-   private build(c: CockpitSession['course']) {
+   groundTexture(c: CockpitSession['course'], daylight: Daylight) {
+      this.daylight = daylight;
+      this.build(c, false);
+      return {
+         canvas: this.canvas,
+         bounds: {
+            minX: c.bounds.minX - this.margin,
+            maxX: c.bounds.maxX + this.margin,
+            minY: c.bounds.minY - this.margin,
+            maxY: c.bounds.maxY + this.margin,
+         },
+      };
+   }
+   private build(c: CockpitSession['course'], includeObjects = true) {
       const sun = DAYLIGHT[this.daylight];
       const bounds = {
             minX: c.bounds.minX - this.margin,
@@ -546,9 +560,9 @@ export class CourseAtlas {
             ctx.shadowBlur = 0;
             const variant =
                Math.abs(Math.floor(object.x * 31 + object.y * 17)) % this.crowns.length;
-            ctx.drawImage(this.crowns[variant], p.x - r, p.y - r, r * 2, r * 2);
+            if (includeObjects) ctx.drawImage(this.crowns[variant], p.x - r, p.y - r, r * 2, r * 2);
             ctx.restore();
-         } else if (object.kind === 'bridge') {
+         } else if (includeObjects && object.kind === 'bridge') {
             const p = point({ x: object.minX, y: object.maxY }),
                bw = (object.maxX - object.minX) * s,
                bh = (object.maxY - object.minY) * s;
@@ -564,6 +578,15 @@ export class CourseAtlas {
             }
          }
       }
+      paintEstateLandmarks(
+         ctx,
+         c.objects,
+         c.places ?? [],
+         point,
+         s,
+         this.daylight,
+         !includeObjects,
+      );
       // A restrained warm-to-cool daylight grade unifies grass, sand and crowns.
       const daylight = ctx.createLinearGradient(
          w * (0.5 + sun.x * 0.5),
@@ -576,6 +599,7 @@ export class CourseAtlas {
       daylight.addColorStop(1, '#123b3620');
       ctx.fillStyle = daylight;
       ctx.fillRect(0, 0, w, h);
+      if (!includeObjects) return;
       // Fade only the remote cache perimeter; the playable course remains fully opaque.
       ctx.save();
       ctx.globalCompositeOperation = 'destination-in';

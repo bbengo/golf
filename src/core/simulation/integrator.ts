@@ -138,7 +138,11 @@ export function integrate(course: any, day: any, launch: any, options: any, h: H
                   spin = F.scale(spin, 0.5);
                   p = F.add(p, F.scale(hit.normal, 1e-5));
                   event(hit.kind, { objectId: hit.id });
-                  if (hit.kind === 'bridge' && hit.normal.z > 0.5 && v.z < 0.12) {
+                  if (
+                     (hit.kind === 'bridge' || hit.kind === 'structure') &&
+                     hit.normal.z > 0.5 &&
+                     v.z < 0.12
+                  ) {
                      mode = 'roll';
                      v.z = 0;
                   }
@@ -193,7 +197,7 @@ export function integrate(course: any, day: any, launch: any, options: any, h: H
             const ns = h.supportAt(course, next);
             next.z = ns.z + F.R;
             const trunk = h.objectHit(course, p, next, new Set(), true);
-            if (trunk?.kind === 'trunk') {
+            if (trunk && (trunk.kind === 'trunk' || trunk.kind === 'structure')) {
                const used = step * trunk.t;
                spin = F.add(oldSpin, F.scale(sub(spin, oldSpin), trunk.t));
                mode = oldMode;
@@ -202,7 +206,7 @@ export function integrate(course: any, day: any, launch: any, options: any, h: H
                v = h.contactVelocity(v, trunk.normal, trunk.restitution, trunk.tangent);
                t += used;
                remaining -= used;
-               event('trunk', { objectId: trunk.id });
+               event(trunk.kind, { objectId: trunk.id });
                if (++collisions > 24) {
                   finish('unresolved-contact-limit');
                   break;

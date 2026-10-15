@@ -1,3 +1,4 @@
+import { addEstateLandmarks } from './estate-landmarks';
 import { ECOLOGY_VERSION } from './landscape-regions';
 import { WATER_VERSION } from './water-system';
 import { TERRAIN_VERSION, continuedHeight } from './terrain-continuation';
@@ -7,7 +8,7 @@ import { HoleVisual } from './hole.js';
 import { Course } from './course.js';
 import type { Point } from '../contracts/cockpit';
 
-export const PURITY_COURSE_REVISION = 'purity-woodland/0.8.0';
+export const PURITY_COURSE_REVISION = 'purity-woodland/0.9.0';
 const interpolate = (a: Point, b: Point, c: Point, d: Point, t: number): Point => ({
    x:
       0.5 *
@@ -339,5 +340,6 @@ export function createPurityCourse() {
    };
    for (const lake of waters.filter((w) => w.id.startsWith('world-lake-')))
       lake.waterHeight = c.world.hydrology.level;
+   addEstateLandmarks(c);
    return c;
 }
