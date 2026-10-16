@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-16: smoother tile joins and consistent daylight grading
+
+- Added neighbouring-pixel gutters and expanded lighting samples to cached overhead terrain tiles.
+- Unified the atlas/surround daylight grade in world coordinates so it stays fixed during streamed exploration.
+- Preserved the default atlas grade and the 64-tile cache limit.
+- Four focused tests, three browser checks, typecheck, formatting and build passed.
+
 ## 2026-10-16: stable surface details and smoother distant crowns
 
 - Replaced angular distant crowns with rounded, smoothly lit 24-triangle meshes under the existing tree-count cap.

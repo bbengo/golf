@@ -1,3 +1,4 @@
+import { paintDaylightGrade } from './daylight-grade';
 import { Course } from '../course/course.js';
 import {
    worldHash as hash,
@@ -13,6 +14,17 @@ import { canopyStamp } from './terrain-detail';
 import { DAYLIGHT, type Daylight } from './daylight';
 
 export const SURROUND_TILE_SIZE = 512;
+export const SURROUND_TILE_RESOLUTION = 256;
+export const SURROUND_TILE_GUTTER = 1;
+/** Pixel centres including the neighbouring texels used by filtered tile edges. */
+export function surroundSample(tx: number, ty: number, px: number, py: number) {
+   const metresPerPixel = SURROUND_TILE_SIZE / SURROUND_TILE_RESOLUTION;
+   return {
+      x: tx * SURROUND_TILE_SIZE + (px - SURROUND_TILE_GUTTER + 0.5) * metresPerPixel,
+      y: (ty + 1) * SURROUND_TILE_SIZE - (py - SURROUND_TILE_GUTTER + 0.5) * metresPerPixel,
+   };
+}
+
 /** Covers the inverse-projected viewport, including rotated and offset cameras. */
 export function surroundTileRange(camera: CourseCamera) {
    const points = [
@@ -75,6 +87,10 @@ export class LandscapeSurround {
             if (this.tiles.size > 64) this.tiles.delete(this.tiles.keys().next().value!);
             ctx.drawImage(
                tile,
+               SURROUND_TILE_GUTTER,
+               SURROUND_TILE_GUTTER,
+               SURROUND_TILE_RESOLUTION,
+               SURROUND_TILE_RESOLUTION,
                x * size,
                -(y + 1) * size,
                size + 0.15 / camera.scale,
@@ -85,22 +101,24 @@ export class LandscapeSurround {
    }
    private build(tx: number, ty: number, daylight: Daylight) {
       const size = SURROUND_TILE_SIZE,
-         resolution = 256,
+         resolution = SURROUND_TILE_RESOLUTION,
+         gutter = SURROUND_TILE_GUTTER,
+         paddedResolution = resolution + gutter * 2,
          factor = resolution / size;
       const tile = document.createElement('canvas');
-      tile.width = tile.height = resolution;
+      tile.width = tile.height = paddedResolution;
       const ctx = tile.getContext('2d')!,
-         pixels = ctx.createImageData(resolution, resolution);
+         pixels = ctx.createImageData(paddedResolution, paddedResolution);
       const sun = DAYLIGHT[daylight];
       // Cache a coarse physical slope-light field, interpolated across pixel samples.
-      const lighting = new Float32Array(17 * 17);
-      for (let iy = 0; iy <= 16; iy++)
-         for (let ix = 0; ix <= 16; ix++) {
+      const lighting = new Float32Array(19 * 19);
+      for (let iy = -1; iy <= 17; iy++)
+         for (let ix = -1; ix <= 17; ix++) {
             const x = tx * size + ix * 32,
                y = (ty + 1) * size - iy * 32;
             const h = (dx: number, dy: number) =>
                Course.heightAt(this.course!, { x: x + dx, y: y + dy });
-            lighting[iy * 17 + ix] = Math.max(
+            lighting[(iy + 1) * 19 + ix + 1] = Math.max(
                -0.08,
                Math.min(
                   0.08,
@@ -108,10 +126,9 @@ export class LandscapeSurround {
                ),
             );
          }
-      for (let py = 0; py < resolution; py++)
-         for (let px = 0; px < resolution; px++) {
-            const x = tx * size + (px + 0.5) / factor,
-               y = (ty + 1) * size - (py + 0.5) / factor;
+      for (let py = 0; py < paddedResolution; py++)
+         for (let px = 0; px < paddedResolution; px++) {
+            const { x, y } = surroundSample(tx, ty, px, py);
             const wet = worldWetness(this.course!, x, y),
                n = noise(x / 65, y / 65) - 0.5;
             const fine = (hash(Math.floor(x), Math.floor(y)) - 0.5) * (wet < 0 ? 1.5 : 9);
@@ -122,25 +139,19 @@ export class LandscapeSurround {
                colour = this.course?.world?.ecologyVersion
                   ? worldGroundColour(this.course, x, y).map((value) => value + n * 32)
                   : [75 + n * 35, 111 + n * 38, 57 + n * 23];
-            const lx = (px + 0.5) / 16,
-               ly = (py + 0.5) / 16;
+            const lx = (px - gutter + 0.5) / 16 + 1,
+               ly = (py - gutter + 0.5) / 16 + 1;
             const ix = Math.floor(lx),
                iy = Math.floor(ly),
                fx = lx - ix,
                fy = ly - iy;
-            const top = lighting[iy * 17 + ix] * (1 - fx) + lighting[iy * 17 + ix + 1] * fx;
+            const top = lighting[iy * 19 + ix] * (1 - fx) + lighting[iy * 19 + ix + 1] * fx;
             const bottom =
-               lighting[(iy + 1) * 17 + ix] * (1 - fx) + lighting[(iy + 1) * 17 + ix + 1] * fx;
+               lighting[(iy + 1) * 19 + ix] * (1 - fx) + lighting[(iy + 1) * 19 + ix + 1] * fx;
             const shade = wet < 0 ? 0 : (top * (1 - fy) + bottom * fy) * 255;
-            const warmth = wet < 0 || daylight === 'day' ? 0 : 5;
             pixels.data.set(
-               [
-                  colour[0] + fine + warmth + shade,
-                  colour[1] + fine + shade,
-                  colour[2] + fine - warmth + shade,
-                  255,
-               ],
-               (py * resolution + px) * 4,
+               [colour[0] + fine + shade, colour[1] + fine + shade, colour[2] + fine + shade, 255],
+               (py * paddedResolution + px) * 4,
             );
          }
       ctx.putImageData(pixels, 0, 0);
@@ -152,8 +163,8 @@ export class LandscapeSurround {
          maxY: (ty + 1) * size + 70,
       })) {
          const { x, y, canopyRadius: r } = tree;
-         const px = (x - tx * size) * factor,
-            py = ((ty + 1) * size - y) * factor;
+         const px = (x - tx * size) * factor + gutter,
+            py = ((ty + 1) * size - y) * factor + gutter;
          ctx.fillStyle = '#10251e45';
          ctx.beginPath();
          ctx.ellipse(
@@ -170,6 +181,19 @@ export class LandscapeSurround {
             this.crowns[Math.floor(hash(Math.floor(x), Math.floor(y)) * this.crowns.length)];
          ctx.drawImage(stamp, px - r * factor, py - r * factor, r * 2 * factor, r * 2 * factor);
       }
+      const border = gutter / factor;
+      paintDaylightGrade(
+         ctx,
+         {
+            minX: tx * size - border,
+            maxX: (tx + 1) * size + border,
+            minY: ty * size - border,
+            maxY: (ty + 1) * size + border,
+         },
+         this.course!.bounds,
+         factor,
+         daylight,
+      );
       return tile;
    }
 }

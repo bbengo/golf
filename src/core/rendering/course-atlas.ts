@@ -1,3 +1,4 @@
+import { paintDaylightGrade } from './daylight-grade';
 import { worldDecoration } from './world-decoration';
 import { paintEstateLandmarks } from './estate-landmarks';
 import { wetCell } from './shoreline';
@@ -596,18 +597,8 @@ export class CourseAtlas {
          this.daylight,
          !includeObjects,
       );
-      // A restrained warm-to-cool daylight grade unifies grass, sand and crowns.
-      const daylight = ctx.createLinearGradient(
-         w * (0.5 + sun.x * 0.5),
-         h * (0.5 - sun.y * 0.5),
-         w * (0.5 - sun.x * 0.5),
-         h * (0.5 + sun.y * 0.5),
-      );
-      daylight.addColorStop(0, sun.warmth);
-      daylight.addColorStop(0.55, '#ebedb200');
-      daylight.addColorStop(1, '#123b3620');
-      ctx.fillStyle = daylight;
-      ctx.fillRect(0, 0, w, h);
+      // One world-anchored grade for both the estate atlas and surrounding tiles.
+      paintDaylightGrade(ctx, bounds, c.bounds, s, this.daylight);
       if (!includeObjects) return;
       // Fade only the remote cache perimeter; the playable course remains fully opaque.
       ctx.save();
