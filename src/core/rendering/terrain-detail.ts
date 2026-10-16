@@ -1,5 +1,9 @@
-﻿/** Seeded material variation. All inputs and output are atlas pixels, never physics. */
-export function terrainVariation(width: number, height: number) {
+﻿/** Cosmetic material variation sampled in world coordinates, rasterized to atlas pixels. */
+export function terrainVariation(
+   width: number,
+   height: number,
+   origin: { minX: number; maxY: number; scale: number },
+) {
    const tile = document.createElement('canvas');
    tile.width = Math.ceil(width / 3);
    tile.height = Math.ceil(height / 3);
@@ -25,8 +29,12 @@ export function terrainVariation(width: number, height: number) {
    };
    for (let y = 0; y < tile.height; y++)
       for (let x = 0; x < tile.width; x++) {
+         const wx = origin.minX + (x * 3) / origin.scale,
+            wy = origin.maxY - (y * 3) / origin.scale;
          const n =
-            noise(x / 85, y / 85) * 0.48 + noise(x / 23, y / 23) * 0.3 + noise(x / 6, y / 6) * 0.22;
+            noise(wx / 128, wy / 128) * 0.48 +
+            noise(wx / 35, wy / 35) * 0.3 +
+            noise(wx / 9, wy / 9) * 0.22;
          const bright = n > 0.5;
          pixels.data.set(
             bright

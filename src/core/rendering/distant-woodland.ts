@@ -58,28 +58,26 @@ export async function distantTrees(
    return { trees: trees.slice(0, 8192), stride, candidates };
 }
 
-/** Twelve triangles per distant crown; actual position, height and canopy radius. */
+export const DISTANT_CROWN_TRIANGLES = 24;
+/** Rounded low-detail crowns with analytic ellipsoid normals. */
 export async function distantWoodland(
    c: CockpitSession['course'],
    bounds: Bounds,
    cancelled = () => false,
 ) {
    const selection = await distantTrees(c, bounds, cancelled);
-   const vertices = new Float32Array(selection.trees.length * 12 * 27);
+   const vertices = new Float32Array(selection.trees.length * DISTANT_CROWN_TRIANGLES * 27);
    let offset = 0;
    type V = [number, number, number];
+   let centre: V = [0, 0, 0],
+      radius = 1,
+      verticalRadius = 1;
    const triangle = (a: V, b: V, d: V, colour: number[]) => {
-      const ux = b[0] - a[0],
-         uy = b[1] - a[1],
-         uz = b[2] - a[2],
-         vx = d[0] - a[0],
-         vy = d[1] - a[1],
-         vz = d[2] - a[2];
-      const nx = uy * vz - uz * vy,
-         ny = uz * vx - ux * vz,
-         nz = ux * vy - uy * vx;
-      const length = Math.hypot(nx, ny, nz) || 1;
       for (const p of [a, b, d]) {
+         const nx = (p[0] - centre[0]) / (radius * radius),
+            ny = (p[1] - centre[1]) / (radius * radius),
+            nz = (p[2] - centre[2]) / (verticalRadius * verticalRadius);
+         const length = Math.hypot(nx, ny, nz) || 1;
          vertices.set([...p, nx / length, ny / length, nz / length, ...colour], offset);
          offset += 9;
       }
@@ -95,17 +93,26 @@ export async function distantWoodland(
       const colour = [0.23 + tint * 0.09, 0.37 + tint * 0.14, 0.18 + tint * 0.05];
       const top: V = [tree.x, tree.y, z + tree.height],
          bottom: V = [tree.x, tree.y, z + tree.canopyBase];
-      const ring = (k: number): V => {
+      radius = tree.canopyRadius;
+      verticalRadius = (tree.height - tree.canopyBase) / 2;
+      centre = [tree.x, tree.y, z + tree.canopyBase + verticalRadius];
+      const ring = (k: number, latitude: number): V => {
          const angle = (k * Math.PI) / 3 + tint * Math.PI * 2;
          return [
-            tree.x + Math.cos(angle) * tree.canopyRadius,
-            tree.y + Math.sin(angle) * tree.canopyRadius,
-            z + tree.canopyBase + (tree.height - tree.canopyBase) * 0.45,
+            tree.x + Math.cos(angle) * radius * Math.cos(latitude),
+            tree.y + Math.sin(angle) * radius * Math.cos(latitude),
+            centre[2] + verticalRadius * Math.sin(latitude),
          ];
       };
       for (let k = 0; k < 6; k++) {
-         triangle(top, ring(k), ring(k + 1), colour);
-         triangle(bottom, ring(k + 1), ring(k), colour);
+         const upper = ring(k, Math.PI / 6),
+            upperNext = ring(k + 1, Math.PI / 6);
+         const lower = ring(k, -Math.PI / 6),
+            lowerNext = ring(k + 1, -Math.PI / 6);
+         triangle(top, upper, upperNext, colour);
+         triangle(upper, lower, lowerNext, colour);
+         triangle(upper, lowerNext, upperNext, colour);
+         triangle(bottom, lowerNext, lower, colour);
       }
    }
    return { vertices, treeCount: selection.trees.length, stride: selection.stride };

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-16: stable surface details and smoother distant crowns
+
+- Replaced angular distant crowns with rounded, smoothly lit 24-triangle meshes under the existing tree-count cap.
+- Anchored meadow patches, turf fibres, water marks, grain and broad texture variation to world coordinates.
+- Made shoreline-stone variation independent of texture-window generation order.
+- Five focused tests, three browser checks, typecheck, formatting and build passed.
+
 ## 2026-10-16: distant woodland continuity
 
 - Added simplified, physically positioned crowns beyond the detailed landscape region.

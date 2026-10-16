@@ -1,6 +1,7 @@
+import { worldDecoration } from './world-decoration';
 import { paintEstateLandmarks } from './estate-landmarks';
 import { wetCell } from './shoreline';
-import { worldTrees, worldWetness, worldGroundColour } from '../course/procedural-world';
+import { worldTrees, worldWetness, worldGroundColour, worldHash } from '../course/procedural-world';
 import { waterColour } from './water-material';
 import { LandscapeSurround } from './landscape-surround';
 import { DAYLIGHT, type Daylight } from './daylight';
@@ -236,12 +237,11 @@ export class CourseAtlas {
          ctx.drawImage(regions, 0, 0, w, h);
       }
       // Quiet meadow variation, kept subordinate to the authored hole.
-      for (let i = 0; i < 220; i++) {
-         const x = random() * w,
-            y = random() * h,
-            r = (18 + random() * 85) * s;
+      for (const mark of worldDecoration(bounds, 100, 731, 104)) {
+         const { x, y } = point(mark),
+            r = (18 + mark.c * 85) * s;
          const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-         g.addColorStop(0, i % 2 ? '#90a85b18' : '#203f3016');
+         g.addColorStop(0, mark.a > 0.5 ? '#90a85b18' : '#203f3016');
          g.addColorStop(1, '#52794a00');
          ctx.fillStyle = g;
          ctx.fillRect(x - r, y - r, r * 2, r * 2);
@@ -300,9 +300,8 @@ export class CourseAtlas {
       }
 
       this.ripples = [];
-      for (let i = 0; i < 900; i++) {
-         const x = random() * w,
-            y = random() * h;
+      for (const mark of worldDecoration(bounds, 50, 919)) {
+         const { x, y } = point(mark);
          if (
             ctx.isPointInPath(water, x, y) &&
             ctx.isPointInPath(water, x - 11, y) &&
@@ -310,7 +309,7 @@ export class CourseAtlas {
             ctx.isPointInPath(water, x, y - 3) &&
             ctx.isPointInPath(water, x, y + 3)
          )
-            this.ripples.push({ x, y, phase: random() * Math.PI * 2 });
+            this.ripples.push({ x, y, phase: mark.c * Math.PI * 2 });
          if (this.ripples.length >= 160) break;
       }
       const waterLayer = document.createElement('canvas');
@@ -421,17 +420,22 @@ export class CourseAtlas {
          }
          ctx.restore();
       }
-      ctx.drawImage(terrainVariation(w, h), 0, 0, w, h);
+      ctx.drawImage(
+         terrainVariation(w, h, { minX: bounds.minX, maxY: bounds.maxY, scale: s }),
+         0,
+         0,
+         w,
+         h,
+      );
       // Fine directional turf fibres; world-anchored so they do not swim on pan.
       for (let shade = 0; shade < 3; shade++) {
          ctx.strokeStyle = ['#e4dfaa18', '#152c2020', '#91a76424'][shade];
          ctx.lineWidth = 0.55;
          ctx.beginPath();
-         for (let i = 0; i < 14000; i++) {
-            const x = random() * w,
-               y = random() * h;
+         for (const mark of worldDecoration(bounds, 13, 101 + shade)) {
+            const { x, y } = point(mark);
             ctx.moveTo(x, y);
-            ctx.lineTo(x + 0.3 + random(), y - 0.8 - random() * 2);
+            ctx.lineTo(x + (0.15 + mark.a * 0.5) * s, y - (0.4 + mark.c) * s);
          }
          ctx.stroke();
       }
@@ -457,9 +461,8 @@ export class CourseAtlas {
       ctx.clip(water);
       ctx.strokeStyle = '#dfebc92b';
       ctx.lineWidth = 0.45 * s;
-      for (let i = 0; i < 2200; i++) {
-         const x = random() * w,
-            y = random() * h;
+      for (const mark of worldDecoration(bounds, 32, 237, 8)) {
+         const { x, y } = point(mark);
          ctx.beginPath();
          ctx.moveTo(x, y);
          ctx.quadraticCurveTo(x + 3 * s, y + s, x + 7 * s, y);
@@ -485,11 +488,15 @@ export class CourseAtlas {
          for (let i = 0; i < polygon.length; i++) {
             const a = point(polygon[i]),
                b = point(polygon[(i + 1) % polygon.length]);
-            const steps = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 2);
+            const steps = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / s);
             for (let j = 0; j < steps; j++) {
                const t = j / steps,
                   x = a.x + (b.x - a.x) * t,
                   y = a.y + (b.y - a.y) * t;
+               seed = Math.floor(
+                  worldHash(Math.floor(polygon[i].x * 10) + j, Math.floor(polygon[i].y * 10)) *
+                     4294967295,
+               );
                if (random() < 0.28) continue;
                ctx.fillStyle = ['#a5a38a', '#737d60', '#526545', '#c2b797'][
                   Math.floor(random() * 4)
@@ -534,9 +541,10 @@ export class CourseAtlas {
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(light, 0, 0, w, h);
       // Fine, seeded grain stays still when panning and never affects a lie.
-      for (let i = 0; i < 95000; i++) {
-         ctx.fillStyle = i % 2 ? '#fff5ca0b' : '#143e3210';
-         ctx.fillRect(random() * w, random() * h, 0.5 + random() * 2, 0.5 + random() * 2);
+      for (const mark of worldDecoration(bounds, 5, 613, 2)) {
+         const { x, y } = point(mark);
+         ctx.fillStyle = mark.c > 0.5 ? '#fff5ca0b' : '#143e3210';
+         ctx.fillRect(x, y, (0.25 + mark.a) * s, (0.25 + mark.b) * s);
       }
       const scenicTrees = worldTrees(c, bounds);
       for (const object of [...scenicTrees, ...c.objects]) {

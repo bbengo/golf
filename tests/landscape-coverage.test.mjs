@@ -1,3 +1,4 @@
+import { DISTANT_CROWN_TRIANGLES } from '../src/core/rendering/distant-woodland.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -65,7 +66,7 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
    assert.equal(pixels.length, 256 * 256 * 4);
    assert.equal(terrainVertices, 128 * 128 * 6);
    assert.ok(treeCount > 0 && treeCount <= 8192);
-   assert.equal(vertices.length, terrainVertices * 9 + treeCount * 12 * 27);
+   assert.equal(vertices.length, terrainVertices * 9 + treeCount * DISTANT_CROWN_TRIANGLES * 27);
    assert.ok(vertices.every(Number.isFinite));
    for (let i = 0; i < terrainVertices * 9; i += 9 * 97) {
       const [x, y, z] = vertices.slice(i, i + 3);
