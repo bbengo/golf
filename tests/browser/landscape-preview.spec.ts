@@ -33,7 +33,15 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    for (let i = 0; i < 12; i++) await canvas.press('Shift+ArrowRight');
    await expect(canvas).toHaveAttribute('data-region-x', /^\d{4,}$/, { timeout: 60000 });
    await expect(canvas).toHaveAttribute('data-streaming', 'false', { timeout: 60000 });
+   await expect(canvas).toHaveAttribute('data-coverage', 'true', { timeout: 60000 });
    await page.screenshot({ path: 'test-results/landscape-preview-surround.png' });
+   await page.setViewportSize({ width: 2560, height: 900 });
+   await canvas.focus();
+   for (let i = 0; i < 8; i++) await canvas.press('ArrowDown');
+   await expect(canvas).toHaveAttribute('data-coverage', 'true', { timeout: 60000 });
+   await expect(canvas).toHaveAttribute('data-backdrop-vertices', '98304');
+   await page.screenshot({ path: 'test-results/landscape-preview-wide-shallow.png' });
+
    await dialog.getByRole('button', { name: 'Pan landscape', exact: true }).click();
    await expect(dialog.getByRole('button', { name: 'Pan landscape', exact: true })).toHaveAttribute(
       'aria-pressed',

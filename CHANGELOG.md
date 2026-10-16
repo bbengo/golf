@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-16: camera-aware distant landscape
+
+- Added a bounded distant terrain layer that expands coverage for ultrawide displays, zoom and shallow camera angles.
+- Reused physical terrain/water heights and regional ground colours with a fixed 32,768-triangle budget, asynchronous generation and GPU cleanup.
+- Detailed terrain continues to own foreground rendering; seamless detail transitions and angled gameplay remain pending.
+
 ## 2026-10-16: explorable angled surroundings
 
 - Added Shift-drag/Shift-arrow panning and a touch-friendly pan toggle.

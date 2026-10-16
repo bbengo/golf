@@ -1,3 +1,10 @@
+import {
+   landscapeFootprint,
+   paddedLandscape,
+   containsLandscape,
+   landscapeBackdrop,
+} from './landscape-coverage';
+import type { Bounds } from './camera';
 import { pickLandscape } from './landscape-projection';
 import { Course } from '../course/course.js';
 import { CourseAtlas } from './course-atlas';
@@ -21,6 +28,8 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
       frame = 0;
    const resources: {
       buffer?: WebGLBuffer;
+      backdrop?: WebGLBuffer;
+      backdropTexture?: WebGLTexture;
       texture?: WebGLTexture;
       program?: WebGLProgram;
       shaders: WebGLShader[];
@@ -33,6 +42,8 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
       closed = true;
       cancelAnimationFrame(frame);
       if (gl) {
+         if (resources.backdropTexture) gl.deleteTexture(resources.backdropTexture);
+         if (resources.backdrop) gl.deleteBuffer(resources.backdrop);
          if (resources.buffer) gl.deleteBuffer(resources.buffer);
          if (resources.texture) gl.deleteTexture(resources.texture);
          if (resources.program) gl.deleteProgram(resources.program);
@@ -72,15 +83,15 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          program,
          compile(
             gl.VERTEX_SHADER,
-            `attribute vec3 position;attribute vec3 normal;attribute vec3 colour;uniform vec3 centre;uniform vec4 view;uniform vec3 sun;uniform vec4 bounds;varying vec3 tint;varying vec2 uv;varying float terrain;varying float lighting;
- void main(){vec3 p=position-centre;float co=cos(view.x),si=sin(view.x);float x=co*p.x-si*p.y,y=si*p.x+co*p.y;float sy=sin(view.y),cy=cos(view.y);gl_Position=vec4(x/(view.z*view.w),(y*sy+p.z*cy)/view.z,(y*cy-p.z*sy)/4000.0,1.0);float light=0.60+0.40*max(0.0,dot(normalize(normal),normalize(sun)));tint=colour*light;lighting=light;terrain=colour.r<0.0?1.0:0.0;uv=vec2((position.x-bounds.x)/(bounds.z-bounds.x),(bounds.w-position.y)/(bounds.w-bounds.y));}`,
+            `attribute vec3 position;attribute vec3 normal;attribute vec3 colour;uniform vec3 centre;uniform vec4 view;uniform vec3 sun;uniform vec4 bounds;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;
+ void main(){extent=bounds.zw-bounds.xy;vec3 p=position-centre;float co=cos(view.x),si=sin(view.x);float x=co*p.x-si*p.y,y=si*p.x+co*p.y;float sy=sin(view.y),cy=cos(view.y);gl_Position=vec4(x/(view.z*view.w),(y*sy+p.z*cy)/view.z,(y*cy-p.z*sy)/32000.0,1.0);float light=0.60+0.40*max(0.0,dot(normalize(normal),normalize(sun)));tint=colour*light;lighting=light;terrain=colour.r<0.0?1.0:0.0;uv=vec2((position.x-bounds.x)/(bounds.z-bounds.x),(bounds.w-position.y)/(bounds.w-bounds.y));}`,
          ),
       );
       gl.attachShader(
          program,
          compile(
             gl.FRAGMENT_SHADER,
-            `precision mediump float;varying vec3 tint;varying vec2 uv;varying float terrain;varying float lighting;uniform sampler2D ground;void main(){gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,1.0);}`,
+            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform float edgeFade;void main(){vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,96.0,min(edge.x,edge.y)):1.0;gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,alpha);}`,
          ),
       );
       gl.linkProgram(program);
@@ -117,17 +128,42 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          ground.bounds.maxX,
          ground.bounds.maxY,
       );
+      let detailBounds = ground.bounds;
       let mesh = await landscapeMesh(course, ground.bounds, 8, () => closed, true);
       if (closed) return;
       const buffer = gl.createBuffer()!;
       resources.buffer = buffer;
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW);
-      for (const [i, name] of ['position', 'normal', 'colour'].entries()) {
-         const a = gl.getAttribLocation(program, name);
-         gl.enableVertexAttribArray(a);
-         gl.vertexAttribPointer(a, 3, gl.FLOAT, false, 36, i * 12);
-      }
+      const bindGeometry = (geometry: WebGLBuffer) => {
+         gl.bindBuffer(gl.ARRAY_BUFFER, geometry);
+         for (const [i, name] of ['position', 'normal', 'colour'].entries()) {
+            const a = gl.getAttribLocation(program, name);
+            gl.enableVertexAttribArray(a);
+            gl.vertexAttribPointer(a, 3, gl.FLOAT, false, 36, i * 12);
+         }
+      };
+      bindGeometry(buffer);
+      const backdropBuffer = gl.createBuffer()!;
+      resources.backdrop = backdropBuffer;
+      const backdropTexture = gl.createTexture()!;
+      resources.backdropTexture = backdropTexture;
+      gl.bindTexture(gl.TEXTURE_2D, backdropTexture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      const bindGround = (image: WebGLTexture, area: Bounds) => {
+         gl.bindTexture(gl.TEXTURE_2D, image);
+         gl.uniform4f(
+            gl.getUniformLocation(program, 'bounds'),
+            area.minX,
+            area.minY,
+            area.maxX,
+            area.maxY,
+         );
+      };
+      bindGround(texture, detailBounds);
       gl.enable(gl.DEPTH_TEST);
       gl.clearColor(0.12, 0.19, 0.18, 1);
       const centre = gl.getUniformLocation(program, 'centre'),
@@ -271,6 +307,72 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          loadedY = 300,
          building = false;
       let lastRequest = 0;
+      let backdropBounds: Bounds | null = null;
+      let backdropCount = 0,
+         backdropBuilding = false,
+         backdropRetry = 0;
+      let backdropRequest = '',
+         backdropSettledAt = 0;
+      const refreshBackdrop = async () => {
+         if (backdropBuilding || performance.now() < backdropRetry) return;
+         const rect = canvas.getBoundingClientRect();
+         const needed = landscapeFootprint({ ...target, width: rect.width, height: rect.height });
+         if (backdropBounds && containsLandscape(backdropBounds, needed)) return;
+         const request = [target.x, target.y, target.span, target.pitch, rect.width, rect.height]
+            .map((v) => v.toFixed(2))
+            .join(':');
+         if (request !== backdropRequest) {
+            backdropRequest = request;
+            backdropSettledAt = performance.now();
+            return;
+         }
+         if (performance.now() - backdropSettledAt < 180) return;
+         backdropBuilding = true;
+         const nextBounds = paddedLandscape(needed);
+         const superseded = () =>
+            !containsLandscape(
+               nextBounds,
+               landscapeFootprint({
+                  ...target,
+                  width: canvas.clientWidth,
+                  height: canvas.clientHeight,
+               }),
+            );
+         try {
+            const { vertices, pixels, textureSize } = await landscapeBackdrop(
+               course,
+               nextBounds,
+               () => closed || superseded(),
+            );
+            if (closed || superseded()) return;
+            gl.bindTexture(gl.TEXTURE_2D, backdropTexture);
+            gl.texImage2D(
+               gl.TEXTURE_2D,
+               0,
+               gl.RGBA,
+               textureSize,
+               textureSize,
+               0,
+               gl.RGBA,
+               gl.UNSIGNED_BYTE,
+               pixels,
+            );
+            gl.bindBuffer(gl.ARRAY_BUFFER, backdropBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            backdropBounds = nextBounds;
+            backdropCount = vertices.length / 9;
+            firstFrame = true;
+            canvas.dataset.backdropReady = 'true';
+            canvas.dataset.backdropVertices = String(backdropCount);
+         } catch (error) {
+            if (!closed && !superseded()) {
+               console.warn('Landscape backdrop', error);
+               backdropRetry = performance.now() + 5000;
+            }
+         } finally {
+            backdropBuilding = false;
+         }
+      };
       // One resident buffer and one in-flight CPU mesh. Never retain visited regions.
       const refreshTerrain = async () => {
          if (building || Math.hypot(target.x - loadedX, target.y - loadedY) < 240) return;
@@ -307,6 +409,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
                patch.bounds.maxX,
                patch.bounds.maxY,
             );
+            detailBounds = patch.bounds;
             patch.canvas.width = patch.canvas.height = 1;
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
             gl.bufferData(gl.ARRAY_BUFFER, next.vertices, gl.STATIC_DRAW);
@@ -335,6 +438,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
       const draw = (now: number) => {
          if (closed) return;
          void refreshTerrain();
+         void refreshBackdrop();
          const changed =
             firstFrame ||
             Object.keys(current).some(
@@ -349,6 +453,13 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
             current[key] += (target[key] - current[key]) * ease;
          const r = canvas.getBoundingClientRect(),
             ratio = Math.min(1.5, devicePixelRatio, Math.sqrt(4000000 / (r.width * r.height)));
+         canvas.dataset.coverage = String(
+            !!backdropBounds &&
+               containsLandscape(
+                  backdropBounds,
+                  landscapeFootprint({ ...current, width: r.width, height: r.height }),
+               ),
+         );
          const w = Math.max(1, Math.round(r.width * ratio)),
             h = Math.max(1, Math.round(r.height * ratio));
          const resized = canvas.width !== w || canvas.height !== h;
@@ -362,7 +473,22 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.uniform3f(centre, current.x, current.y, current.z);
             gl.uniform4f(view, current.yaw, current.pitch, current.span, w / h);
+            if (backdropCount && backdropBounds) {
+               gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), 0);
+               bindGround(backdropTexture, backdropBounds);
+               bindGeometry(backdropBuffer);
+               gl.drawArrays(gl.TRIANGLES, 0, backdropCount);
+               // The detailed physical surface owns the foreground. Clearing only
+               // depth prevents the coarse approximation poking through it.
+               gl.clear(gl.DEPTH_BUFFER_BIT);
+            }
+            gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), backdropCount ? 1 : 0);
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            bindGround(texture, detailBounds);
+            bindGeometry(buffer);
             gl.drawArrays(gl.TRIANGLES, 0, mesh.vertices.length / 9);
+            gl.disable(gl.BLEND);
          }
          frame = requestAnimationFrame(draw);
       };
