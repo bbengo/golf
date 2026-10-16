@@ -340,7 +340,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
             );
          try {
             const { vertices, pixels, textureSize, terrainVertices, treeCount } =
-               await landscapeBackdrop(course, nextBounds, () => closed || superseded());
+               await landscapeBackdrop(course, nextBounds, () => closed || superseded(), daylight);
             if (closed || superseded()) return;
             gl.bindTexture(gl.TEXTURE_2D, backdropTexture);
             gl.texImage2D(

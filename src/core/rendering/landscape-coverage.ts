@@ -2,7 +2,9 @@ import { distantWoodland } from './distant-woodland';
 import type { LandscapeView } from './landscape-projection';
 import type { Bounds } from './camera';
 import { Course } from '../course/course.js';
-import { worldGroundColour } from '../course/procedural-world';
+import { worldGroundColour, worldWetness } from '../course/procedural-world';
+import { waterColour } from './water-material';
+import type { Daylight } from './daylight';
 import type { CockpitSession } from '../session/cockpit-session';
 
 /** Conservative ground footprint across yaw, allowing 512 m of relative relief.
@@ -52,6 +54,7 @@ export async function landscapeBackdrop(
    c: CockpitSession['course'],
    bounds: Bounds,
    cancelled = () => false,
+   daylight: Daylight = 'day',
 ) {
    if (
       !Object.values(bounds).every(Number.isFinite) ||
@@ -113,7 +116,10 @@ export async function landscapeBackdrop(
          const x = bounds.minX + ((i + 0.5) / textureSize) * (bounds.maxX - bounds.minX);
          const y = bounds.maxY - ((j + 0.5) / textureSize) * (bounds.maxY - bounds.minY);
          const surface = Course.surfaceAt(c, { x, y });
-         const colour = surface.type === 'water' ? [56, 110, 112] : worldGroundColour(c, x, y);
+         const colour =
+            surface.type === 'water'
+               ? waterColour(x, y, Math.max(0, -worldWetness(c, x, y) * 28), daylight)
+               : worldGroundColour(c, x, y);
          const pixel = (j * textureSize + i) * 4;
          pixels.set([...colour, 255], pixel);
       }

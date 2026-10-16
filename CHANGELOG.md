@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-16: natural distant water
+
+- Reused the shared shoreline/reflection palette for distant water in angled exploration.
+- Passed the selected daylight preset through streamed backdrop builds.
+- Kept the existing texture and geometry budgets, physical water geometry and shot state.
+
 ## 2026-10-16: smoother tile joins and consistent daylight grading
 
 - Added neighbouring-pixel gutters and expanded lighting samples to cached overhead terrain tiles.

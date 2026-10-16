@@ -10,6 +10,8 @@ import {
 import { landscapeRay } from '../src/core/rendering/landscape-projection.ts';
 import { createPurityCourse } from '../src/core/course/purity-course.ts';
 import { Course } from '../src/core/course/course.js';
+import { worldWetness } from '../src/core/course/procedural-world.ts';
+import { waterColour } from '../src/core/rendering/water-material.ts';
 
 test('coverage encloses every corner ray across wide screens, shallow pitch and relief', () => {
    for (const [width, height] of [
@@ -61,6 +63,8 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
    const { vertices, pixels, textureSize, terrainVertices, treeCount } = await landscapeBackdrop(
       course,
       bounds,
+      () => false,
+      'evening',
    );
    assert.equal(textureSize, 256);
    assert.equal(pixels.length, 256 * 256 * 4);
@@ -75,6 +79,25 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
          surface.type === 'water' ? surface.waterHeight : Course.heightAt(course, { x, y });
       assert.ok(Math.abs(z - expected) < 0.001);
    }
+   let waterSamples = 0;
+   const waterColours = new Set();
+   for (let row = 0; row < textureSize; row += 3)
+      for (let col = 0; col < textureSize; col += 3) {
+         const x = bounds.minX + ((col + 0.5) / textureSize) * (bounds.maxX - bounds.minX);
+         const y = bounds.maxY - ((row + 0.5) / textureSize) * (bounds.maxY - bounds.minY);
+         if (Course.surfaceAt(course, { x, y }).type !== 'water') continue;
+         const offset = (row * textureSize + col) * 4;
+         const actual = Array.from(pixels.slice(offset, offset + 3));
+         assert.deepEqual(
+            actual,
+            waterColour(x, y, Math.max(0, -worldWetness(course, x, y) * 28), 'evening'),
+         );
+         assert.equal(pixels[offset + 3], 255);
+         waterColours.add(actual.join(','));
+         waterSamples++;
+      }
+   assert.ok(waterSamples > 10, 'exercise distant physical water');
+   assert.ok(waterColours.size > 3, 'preserve subtle variation instead of one flat colour');
    await assert.rejects(
       landscapeBackdrop(course, bounds, () => true),
       /closed/,
