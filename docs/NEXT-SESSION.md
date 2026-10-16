@@ -1,6 +1,6 @@
 # Next session: unfinished work
 
-## Current position - 15 October 2026
+## Current position - 16 October 2026
 
 The four engine implementation tracks now have working foundations: shared procedural world and outer-water elevations/beds; versioned baseline ball/aero/contact profiles; shared weather/sunlight shot snapshots; recorded-shot comparison and a seeded 12-shot consistency study. Older notes below are chronological history, not the current completion checklist.
 
@@ -12,6 +12,10 @@ Remaining research: measured drag/lift datasets and independent flight validatio
 ## Visual direction - My Little Universe references (15 October)
 
 First slice implemented: deterministic surface-specific contact particles, water rings and cup capture feedback, respecting existing visibility/motion preferences. Next visual steps: coordinated natural material contrast across core/surround; deliberate loading-to-play transitions and control confirmation; then a separate angled terrain-renderer prototype using the same physics/world data. Keep top-down available. A separate native WebGL estate preview is now available through Environment / Explore landscape. It is not yet a playable angled camera. See root COSMOLOGY for reference observations, architecture and acceptance criteria.
+
+## Angled exploration follow-up (16 October)
+
+Implemented: panning and bounded 1,536-metre moving mesh windows with one active build and one resident GPU buffer. Shared world heights/materials continue beyond the estate. Still pending: seamless textured multiresolution coverage at all aspect ratios/pitches (window edges remain visible in sufficiently wide views), world-anchored decorative texture noise across regenerated windows, device memory/performance profiling, and playable angled ball/effects/aim/camera integration. This is a preview, not completion of the angled gameplay track.
 
 ## Regional landscape follow-up
 

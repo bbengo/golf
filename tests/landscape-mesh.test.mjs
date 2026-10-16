@@ -54,3 +54,18 @@ test('adaptive terrain shares every interior edge without cracks or unmatched co
       );
    }
 });
+
+test('streamed outer region uses physical elevations and material colours beyond the atlas', async () => {
+   const c = createPurityCourse();
+   const bounds = { minX: 1600, maxX: 1640, minY: 1200, maxY: 1240 };
+   const mesh = await landscapeMesh(c, bounds, 8);
+   assert.ok(mesh.vertices.every(Number.isFinite));
+   for (let i = 0; i < mesh.terrainTriangles * 27; i += 9) {
+      const [x, y, z] = mesh.vertices.slice(i, i + 3);
+      const surface = Course.surfaceAt(c, { x, y });
+      const expected =
+         surface.type === 'water' ? surface.waterHeight : Course.heightAt(c, { x, y });
+      assert.ok(Math.abs(z - expected) < 0.001);
+      assert.ok(mesh.vertices[i + 6] >= 0, 'outer terrain must not stretch the estate texture');
+   }
+});

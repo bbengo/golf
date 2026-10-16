@@ -28,6 +28,18 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    await expect(canvas).toHaveAttribute('data-pick-x', /^-?\d/);
    await expect(dialog.locator('[role=status]')).toContainText('Your shot target is unchanged');
 
+   await dialog.getByRole('button', { name: 'Whole estate', exact: true }).click();
+   await canvas.focus();
+   for (let i = 0; i < 12; i++) await canvas.press('Shift+ArrowRight');
+   await expect(canvas).toHaveAttribute('data-region-x', /^\d{4,}$/, { timeout: 60000 });
+   await expect(canvas).toHaveAttribute('data-streaming', 'false', { timeout: 60000 });
+   await page.screenshot({ path: 'test-results/landscape-preview-surround.png' });
+   await dialog.getByRole('button', { name: 'Pan landscape', exact: true }).click();
+   await expect(dialog.getByRole('button', { name: 'Pan landscape', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+   );
+
    await page.setViewportSize({ width: 390, height: 844 });
    await page.screenshot({ path: 'test-results/landscape-preview-phone.png' });
    await page.keyboard.press('Escape');

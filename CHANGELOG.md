@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-16: explorable angled surroundings
+
+- Added Shift-drag/Shift-arrow panning and a touch-friendly pan toggle.
+- Added bounded moving terrain windows, shared physical outer-world materials and elevations, periodic cancellation, and replacement of the resident GPU buffer.
+- Regenerate the procedural ground texture for each region, preserving detailed outer ground and water colours. Angled gameplay and seamless multiresolution coverage remain unfinished.
+
+- Validation: five focused unit tests and both preview browser tests passed; typecheck, formatting and build passed.
+
 ## 2026-10-15: adaptive preview terrain, vegetation and ground picking
 
 - Added stitched terrain refinement around landmarks and elevation changes.

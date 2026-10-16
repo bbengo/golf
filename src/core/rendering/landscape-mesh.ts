@@ -190,7 +190,12 @@ export async function landscapeMesh(
       ...c.objects.filter((o: { kind: string }) => o.kind === 'tree'),
       ...worldTrees(c, bounds),
    ];
+   let treeIndex = 0;
    for (const tree of trees) {
+      if (treeIndex++ % 48 === 0) {
+         await new Promise((resolve) => setTimeout(resolve, 0));
+         if (cancelled()) throw Error('Preview closed');
+      }
       if (
          tree.x < bounds.minX ||
          tree.x > bounds.maxX ||
@@ -236,7 +241,13 @@ export async function landscapeMesh(
    }
    canopyNormal = null;
    for (const o of c.objects)
-      if (o.kind === 'structure' || o.kind === 'bridge')
+      if (
+         (o.kind === 'structure' || o.kind === 'bridge') &&
+         o.maxX >= bounds.minX &&
+         o.minX <= bounds.maxX &&
+         o.maxY >= bounds.minY &&
+         o.minY <= bounds.maxY
+      )
          box(
             o.minX,
             o.minY,

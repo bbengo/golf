@@ -12,7 +12,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
    dialog.id = 'landscapePreview';
    dialog.className = 'landscape-preview';
    dialog.setAttribute('aria-labelledby', 'landscapePreviewTitle');
-   dialog.innerHTML = `<canvas tabindex="0" aria-label="Angled landscape preview. Drag to orbit; scroll to zoom. Use arrow keys to orbit, plus or minus to zoom."></canvas><header><div><p class="hud-eyebrow">LANDSCAPE STUDY</p><h1 id="landscapePreviewTitle">A different perspective.</h1><p>Preview only. Your round stays in the overhead view.</p></div><button type="button" aria-label="Return to game options">Back to options</button></header><nav aria-label="Landscape viewpoints"></nav><p class="preview-status" role="status">Preparing terrain and woodland...</p><footer>Double-click ground to explore &middot; Drag to orbit &middot; Scroll to zoom &middot; Arrow keys to orbit &middot; + / - to zoom &middot; Escape to return</footer>`;
+   dialog.innerHTML = `<canvas tabindex="0" aria-label="Angled landscape preview. Drag to orbit; Shift-drag to pan; scroll to zoom. Use arrow keys to orbit, plus or minus to zoom."></canvas><header><div><p class="hud-eyebrow">LANDSCAPE STUDY</p><h1 id="landscapePreviewTitle">A different perspective.</h1><p>Preview only. Your round stays in the overhead view.</p></div><button type="button" aria-label="Return to game options">Back to options</button></header><nav aria-label="Landscape viewpoints"></nav><p class="preview-status" role="status">Preparing terrain and woodland...</p><footer>Double-click ground to explore &middot; Drag to orbit &middot; Shift-drag to pan &middot; Scroll to zoom &middot; Arrow keys to orbit &middot; + / - to zoom &middot; Escape to return</footer>`;
    document.body.append(dialog);
    dialog.showModal();
    const canvas = dialog.querySelector('canvas')!,
@@ -117,7 +117,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          ground.bounds.maxX,
          ground.bounds.maxY,
       );
-      const mesh = await landscapeMesh(course, ground.bounds, 8, () => closed, true);
+      let mesh = await landscapeMesh(course, ground.bounds, 8, () => closed, true);
       if (closed) return;
       const buffer = gl.createBuffer()!;
       resources.buffer = buffer;
@@ -137,6 +137,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
       gl.uniform3f(sun, light.x, light.y, 1 / light.length);
       const current = { x: 150, y: 300, z: 190, yaw: -0.3, pitch: 0.82, span: 580 };
       const target = { ...current };
+      let inspection = '';
       const nav = dialog.querySelector('nav')!;
       const stops = [
          { name: 'Whole estate', x: 150, y: 300, span: 580 },
@@ -150,14 +151,39 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          button.type = 'button';
          button.textContent = stop.name;
          button.onclick = () => {
+            inspection = '';
             Object.assign(target, { x: stop.x, y: stop.y, span: stop.span });
             target.z = 190;
-            for (const b of nav.querySelectorAll('button'))
+            for (const b of nav.querySelectorAll('button:not([data-pan])'))
                b.setAttribute('aria-pressed', String(b === button));
          };
          nav.append(button);
          button.setAttribute('aria-pressed', String(nav.children.length === 1));
       }
+      let panMode = false;
+      const panButton = document.createElement('button');
+      panButton.type = 'button';
+      panButton.dataset.pan = 'true';
+      panButton.textContent = 'Pan landscape';
+      panButton.setAttribute('aria-pressed', 'false');
+      panButton.onclick = () => {
+         panMode = !panMode;
+         panButton.setAttribute('aria-pressed', String(panMode));
+      };
+      nav.append(panButton);
+      const pan = (dx: number, dy: number) => {
+         inspection = '';
+         for (const button of nav.querySelectorAll('button:not([data-pan])'))
+            button.setAttribute('aria-pressed', 'false');
+         const scale = (2 * target.span) / Math.max(1, canvas.clientHeight);
+         const rx = -dx * scale,
+            ry = (dy * scale) / Math.sin(target.pitch);
+         const co = Math.cos(target.yaw),
+            si = Math.sin(target.yaw);
+         target.x += co * rx + si * ry;
+         target.y += -si * rx + co * ry;
+         target.z = Course.heightAt(course, target);
+      };
       let pointer: { x: number; y: number } | null = null;
       canvas.onpointerdown = (e) => {
          pointer = { x: e.clientX, y: e.clientY };
@@ -166,6 +192,11 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
       };
       canvas.onpointermove = (e) => {
          if (!pointer) return;
+         if (panMode || e.shiftKey) {
+            pan(e.clientX - pointer.x, e.clientY - pointer.y);
+            pointer = { x: e.clientX, y: e.clientY };
+            return;
+         }
          target.yaw += (e.clientX - pointer.x) * 0.006;
          target.pitch = Math.max(
             0.28,
@@ -194,6 +225,13 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-'].includes(e.key))
             return;
          e.preventDefault();
+         if (e.shiftKey && e.key.startsWith('Arrow')) {
+            pan(
+               e.key === 'ArrowLeft' ? 80 : e.key === 'ArrowRight' ? -80 : 0,
+               e.key === 'ArrowUp' ? 80 : e.key === 'ArrowDown' ? -80 : 0,
+            );
+            return;
+         }
          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight')
             target.yaw += e.key === 'ArrowLeft' ? -0.12 : 0.12;
          else if (e.key === 'ArrowUp' || e.key === 'ArrowDown')
@@ -216,30 +254,87 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
                return surface.type === 'water' ? surface.waterHeight : Course.heightAt(course, p);
             },
          );
-         if (
-            !hit ||
-            hit.x < ground.bounds.minX ||
-            hit.x > ground.bounds.maxX ||
-            hit.y < ground.bounds.minY ||
-            hit.y > ground.bounds.maxY
-         ) {
-            status.textContent =
-               'Outside this preview. Choose a viewpoint to return to the estate.';
-            return;
-         }
+         if (!hit) return;
          Object.assign(target, { x: hit.x, y: hit.y, z: hit.z, span: Math.min(target.span, 100) });
          const material = Course.surfaceAt(course, hit).type.replaceAll('-', ' ');
-         status.textContent = `Ground: ${material}. Elevation ${hit.z.toFixed(1)} m. Your shot target is unchanged.`;
+         inspection = `Ground: ${material}. Elevation ${hit.z.toFixed(1)} m. Your shot target is unchanged.`;
+         status.textContent = inspection;
          canvas.dataset.pickX = hit.x.toFixed(4);
          canvas.dataset.pickY = hit.y.toFixed(4);
-         for (const button of nav.querySelectorAll('button'))
+         for (const button of nav.querySelectorAll('button:not([data-pan])'))
             button.setAttribute('aria-pressed', 'false');
       };
       const reduce = matchMedia('(prefers-reduced-motion: reduce)');
       let last = performance.now();
       let firstFrame = true;
+      let loadedX = 150,
+         loadedY = 300,
+         building = false;
+      let lastRequest = 0;
+      // One resident buffer and one in-flight CPU mesh. Never retain visited regions.
+      const refreshTerrain = async () => {
+         if (building || Math.hypot(target.x - loadedX, target.y - loadedY) < 240) return;
+         if (performance.now() - lastRequest < 250) return;
+         lastRequest = performance.now();
+         building = true;
+         const x = Math.round(target.x / 128) * 128,
+            y = Math.round(target.y / 128) * 128;
+         status.textContent = inspection || 'Preparing surrounding terrain...';
+         canvas.dataset.streaming = 'true';
+         try {
+            const next = await landscapeMesh(
+               course,
+               { minX: x - 768, maxX: x + 768, minY: y - 768, maxY: y + 768 },
+               16,
+               () => closed,
+               true,
+            );
+            if (closed) return;
+            // Discard obsolete work if the player moved on during generation.
+            if (Math.hypot(target.x - x, target.y - y) > 240) return;
+            const patch = new CourseAtlas().groundTexture(course, daylight, {
+               minX: x - 768,
+               maxX: x + 768,
+               minY: y - 768,
+               maxY: y + 768,
+            });
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, patch.canvas);
+            gl.uniform4f(
+               gl.getUniformLocation(program, 'bounds'),
+               patch.bounds.minX,
+               patch.bounds.minY,
+               patch.bounds.maxX,
+               patch.bounds.maxY,
+            );
+            patch.canvas.width = patch.canvas.height = 1;
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, next.vertices, gl.STATIC_DRAW);
+            mesh = next;
+            loadedX = x;
+            loadedY = y;
+            firstFrame = true;
+            canvas.dataset.triangles = String(mesh.triangles);
+            canvas.dataset.regionX = String(x);
+            canvas.dataset.regionY = String(y);
+            status.textContent =
+               inspection ||
+               'Surrounding landscape ready. Shift-drag or use Pan landscape to explore.';
+         } catch (error) {
+            if (!closed) {
+               lastRequest = performance.now() + 5000;
+               status.textContent =
+                  'Terrain could not update. Return to a saved viewpoint to retry.';
+               console.warn('Landscape streaming', error);
+            }
+         } finally {
+            building = false;
+            canvas.dataset.streaming = 'false';
+         }
+      };
       const draw = (now: number) => {
          if (closed) return;
+         void refreshTerrain();
          const changed =
             firstFrame ||
             Object.keys(current).some(

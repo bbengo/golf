@@ -8,7 +8,7 @@ import { terrainVariation, canopyStamp } from './terrain-detail';
 import { Course } from '../course/course.js';
 import type { CockpitSession } from '../session/cockpit-session';
 import type { Point, Snapshot } from '../contracts/cockpit';
-import type { CourseCamera } from './camera';
+import type { Bounds, CourseCamera } from './camera';
 
 const colors: Record<string, string> = {
    rough: '#51763e',
@@ -155,12 +155,13 @@ export class CourseAtlas {
       }
       ctx.restore();
    }
-   groundTexture(c: CockpitSession['course'], daylight: Daylight) {
+   groundTexture(c: CockpitSession['course'], daylight: Daylight, region?: Bounds) {
       this.daylight = daylight;
-      this.build(c, false);
+      this.scale = region ? 1 : 2;
+      this.build(c, false, region);
       return {
          canvas: this.canvas,
-         bounds: {
+         bounds: region ?? {
             minX: c.bounds.minX - this.margin,
             maxX: c.bounds.maxX + this.margin,
             minY: c.bounds.minY - this.margin,
@@ -168,9 +169,9 @@ export class CourseAtlas {
          },
       };
    }
-   private build(c: CockpitSession['course'], includeObjects = true) {
+   private build(c: CockpitSession['course'], includeObjects = true, region?: Bounds) {
       const sun = DAYLIGHT[this.daylight];
-      const bounds = {
+      const bounds = region ?? {
             minX: c.bounds.minX - this.margin,
             maxX: c.bounds.maxX + this.margin,
             minY: c.bounds.minY - this.margin,
