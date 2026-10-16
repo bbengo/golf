@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-16: consistent distant daylight
+
+- Applied the detailed atlas daylight wash to distant angled terrain and water.
+- Preserved world alignment across rectangular streamed textures, raw texture orientation and existing GPU budgets.
+- Added a browser raster check for all three daylight presets.
+
 ## 2026-10-16: natural distant water
 
 - Reused the shared shoreline/reflection palette for distant water in angled exploration.

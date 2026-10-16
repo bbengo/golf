@@ -1,3 +1,4 @@
+import { gradeDaylightPixels } from './daylight-grade';
 import {
    landscapeFootprint,
    paddedLandscape,
@@ -352,7 +353,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
                0,
                gl.RGBA,
                gl.UNSIGNED_BYTE,
-               pixels,
+               gradeDaylightPixels(pixels, textureSize, nextBounds, course.bounds, daylight),
             );
             gl.bindBuffer(gl.ARRAY_BUFFER, backdropBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);

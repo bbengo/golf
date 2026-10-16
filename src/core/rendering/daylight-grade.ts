@@ -32,3 +32,34 @@ export function paintDaylightGrade(
    ctx.fillStyle = gradient;
    ctx.fillRect(0, 0, (bounds.maxX - bounds.minX) * scale, (bounds.maxY - bounds.minY) * scale);
 }
+
+/** Apply the atlas grade to a bounded square GPU texture without changing its UV orientation.
+ * World-to-pixel scaling may differ on each axis for rectangular streamed regions.
+ */
+export function gradeDaylightPixels(
+   pixels: Uint8Array,
+   size: number,
+   bounds: Bounds,
+   reference: Bounds,
+   daylight: Daylight,
+): Uint8Array {
+   if (
+      !Number.isInteger(size) ||
+      size <= 0 ||
+      pixels.length !== size * size * 4 ||
+      !Object.values(bounds).every(Number.isFinite) ||
+      bounds.maxX <= bounds.minX ||
+      bounds.maxY <= bounds.minY
+   )
+      throw Error('Invalid daylight texture');
+   const canvas = document.createElement('canvas');
+   canvas.width = canvas.height = size;
+   const ctx = canvas.getContext('2d')!;
+   const data = ctx.createImageData(size, size);
+   data.data.set(pixels);
+   ctx.putImageData(data, 0, 0);
+   ctx.scale(size / (bounds.maxX - bounds.minX), size / (bounds.maxY - bounds.minY));
+   paintDaylightGrade(ctx, bounds, reference, 1, daylight);
+   // Keep the raw upload path: no browser-dependent DOM texture vertical flip.
+   return new Uint8Array(ctx.getImageData(0, 0, size, size).data.buffer);
+}
