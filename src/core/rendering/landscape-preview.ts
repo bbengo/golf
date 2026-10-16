@@ -314,11 +314,18 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          backdropRetry = 0;
       let backdropRequest = '',
          backdropSettledAt = 0;
+      let backdropDetail = '';
+      const detailKey = () => JSON.stringify(detailBounds);
       const refreshBackdrop = async () => {
          if (backdropBuilding || performance.now() < backdropRetry) return;
          const rect = canvas.getBoundingClientRect();
          const needed = landscapeFootprint({ ...target, width: rect.width, height: rect.height });
-         if (backdropBounds && containsLandscape(backdropBounds, needed)) return;
+         if (
+            backdropBounds &&
+            containsLandscape(backdropBounds, needed) &&
+            backdropDetail === detailKey()
+         )
+            return;
          const request = [target.x, target.y, target.span, target.pitch, rect.width, rect.height]
             .map((v) => v.toFixed(2))
             .join(':');
@@ -330,7 +337,10 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          if (performance.now() - backdropSettledAt < 180) return;
          backdropBuilding = true;
          const nextBounds = paddedLandscape(needed);
+         const requestedDetail = detailKey();
+         const treeDetail = { ...detailBounds };
          const superseded = () =>
+            requestedDetail !== detailKey() ||
             !containsLandscape(
                nextBounds,
                landscapeFootprint({
@@ -341,7 +351,13 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
             );
          try {
             const { vertices, pixels, textureSize, terrainVertices, treeCount } =
-               await landscapeBackdrop(course, nextBounds, () => closed || superseded(), daylight);
+               await landscapeBackdrop(
+                  course,
+                  nextBounds,
+                  () => closed || superseded(),
+                  daylight,
+                  treeDetail,
+               );
             if (closed || superseded()) return;
             gl.bindTexture(gl.TEXTURE_2D, backdropTexture);
             gl.texImage2D(
@@ -358,6 +374,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
             gl.bindBuffer(gl.ARRAY_BUFFER, backdropBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
             backdropBounds = nextBounds;
+            backdropDetail = requestedDetail;
             backdropCount = vertices.length / 9;
             firstFrame = true;
             canvas.dataset.backdropReady = 'true';
@@ -455,6 +472,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
             ratio = Math.min(1.5, devicePixelRatio, Math.sqrt(4000000 / (r.width * r.height)));
          canvas.dataset.coverage = String(
             !!backdropBounds &&
+               backdropDetail === detailKey() &&
                containsLandscape(
                   backdropBounds,
                   landscapeFootprint({ ...current, width: r.width, height: r.height }),

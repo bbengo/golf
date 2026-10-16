@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-16: graduated woodland transitions
+
+- Reserved part of the distant tree sampling budget for a tapered band around detailed terrain.
+- Kept physical tree identities and the existing candidate/crown limits, with no duplicate distant trees in the detailed interior.
+- Regenerated woodland coverage when the streamed detail window moves.
+
 ## 2026-10-16: consistent distant daylight
 
 - Applied the detailed atlas daylight wash to distant angled terrain and water.

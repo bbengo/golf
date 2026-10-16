@@ -64,3 +64,39 @@ test('distant crowns retain physical height and radius with smooth unit normals'
       assert.ok(Math.abs(highest - ground - tree.height) < 0.001);
    }
 });
+
+test('transition woodland increases nearby coverage within the existing budgets', async () => {
+   const course = createPurityCourse();
+   const bounds = { minX: -4096, maxX: 4096, minY: -4096, maxY: 4096 };
+   const detail = { minX: 800, maxX: 2336, minY: -768, maxY: 768 };
+   const before = JSON.stringify(Course.physicsSnapshot(course));
+   const baseline = await distantTrees(course, bounds);
+   const selected = await distantTrees(course, bounds, () => false, detail);
+   const repeated = await distantTrees(course, bounds, () => false, detail);
+   assert.ok(selected.candidates <= 65536);
+   assert.ok(selected.trees.length <= 8192);
+   assert.equal(new Set(selected.trees.map((t) => t.id)).size, selected.trees.length);
+   assert.deepEqual(selected, repeated);
+   const distance = (t) =>
+      Math.hypot(
+         Math.max(detail.minX - t.x, 0, t.x - detail.maxX),
+         Math.max(detail.minY - t.y, 0, t.y - detail.maxY),
+      );
+   assert.ok(
+      selected.trees.every((t) => distance(t) > 0),
+      'do not duplicate the detailed interior',
+   );
+   assert.ok(
+      selected.trees.filter((t) => distance(t) < 256).length >
+         baseline.trees.filter((t) => distance(t) > 0 && distance(t) < 256).length * 1.5,
+   );
+   assert.ok(
+      selected.trees.some((t) => distance(t) > 2000),
+      'retain remote woodland',
+   );
+   for (const tree of selected.trees) {
+      const [, x, y] = tree.id.split(':');
+      assert.deepEqual(tree, worldTree(course, Number(x), Number(y)));
+   }
+   assert.equal(JSON.stringify(Course.physicsSnapshot(course)), before);
+});

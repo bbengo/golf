@@ -55,6 +55,7 @@ export async function landscapeBackdrop(
    bounds: Bounds,
    cancelled = () => false,
    daylight: Daylight = 'day',
+   detail?: Bounds,
 ) {
    if (
       !Object.values(bounds).every(Number.isFinite) ||
@@ -125,7 +126,7 @@ export async function landscapeBackdrop(
       }
       if (j % 8 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
    }
-   const woodland = await distantWoodland(c, bounds, cancelled);
+   const woodland = await distantWoodland(c, bounds, cancelled, detail);
    const combined = new Float32Array(vertices.length + woodland.vertices.length);
    combined.set(vertices);
    combined.set(woodland.vertices, vertices.length);

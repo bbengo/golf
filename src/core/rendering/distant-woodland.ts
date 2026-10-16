@@ -9,6 +9,7 @@ export async function distantTrees(
    c: CockpitSession['course'],
    bounds: Bounds,
    cancelled = () => false,
+   detail?: Bounds,
 ) {
    if (
       !Object.values(bounds).every(Number.isFinite) ||
@@ -16,6 +17,13 @@ export async function distantTrees(
       bounds.maxY <= bounds.minY
    )
       throw Error('Invalid distant woodland bounds');
+   if (
+      detail &&
+      (!Object.values(detail).every(Number.isFinite) ||
+         detail.maxX <= detail.minX ||
+         detail.maxY <= detail.minY)
+   )
+      throw Error('Invalid woodland detail bounds');
    const cell = c.world?.ecologyVersion === ECOLOGY_VERSION ? 20 : 32;
    let stride = 1;
    const range = () => ({
@@ -25,36 +33,87 @@ export async function distantTrees(
       y1: Math.floor(bounds.maxY / cell / stride),
    });
    let r = range();
-   while ((r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1) > 65536) {
+   while ((r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1) > (detail ? 49152 : 65536)) {
       stride *= 2;
       r = range();
    }
    const trees: NonNullable<ReturnType<typeof worldTree>>[] = [];
    let candidates = 0;
+   const seen = new Set<string>();
+   const visit = (x: number, y: number, transition = false) => {
+      candidates++;
+      const tree = worldTree(c, x, y);
+      if (
+         !tree ||
+         seen.has(tree.id) ||
+         tree.x < bounds.minX ||
+         tree.x > bounds.maxX ||
+         tree.y < bounds.minY ||
+         tree.y > bounds.maxY
+      )
+         return;
+      // Detailed trees already own the interior; spend the distant cap outside it.
+      if (
+         detail &&
+         tree.x > detail.minX &&
+         tree.x < detail.maxX &&
+         tree.y > detail.minY &&
+         tree.y < detail.maxY
+      )
+         return;
+      if (detail && transition) {
+         const distance = Math.hypot(
+            Math.max(detail.minX - tree.x, 0, tree.x - detail.maxX),
+            Math.max(detail.minY - tree.y, 0, tree.y - detail.maxY),
+         );
+         const t = Math.min(1, distance / 256);
+         const weight = 1 - t * t * (3 - 2 * t);
+         if (worldHash(Math.floor(tree.x) + 919, Math.floor(tree.y) - 431) >= weight) return;
+      }
+      seen.add(tree.id);
+      trees.push(tree);
+   };
    for (let y = r.y0; y <= r.y1; y++) {
       if (cancelled()) throw Error('Preview closed');
       for (let x = r.x0; x <= r.x1; x++) {
-         candidates++;
-         const tree = worldTree(c, x * stride, y * stride);
-         if (
-            tree &&
-            tree.x >= bounds.minX &&
-            tree.x <= bounds.maxX &&
-            tree.y >= bounds.minY &&
-            tree.y <= bounds.maxY
-         )
-            trees.push(tree);
+         visit(x * stride, y * stride);
       }
       if ((y - r.y0) % 8 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
    }
+   if (detail) {
+      // Reserve 16,384 candidate visits for the 256 m transition band. Enumerating
+      // its bounding rectangle keeps cancellation and the worst-case cost explicit.
+      let nearStride = 1;
+      const nearRange = () => ({
+         x0: Math.floor(Math.max(bounds.minX, detail.minX - 256) / cell / nearStride),
+         x1: Math.ceil(Math.min(bounds.maxX, detail.maxX + 256) / cell / nearStride),
+         y0: Math.floor(Math.max(bounds.minY, detail.minY - 256) / cell / nearStride),
+         y1: Math.ceil(Math.min(bounds.maxY, detail.maxY + 256) / cell / nearStride),
+      });
+      let near = nearRange();
+      while (Math.max(0, near.x1 - near.x0 + 1) * Math.max(0, near.y1 - near.y0 + 1) > 16384) {
+         nearStride *= 2;
+         near = nearRange();
+      }
+      for (let y = near.y0; y <= near.y1; y++) {
+         if (cancelled()) throw Error('Preview closed');
+         for (let x = near.x0; x <= near.x1; x++) visit(x * nearStride, y * nearStride, true);
+         if ((y - near.y0) % 8 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+   }
+   const priority = (tree: (typeof trees)[number]) => {
+      const distance = detail
+         ? Math.hypot(
+              Math.max(detail.minX - tree.x, 0, tree.x - detail.maxX),
+              Math.max(detail.minY - tree.y, 0, tree.y - detail.maxY),
+           )
+         : 0;
+      return worldHash(Math.floor(tree.x), Math.floor(tree.y)) * (1 + Math.min(4, distance / 512));
+   };
    // A separate render cap avoids making the candidate budget dictate sparse forests.
    // Stable priorities keep the cap independent of traversal order.
    if (trees.length > 8192)
-      trees.sort(
-         (a, b) =>
-            worldHash(Math.floor(a.x), Math.floor(a.y)) -
-               worldHash(Math.floor(b.x), Math.floor(b.y)) || a.id.localeCompare(b.id),
-      );
+      trees.sort((a, b) => priority(a) - priority(b) || a.id.localeCompare(b.id));
    return { trees: trees.slice(0, 8192), stride, candidates };
 }
 
@@ -64,8 +123,9 @@ export async function distantWoodland(
    c: CockpitSession['course'],
    bounds: Bounds,
    cancelled = () => false,
+   detail?: Bounds,
 ) {
-   const selection = await distantTrees(c, bounds, cancelled);
+   const selection = await distantTrees(c, bounds, cancelled, detail);
    const vertices = new Float32Array(selection.trees.length * DISTANT_CROWN_TRIANGLES * 27);
    let offset = 0;
    type V = [number, number, number];
