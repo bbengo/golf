@@ -57,12 +57,17 @@ test('coverage encloses every corner ray across wide screens, shallow pitch and 
 test('distant terrain has a fixed geometry budget and physical heights, including water', async () => {
    const course = createPurityCourse();
    const bounds = { minX: -4096, maxX: 4096, minY: -4096, maxY: 4096 };
-   const { vertices, pixels, textureSize } = await landscapeBackdrop(course, bounds);
+   const { vertices, pixels, textureSize, terrainVertices, treeCount } = await landscapeBackdrop(
+      course,
+      bounds,
+   );
    assert.equal(textureSize, 256);
    assert.equal(pixels.length, 256 * 256 * 4);
-   assert.equal(vertices.length, 128 * 128 * 6 * 9);
+   assert.equal(terrainVertices, 128 * 128 * 6);
+   assert.ok(treeCount > 0 && treeCount <= 8192);
+   assert.equal(vertices.length, terrainVertices * 9 + treeCount * 12 * 27);
    assert.ok(vertices.every(Number.isFinite));
-   for (let i = 0; i < vertices.length; i += 9 * 97) {
+   for (let i = 0; i < terrainVertices * 9; i += 9 * 97) {
       const [x, y, z] = vertices.slice(i, i + 3);
       const surface = Course.surfaceAt(course, { x, y });
       const expected =

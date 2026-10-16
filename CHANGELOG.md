@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-16: distant woodland continuity
+
+- Added simplified, physically positioned crowns beyond the detailed landscape region.
+- Bound sampling to 65,536 real world-tree candidates and 8,192 rendered crowns with deterministic thinning and cancellation.
+- Reused the existing background buffer and lighting; no physics or saved-world changes.
+- Four focused tests, both preview browser checks, typecheck, formatting and build passed.
+
 ## 2026-10-16: camera-aware distant landscape
 
 - Added a bounded distant terrain layer that expands coverage for ultrawide displays, zoom and shallow camera angles.

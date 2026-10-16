@@ -1,3 +1,4 @@
+import { distantWoodland } from './distant-woodland';
 import type { LandscapeView } from './landscape-projection';
 import type { Bounds } from './camera';
 import { Course } from '../course/course.js';
@@ -44,7 +45,7 @@ export function paddedLandscape(bounds: Bounds): Bounds {
    };
 }
 
-/** Fixed-budget distant terrain: 128 squared cells, no trees or object meshes.
+/** Fixed-budget distant terrain: 128 squared cells, plus bounded distant crowns.
  * Samples the shared physical world; this is presentation LOD, never collision data.
  */
 export async function landscapeBackdrop(
@@ -118,5 +119,16 @@ export async function landscapeBackdrop(
       }
       if (j % 8 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
    }
-   return { vertices, pixels, textureSize };
+   const woodland = await distantWoodland(c, bounds, cancelled);
+   const combined = new Float32Array(vertices.length + woodland.vertices.length);
+   combined.set(vertices);
+   combined.set(woodland.vertices, vertices.length);
+   return {
+      vertices: combined,
+      pixels,
+      textureSize,
+      terrainVertices: vertices.length / 9,
+      treeCount: woodland.treeCount,
+      treeStride: woodland.stride,
+   };
 }

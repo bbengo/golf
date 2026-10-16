@@ -339,11 +339,8 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
                }),
             );
          try {
-            const { vertices, pixels, textureSize } = await landscapeBackdrop(
-               course,
-               nextBounds,
-               () => closed || superseded(),
-            );
+            const { vertices, pixels, textureSize, terrainVertices, treeCount } =
+               await landscapeBackdrop(course, nextBounds, () => closed || superseded());
             if (closed || superseded()) return;
             gl.bindTexture(gl.TEXTURE_2D, backdropTexture);
             gl.texImage2D(
@@ -364,6 +361,8 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
             firstFrame = true;
             canvas.dataset.backdropReady = 'true';
             canvas.dataset.backdropVertices = String(backdropCount);
+            canvas.dataset.backdropTerrainVertices = String(terrainVertices);
+            canvas.dataset.distantTrees = String(treeCount);
          } catch (error) {
             if (!closed && !superseded()) {
                console.warn('Landscape backdrop', error);
