@@ -385,3 +385,7 @@ Extracted the atlas's existing seeded three-scale tone field (128, 35 and 9 metr
 The angled shader now blends terrain across a 256-metre perimeter instead of 96 metres. Trees and structures retain the 96-metre fade, avoiding an enlarged translucent-object band. Texture resolution, geometry budgets, physical heights and collision data remain unchanged. This reduces one material mismatch and spreads the resolution transition; the coarse distant mesh/texture is still visible. It does not replace properly stitched terrain LOD or complete playable angled integration.
 
 Validation: typecheck, build and both coverage/material tests passed. All five browser checks passed: world-aligned grading, Canvas/material compositing across grass/sand/water, angled exploration and return, unavailable-WebGL fallback, and wide/portrait rotated overhead coverage. The existing legacy data bundle warning remains.
+
+## 2026-10-17: renderer no longer completes shots
+
+SimpleCourse only presents the recorded trajectory and finish. CockpitSession.tick, called by the display loop before drawing/publication, owns the transition to resolved. This allows the overhead renderer to remain suspended for phone-triggered shots behind landscape exploration. Fifteen session/engine checks and two paired-browser checks passed, including completion with zero hidden course redraws and resumed rendering on return. Physics integration and recorded evidence are unchanged; frame-driven background scheduling remains a limitation.

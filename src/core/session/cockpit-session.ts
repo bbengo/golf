@@ -61,6 +61,13 @@ export class CockpitSession {
       const elapsed = Math.max(0, (now - this.animationStarted) / 1000) * 3;
       return clampToShot ? Math.min(this.last.result.duration, elapsed) : elapsed;
    }
+   /** Advance recorded-shot playback independently of any camera or renderer. */
+   tick(now = performance.now()): boolean {
+      if (!Number.isFinite(now) || this.phase !== 'animating' || !this.last) return false;
+      if (this.shotTime(now, false) < this.last.result.duration) return false;
+      this.finish();
+      return true;
+   }
    viewDay() {
       if (this.phase !== 'animating' || !this.last) return this.day();
       const elapsed = this.shotTime();

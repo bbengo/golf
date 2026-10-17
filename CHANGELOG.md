@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-17: session-owned shot progression
+
+- Moved shot completion from course drawing into the session clock.
+- Kept phone updates and shot completion running while the landscape preview suspends overhead rendering.
+- Added headless timing/replay and paired hidden-renderer regression coverage.
+
 ## 2026-10-17: shared ground texture treatment
 
 - Reused the detailed atlas earth-tone field in distant terrain and water.

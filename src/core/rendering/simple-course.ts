@@ -187,8 +187,7 @@ export class SimpleCourse {
          const trace = session.last.result.trajectory,
             elapsed = session.shotTime(time);
          if (elapsed >= session.last.result.duration) {
-            session.finish();
-            ball = session.ball;
+            ball = session.last.result.finish;
          } else {
             let i = 1;
             while (i < trace.length - 1 && trace[i].t < elapsed) i++;

@@ -62,3 +62,32 @@ test('inspection is independent of aiming and setup restarts the round', () => {
    assert.equal(s.course.selectedTee, 'red');
    assert.equal(s.snapshot().type, 'STATE');
 });
+
+test('session clock resolves shots without drawing and replay completes exactly once', () => {
+   const s = new CockpitSession();
+   assert.equal(s.tick(1000), false);
+   assert.equal(
+      s.apply({ type: 'COMMAND', id: 'clock-play', action: 'PLAY', shot: 1, intent: s.intent }).ok,
+      true,
+   );
+   s.animationStarted = 1000;
+   const end = 1000 + (s.last.result.duration * 1000) / 3;
+   const record = JSON.stringify(s.last),
+      practice = JSON.stringify(s.practice);
+   const revision = s.revision;
+   for (const t of [0, 1000, end - 1, NaN, Infinity]) assert.equal(s.tick(t), false);
+   assert.equal(s.phase, 'animating');
+   assert.equal(s.tick(end + 1), true);
+   assert.equal(s.phase, 'resolved');
+   assert.deepEqual(s.ball, s.last.result.finish);
+   assert.equal(s.revision, revision + 1);
+   assert.equal(s.tick(end + 100000), false);
+   assert.equal(s.revision, revision + 1);
+   assert.equal(s.snapshot().phase, 'resolved');
+   assert.equal(s.apply({ type: 'COMMAND', id: 'clock-replay', action: 'REPLAY' }).ok, true);
+   s.animationStarted = 2000;
+   assert.equal(s.tick(2000 + (s.last.result.duration * 1000) / 3 + 1), true);
+   assert.equal(JSON.stringify(s.last), record);
+   assert.equal(JSON.stringify(s.practice), practice);
+   assert.equal(s.records.length, 1);
+});
