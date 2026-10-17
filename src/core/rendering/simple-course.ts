@@ -1,3 +1,4 @@
+import { recordedBallPosition } from './ball-position';
 import { paintBirds } from './ambient-life';
 import { CourseStudyLayers } from './course-study-layers';
 import { paintTarget } from './target-reticle';
@@ -177,26 +178,15 @@ export class SimpleCourse {
                session.view === 'ball' ? 3 : 5,
             );
       }
-      let ball = session.ball;
+      const ball = recordedBallPosition(session, time);
       if (session.phase === 'animating' && session.last) {
          if (this.shotStarted !== session.animationStarted) {
             this.shotStarted = session.animationStarted;
             this.following =
                !this.reducedMotion.matches && document.body.dataset.followBall !== 'false';
          }
-         const trace = session.last.result.trajectory,
-            elapsed = session.shotTime(time);
-         if (elapsed >= session.last.result.duration) {
-            ball = session.last.result.finish;
-         } else {
-            let i = 1;
-            while (i < trace.length - 1 && trace[i].t < elapsed) i++;
-            const a = trace[i - 1],
-               b = trace[i],
-               f = Math.max(0, Math.min(1, (elapsed - a.t) / (b.t - a.t || 1)));
-            ball = { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f };
-         }
       }
+
       if (
          this.following &&
          !this.reducedMotion.matches &&

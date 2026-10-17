@@ -389,3 +389,14 @@ Validation: typecheck, build and both coverage/material tests passed. All five b
 ## 2026-10-17: renderer no longer completes shots
 
 SimpleCourse only presents the recorded trajectory and finish. CockpitSession.tick, called by the display loop before drawing/publication, owns the transition to resolved. This allows the overhead renderer to remain suspended for phone-triggered shots behind landscape exploration. Fifteen session/engine checks and two paired-browser checks passed, including completion with zero hidden course redraws and resumed rendering on return. Physics integration and recorded evidence are unchanged; frame-driven background scheduling remains a limitation.
+
+
+## 2026-10-17: shared ball playback in the angled landscape
+
+Both SimpleCourse and the optional WebGL preview now sample one read-only recordedBallPosition helper. It interpolates irregular trajectory timestamps, clamps to the recorded finish and returns copies without advancing session state or changing evidence. The session clock remains responsible for completion. The preview receives the live session and renders a small depth-tested point marker from that position; a Current ball shortcut frames it without changing aim or the round.
+
+The marker uses one reusable nine-float GPU buffer, released with preview resources. It redraws when the sampled position changes, even if the camera is stationary. A seven-CSS-pixel circular marker and small depth offset keep it readable; this is a visual locator, not a physically scaled golf-ball mesh. Current ball reframes once, rather than enabling automatic follow. If the session changes to a different course while exploration is open, its ball is no longer drawn into the old course.
+
+Why: live angled playback should observe the same authoritative shot as overhead/phone play, not run a second simulation. This is the first gameplay presentation integration, not full angled gameplay: direct aiming, shot controls, camera following, trajectory/effect depth and refined occlusion across terrain LOD remain pending. Existing near/far depth compromises also apply to this marker.
+
+Validation: pure sampling tests pass for irregular-time interpolation, finish clamping, copy isolation, resolved-state sampling and unchanged records. Typecheck and build passed. All three browser tests passed: normal paired gameplay extended with live angled marker movement during a phone-triggered shot, exploration/current-ball framing and unchanged-shot return, and unavailable-WebGL recovery. The estate capture was visually reviewed with the marker visible at the tee. Formatting and diff checks passed; the existing legacy bundle warning remains.

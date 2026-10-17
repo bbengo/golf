@@ -1,3 +1,4 @@
+import { recordedBallPosition } from './ball-position';
 import { gradeDaylightPixels } from './daylight-grade';
 import {
    landscapeFootprint,
@@ -13,7 +14,11 @@ import { landscapeMesh } from './landscape-mesh';
 import { DAYLIGHT, type Daylight } from './daylight';
 import type { CockpitSession } from '../session/cockpit-session';
 /** An isolated, depth-tested WebGL study. It never changes aim, ball or round state. */
-export async function openLandscapePreview(course: CockpitSession['course'], daylight: Daylight) {
+export async function openLandscapePreview(
+   course: CockpitSession['course'],
+   daylight: Daylight,
+   session?: CockpitSession,
+) {
    if (document.getElementById('landscapePreview')) return;
    const previous = document.activeElement as HTMLElement | null;
    const dialog = document.createElement('dialog');
@@ -29,6 +34,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
       frame = 0;
    const resources: {
       buffer?: WebGLBuffer;
+      ball?: WebGLBuffer;
       backdrop?: WebGLBuffer;
       backdropTexture?: WebGLTexture;
       texture?: WebGLTexture;
@@ -45,6 +51,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
       if (gl) {
          if (resources.backdropTexture) gl.deleteTexture(resources.backdropTexture);
          if (resources.backdrop) gl.deleteBuffer(resources.backdrop);
+         if (resources.ball) gl.deleteBuffer(resources.ball);
          if (resources.buffer) gl.deleteBuffer(resources.buffer);
          if (resources.texture) gl.deleteTexture(resources.texture);
          if (resources.program) gl.deleteProgram(resources.program);
@@ -84,15 +91,15 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          program,
          compile(
             gl.VERTEX_SHADER,
-            `attribute vec3 position;attribute vec3 normal;attribute vec3 colour;uniform vec3 centre;uniform vec4 view;uniform vec3 sun;uniform vec4 bounds;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;
- void main(){extent=bounds.zw-bounds.xy;vec3 p=position-centre;float co=cos(view.x),si=sin(view.x);float x=co*p.x-si*p.y,y=si*p.x+co*p.y;float sy=sin(view.y),cy=cos(view.y);gl_Position=vec4(x/(view.z*view.w),(y*sy+p.z*cy)/view.z,(y*cy-p.z*sy)/32000.0,1.0);float light=0.60+0.40*max(0.0,dot(normalize(normal),normalize(sun)));tint=colour*light;lighting=light;terrain=colour.r<0.0?1.0:0.0;uv=vec2((position.x-bounds.x)/(bounds.z-bounds.x),(bounds.w-position.y)/(bounds.w-bounds.y));}`,
+            `attribute vec3 position;attribute vec3 normal;attribute vec3 colour;uniform vec3 centre;uniform vec4 view;uniform vec3 sun;uniform vec4 bounds;uniform float markerSize;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;
+ void main(){gl_PointSize=markerSize;extent=bounds.zw-bounds.xy;vec3 p=position-centre;float co=cos(view.x),si=sin(view.x);float x=co*p.x-si*p.y,y=si*p.x+co*p.y;float sy=sin(view.y),cy=cos(view.y);gl_Position=vec4(x/(view.z*view.w),(y*sy+p.z*cy)/view.z,(y*cy-p.z*sy)/32000.0,1.0);float light=0.60+0.40*max(0.0,dot(normalize(normal),normalize(sun)));tint=colour*light;lighting=light;terrain=colour.r<0.0?1.0:0.0;uv=vec2((position.x-bounds.x)/(bounds.z-bounds.x),(bounds.w-position.y)/(bounds.w-bounds.y));}`,
          ),
       );
       gl.attachShader(
          program,
          compile(
             gl.FRAGMENT_SHADER,
-            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform float edgeFade;void main(){vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,alpha);}`,
+            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform float edgeFade;uniform float ballMarker;void main(){if(ballMarker>0.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(mix(vec3(1.0,0.99,0.91),vec3(0.25,0.33,0.25),smoothstep(0.30,0.5,d)),1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,alpha);}`,
          ),
       );
       gl.linkProgram(program);
@@ -145,6 +152,10 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          }
       };
       bindGeometry(buffer);
+      const ballBuffer = gl.createBuffer()!;
+      resources.ball = ballBuffer;
+      const ballData = new Float32Array(9);
+      let previousBall = '';
       const backdropBuffer = gl.createBuffer()!;
       resources.backdrop = backdropBuffer;
       const backdropTexture = gl.createTexture()!;
@@ -196,6 +207,27 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          };
          nav.append(button);
          button.setAttribute('aria-pressed', String(nav.children.length === 1));
+      }
+      if (session) {
+         const ballButton = document.createElement('button');
+         ballButton.type = 'button';
+         ballButton.textContent = 'Current ball';
+         ballButton.setAttribute('aria-pressed', 'false');
+         ballButton.onclick = () => {
+            if (session.course !== course) return;
+            const ball = recordedBallPosition(session, performance.now());
+            Object.assign(target, {
+               x: ball.x,
+               y: ball.y,
+               z: ball.z ?? Course.heightAt(course, ball),
+               span: 85,
+            });
+            inspection = 'Live ball position. Shot controls remain on your phone or overhead view.';
+            status.textContent = inspection;
+            for (const button of nav.querySelectorAll('button:not([data-pan])'))
+               button.setAttribute('aria-pressed', String(button === ballButton));
+         };
+         nav.append(ballButton);
       }
       let panMode = false;
       const panButton = document.createElement('button');
@@ -456,8 +488,12 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          if (closed) return;
          void refreshTerrain();
          void refreshBackdrop();
+         const ball =
+            session && session.course === course ? recordedBallPosition(session, now) : null;
+         const ballKey = ball ? `${ball.x}:${ball.y}:${ball.z}` : '';
          const changed =
             firstFrame ||
+            ballKey !== previousBall ||
             Object.keys(current).some(
                (key) =>
                   Math.abs(
@@ -488,6 +524,8 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          }
          if (changed || resized) {
             firstFrame = false;
+            previousBall = ballKey;
+            gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.uniform3f(centre, current.x, current.y, current.z);
             gl.uniform4f(view, current.yaw, current.pitch, current.span, w / h);
@@ -507,6 +545,19 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
             bindGeometry(buffer);
             gl.drawArrays(gl.TRIANGLES, 0, mesh.vertices.length / 9);
             gl.disable(gl.BLEND);
+            if (ball) {
+               const z = ball.z ?? Course.heightAt(course, ball);
+               ballData.set([ball.x, ball.y, z + 0.04, 0, 0, 1, 1, 1, 1]);
+               gl.bindBuffer(gl.ARRAY_BUFFER, ballBuffer);
+               gl.bufferData(gl.ARRAY_BUFFER, ballData, gl.DYNAMIC_DRAW);
+               bindGeometry(ballBuffer);
+               gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 1);
+               gl.uniform1f(gl.getUniformLocation(program, 'markerSize'), 7 * ratio);
+               gl.drawArrays(gl.POINTS, 0, 1);
+               canvas.dataset.ballX = String(ball.x);
+               canvas.dataset.ballY = String(ball.y);
+               canvas.dataset.ballZ = String(z);
+            }
          }
          frame = requestAnimationFrame(draw);
       };

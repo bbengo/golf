@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-17: live ball in angled exploration
+
+- Shared read-only recorded-ball sampling between overhead and angled views.
+- Added a depth-tested live ball marker and Current ball camera shortcut to landscape exploration.
+- Kept simulation, aiming and shot commands in the existing authoritative session.
+
 ## 2026-10-17: session-owned shot progression
 
 - Moved shot completion from course drawing into the session clock.

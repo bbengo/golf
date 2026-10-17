@@ -86,7 +86,7 @@ export async function startDisplay(onFirstFrame?: () => void) {
       },
       () => {
          void import('../core/rendering/landscape-preview').then(({ openLandscapePreview }) =>
-            openLandscapePreview(session.course, session.environment.daylight),
+            openLandscapePreview(session.course, session.environment.daylight, session),
          );
       },
    );

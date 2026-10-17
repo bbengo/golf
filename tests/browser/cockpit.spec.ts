@@ -5,7 +5,7 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
 }) => {
    // Two browser contexts, full shot animations and visual captures on a shared runner.
    // Individual action/assertion deadlines remain unchanged.
-   test.setTimeout(180000);
+   test.setTimeout(240000);
    const displayContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
    const phoneContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -112,6 +112,22 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await expect(course).toHaveAttribute('data-camera-mode', 'framed');
    await expect(course).toHaveAttribute('data-camera-zoom', '1.000');
    await expect(phone.locator('#play')).toHaveText('Next shot', { timeout: 20000 });
+   // The optional angled view observes the same phone-triggered recorded flight.
+   await phone.locator('#mulligan').click();
+   await screen.keyboard.press('Escape');
+   await screen.locator('#openGameOptions').click();
+   await screen.locator('[data-option-tab=world]').click();
+   await screen.locator('#openLandscapePreview').click();
+   const angled = screen.locator('#landscapePreview canvas');
+   await expect(angled).toHaveAttribute('data-ready', 'true', { timeout: 60000 });
+   await expect(angled).toHaveAttribute('data-ball-x', /^-?\d/);
+   const initialBall = await angled.getAttribute('data-ball-x');
+   await phone.locator('#play').click();
+   await expect(phone.locator('#play')).toHaveText('Show result');
+   await expect(angled).not.toHaveAttribute('data-ball-x', initialBall!, { timeout: 15000 });
+   await expect(phone.locator('#play')).toHaveText('Next shot', { timeout: 30000 });
+   await screen.keyboard.press('Escape');
+   await screen.locator('#closeGameOptions').click();
    expect(images).toEqual([]);
    await phone.getByRole('button', { name: 'Course settings', exact: true }).click();
    await expect(phone.getByRole('dialog')).toBeVisible();
