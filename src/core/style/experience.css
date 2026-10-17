@@ -1780,3 +1780,146 @@ html:has(body.experience) {
       right: 12px;
    }
 }
+
+/* Angled exploration shares the game's restrained, dark instrument surfaces. */
+.landscape-preview header > div {
+   padding: 16px 20px;
+   border: 1px solid #dbe5cc20;
+   background: #10251ee8;
+   backdrop-filter: blur(18px);
+   box-shadow: 0 8px 32px #07181026;
+}
+.landscape-preview h1 {
+   font-size: 23px;
+   letter-spacing: -0.035em;
+}
+.landscape-preview header p:last-child {
+   font-size: 12px;
+   color: #c3cdbb;
+}
+.landscape-preview nav {
+   bottom: 30px;
+   left: 50%;
+   right: auto;
+   transform: translateX(-50%);
+   width: max-content;
+   max-width: calc(100% - 48px);
+   padding: 7px;
+   gap: 4px;
+   border-radius: 28px;
+   border: 1px solid #dbe5cc25;
+   background: #10251ef5;
+   box-shadow: 0 12px 40px #07181040;
+}
+.landscape-preview nav button {
+   border-color: transparent;
+   background: transparent;
+   padding: 10px 15px;
+   font-size: 13px;
+}
+.landscape-preview nav button[aria-pressed='true'] {
+   background: #d9e2be;
+   color: #1a3026;
+}
+.landscape-preview button:hover {
+   border-color: #d9e2be88;
+}
+.landscape-preview button:focus-visible,
+.landscape-preview summary:focus-visible {
+   outline: 2px solid #d9e2be;
+   outline-offset: 4px;
+}
+.landscape-preview button:disabled {
+   opacity: 0.45;
+   cursor: default;
+}
+.landscape-preview .preview-status {
+   bottom: 100px;
+   left: 50%;
+   transform: translateX(-50%);
+   max-width: calc(100% - 48px);
+   text-align: center;
+   font-size: 12px;
+   color: #c3cdbb;
+}
+.landscape-preview footer {
+   top: 160px;
+   bottom: auto;
+   left: 24px;
+   right: auto;
+   max-width: 320px;
+   text-align: left;
+   padding: 0;
+   background: transparent;
+}
+.landscape-preview details {
+   background: #10251ee8;
+   border: 1px solid #dbe5cc20;
+   border-radius: 18px;
+   padding: 12px 16px;
+}
+.landscape-preview summary {
+   cursor: pointer;
+   color: #d9e2be;
+}
+.landscape-preview details p {
+   line-height: 1.7;
+   color: #c3cdbb;
+}
+.preview-loading {
+   position: absolute;
+   inset: 0;
+   display: grid;
+   align-content: center;
+   justify-items: center;
+   gap: 16px;
+   background: #14271e;
+   pointer-events: none;
+}
+.preview-loading strong {
+   font-size: 28px;
+   font-weight: 500;
+   letter-spacing: -0.035em;
+}
+.preview-loading > span:last-child {
+   font-size: 13px;
+   color: #c3cdbb;
+}
+.landscape-preview header,
+.landscape-preview nav,
+.landscape-preview footer,
+.landscape-preview .preview-status {
+   z-index: 2;
+}
+.landscape-preview[data-world-ready='true'] .preview-loading {
+   display: none;
+}
+@media (max-width: 600px) {
+   .landscape-preview header > div {
+      padding: 12px 16px;
+   }
+   .landscape-preview h1 {
+      font-size: 20px;
+   }
+   .landscape-preview nav {
+      bottom: 18px;
+      max-width: calc(100% - 24px);
+      width: calc(100% - 24px);
+   }
+   .landscape-preview nav button {
+      padding: 8px 12px;
+   }
+   .landscape-preview .preview-status {
+      bottom: 160px;
+      left: 50%;
+      right: auto;
+      width: max-content;
+   }
+   .landscape-preview footer {
+      top: 190px;
+      left: 12px;
+      right: auto;
+      bottom: auto;
+      max-width: 270px;
+   }
+}

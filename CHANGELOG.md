@@ -1,4 +1,16 @@
+## 2026-10-18: angled view coverage and interface polish
+
+- Hold camera motion at rendered coverage while the requested landscape streams.
+- Cover initial preparation and invalidated resize views instead of exposing world edges.
+- Unify dark viewpoint controls, compact course heading and expandable navigation help.
+
 # Changelog
+
+## 2026-10-17: optional angled ball following
+
+- Added smooth Follow ball tracking with height-aware framing in landscape exploration.
+- Handed camera control back on manual input and disabled automatic following under reduced motion.
+- Preserved the authoritative recorded shot and overhead camera.
 
 ## 2026-10-17: live ball in angled exploration
 

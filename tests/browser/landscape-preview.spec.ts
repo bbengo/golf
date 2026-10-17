@@ -24,6 +24,7 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    const dialog = page.locator('#landscapePreview'),
       canvas = dialog.locator('canvas');
    await expect(canvas).toHaveAttribute('data-ready', 'true', { timeout: 60000 });
+   await expect(dialog).toHaveAttribute('data-world-ready', 'true', { timeout: 60000 });
    expect(Number(await canvas.getAttribute('data-triangles'))).toBeGreaterThan(10000);
    const courseCanvas = page.locator('#course');
    const hiddenDraws = await courseCanvas.getAttribute('data-draw-count');
@@ -31,6 +32,7 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    await expect(courseCanvas).toHaveAttribute('data-draw-count', hiddenDraws!);
    await page.screenshot({ path: 'test-results/landscape-preview-estate.png' });
    await expect(canvas).toHaveAttribute('data-ball-x', /^-?\d/);
+   await expect(dialog.getByRole('button', { name: 'Follow ball', exact: true })).toBeDisabled();
    const ballX = await canvas.getAttribute('data-ball-x');
    await dialog.getByRole('button', { name: 'Current ball', exact: true }).click();
    await expect(dialog.locator('[role=status]')).toContainText('Live ball position');

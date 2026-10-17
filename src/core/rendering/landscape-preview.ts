@@ -25,7 +25,7 @@ export async function openLandscapePreview(
    dialog.id = 'landscapePreview';
    dialog.className = 'landscape-preview';
    dialog.setAttribute('aria-labelledby', 'landscapePreviewTitle');
-   dialog.innerHTML = `<canvas tabindex="0" aria-label="Angled landscape preview. Drag to orbit; Shift-drag to pan; scroll to zoom. Use arrow keys to orbit, plus or minus to zoom."></canvas><header><div><p class="hud-eyebrow">LANDSCAPE STUDY</p><h1 id="landscapePreviewTitle">A different perspective.</h1><p>Preview only. Your round stays in the overhead view.</p></div><button type="button" aria-label="Return to game options">Back to options</button></header><nav aria-label="Landscape viewpoints"></nav><p class="preview-status" role="status">Preparing terrain and woodland...</p><footer>Double-click ground to explore &middot; Drag to orbit &middot; Shift-drag to pan &middot; Scroll to zoom &middot; Arrow keys to orbit &middot; + / - to zoom &middot; Escape to return</footer>`;
+   dialog.innerHTML = `<canvas tabindex="0" aria-label="Angled landscape preview. Drag to orbit; Shift-drag to pan; scroll to zoom. Use arrow keys to orbit, plus or minus to zoom."></canvas><header><div><p class="hud-eyebrow">PURITY / LANDSCAPE</p><h1 id="landscapePreviewTitle">Explore the course.</h1><p>Angled view &middot; Return to overhead to aim and play.</p></div><button type="button" aria-label="Return to game options">Back to options</button></header><nav aria-label="Landscape viewpoints"></nav><p class="preview-status" role="status">Preparing terrain and woodland...</p><aside class="preview-loading" aria-live="polite"><span class="hud-eyebrow">PURITY</span><strong>Preparing your view</strong><span>Bringing the surrounding landscape into view.</span></aside><footer><details><summary>Camera controls</summary><p>Drag to orbit &middot; Shift-drag to pan &middot; Scroll to zoom</p><p>Double-click ground to explore &middot; Arrow keys to orbit &middot; + / &minus; to zoom &middot; Escape to return</p></details></footer>`;
    document.body.append(dialog);
    dialog.showModal();
    const canvas = dialog.querySelector('canvas')!,
@@ -64,6 +64,7 @@ export async function openLandscapePreview(
    dialog.addEventListener('close', cleanup, { once: true });
    dialog.querySelector('button')!.onclick = () => dialog.close();
    if (!gl) {
+      dialog.dataset.worldReady = 'true';
       status.textContent =
          'This browser could not start the angled preview. The overhead game remains available.';
       return;
@@ -71,6 +72,7 @@ export async function openLandscapePreview(
    canvas.addEventListener('webglcontextlost', (e) => {
       e.preventDefault();
       cancelAnimationFrame(frame);
+      dialog.dataset.worldReady = 'true';
       if (!closed)
          status.textContent =
             'The graphics context was lost. Return to options and reopen the preview.';
@@ -186,6 +188,18 @@ export async function openLandscapePreview(
       const current = { x: 150, y: 300, z: 190, yaw: -0.3, pitch: 0.82, span: 580 };
       const target = { ...current };
       let inspection = '';
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+      let following = false;
+      let followButton: HTMLButtonElement | null = null;
+      const stopFollowing = () => {
+         if (following) {
+            inspection = 'Free camera. Follow ball is off.';
+            status.textContent = inspection;
+         }
+         following = false;
+         followButton?.setAttribute('aria-pressed', 'false');
+         canvas.dataset.following = 'false';
+      };
       const nav = dialog.querySelector('nav')!;
       const stops = [
          { name: 'Whole estate', x: 150, y: 300, span: 580 },
@@ -199,6 +213,7 @@ export async function openLandscapePreview(
          button.type = 'button';
          button.textContent = stop.name;
          button.onclick = () => {
+            stopFollowing();
             inspection = '';
             Object.assign(target, { x: stop.x, y: stop.y, span: stop.span });
             target.z = 190;
@@ -214,6 +229,7 @@ export async function openLandscapePreview(
          ballButton.textContent = 'Current ball';
          ballButton.setAttribute('aria-pressed', 'false');
          ballButton.onclick = () => {
+            stopFollowing();
             if (session.course !== course) return;
             const ball = recordedBallPosition(session, performance.now());
             Object.assign(target, {
@@ -228,6 +244,36 @@ export async function openLandscapePreview(
                button.setAttribute('aria-pressed', String(button === ballButton));
          };
          nav.append(ballButton);
+         followButton = document.createElement('button');
+         followButton.type = 'button';
+         followButton.textContent = 'Follow ball';
+         followButton.setAttribute('aria-pressed', 'false');
+         followButton.onclick = () => {
+            if (reduce.matches || session.course !== course) return;
+            following = !following;
+            for (const button of nav.querySelectorAll('button:not([data-pan])'))
+               button.setAttribute('aria-pressed', String(button === followButton && following));
+            canvas.dataset.following = String(following);
+            inspection = following
+               ? 'Following the ball. Pan, orbit or zoom to take control.'
+               : 'Free camera. Follow ball is off.';
+            status.textContent = inspection;
+         };
+         const motionChanged = () => {
+            followButton!.disabled = reduce.matches;
+            followButton!.title = reduce.matches
+               ? 'Automatic following is off with reduced motion. Use Current ball to reframe.'
+               : 'Smoothly follow the live ball';
+            if (reduce.matches) stopFollowing();
+         };
+         motionChanged();
+         reduce.addEventListener('change', motionChanged);
+         dialog.addEventListener(
+            'close',
+            () => reduce.removeEventListener('change', motionChanged),
+            { once: true },
+         );
+         nav.append(followButton);
       }
       let panMode = false;
       const panButton = document.createElement('button');
@@ -236,11 +282,13 @@ export async function openLandscapePreview(
       panButton.textContent = 'Pan landscape';
       panButton.setAttribute('aria-pressed', 'false');
       panButton.onclick = () => {
+         stopFollowing();
          panMode = !panMode;
          panButton.setAttribute('aria-pressed', String(panMode));
       };
       nav.append(panButton);
       const pan = (dx: number, dy: number) => {
+         stopFollowing();
          inspection = '';
          for (const button of nav.querySelectorAll('button:not([data-pan])'))
             button.setAttribute('aria-pressed', 'false');
@@ -255,6 +303,7 @@ export async function openLandscapePreview(
       };
       let pointer: { x: number; y: number } | null = null;
       canvas.onpointerdown = (e) => {
+         stopFollowing();
          pointer = { x: e.clientX, y: e.clientY };
          canvas.setPointerCapture(e.pointerId);
          canvas.focus();
@@ -280,6 +329,7 @@ export async function openLandscapePreview(
                pointer = null;
             };
       const zoom = (factor: number) => {
+         stopFollowing();
          target.span = Math.max(35, Math.min(720, target.span * factor));
       };
       canvas.addEventListener(
@@ -294,6 +344,7 @@ export async function openLandscapePreview(
          if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-'].includes(e.key))
             return;
          e.preventDefault();
+         stopFollowing();
          if (e.shiftKey && e.key.startsWith('Arrow')) {
             pan(
                e.key === 'ArrowLeft' ? 80 : e.key === 'ArrowRight' ? -80 : 0,
@@ -314,6 +365,7 @@ export async function openLandscapePreview(
       canvas.dataset.ready = 'true';
       canvas.dataset.triangles = String(mesh.triangles);
       canvas.ondblclick = (event) => {
+         stopFollowing();
          const rect = canvas.getBoundingClientRect();
          const hit = pickLandscape(
             { x: event.clientX - rect.left, y: event.clientY - rect.top },
@@ -333,7 +385,6 @@ export async function openLandscapePreview(
          for (const button of nav.querySelectorAll('button:not([data-pan])'))
             button.setAttribute('aria-pressed', 'false');
       };
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)');
       let last = performance.now();
       let firstFrame = true;
       let loadedX = 150,
@@ -486,34 +537,58 @@ export async function openLandscapePreview(
       };
       const draw = (now: number) => {
          if (closed) return;
-         void refreshTerrain();
-         void refreshBackdrop();
          const ball =
             session && session.course === course ? recordedBallPosition(session, now) : null;
+         if (following && (!ball || reduce.matches)) stopFollowing();
+         if (following && ball) {
+            const ground = Course.heightAt(course, ball);
+            const z = ball.z ?? ground;
+            Object.assign(target, {
+               x: ball.x,
+               y: ball.y,
+               z,
+               span: 85 + Math.min(75, Math.max(0, z - ground) * 0.6),
+            });
+         }
+         void refreshTerrain();
+         void refreshBackdrop();
          const ballKey = ball ? `${ball.x}:${ball.y}:${ball.z}` : '';
+         const previousCamera = { ...current };
+         const ease = reduce.matches
+            ? 1
+            : 1 - Math.exp(-Math.min(64, now - last) / (following ? 320 : 200));
+         last = now;
+         const r = canvas.getBoundingClientRect(),
+            ratio = Math.min(1.5, devicePixelRatio, Math.sqrt(4000000 / (r.width * r.height)));
+         const next = { ...current };
+         for (const key of Object.keys(current) as (keyof typeof current)[])
+            next[key] =
+               Math.abs(target[key] - current[key]) < 0.0001
+                  ? target[key]
+                  : current[key] + (target[key] - current[key]) * ease;
+         const covered = (camera: typeof current) =>
+            !!backdropBounds &&
+            containsLandscape(
+               backdropBounds,
+               landscapeFootprint({ ...camera, width: r.width, height: r.height }),
+            );
+         // Requested navigation streams terrain independently. Only expose a view
+         // once its entire ground footprint fits the resident GPU landscape.
+         if (covered(next)) Object.assign(current, next);
+         else if (!covered(current) && covered(target)) Object.assign(current, target);
          const changed =
             firstFrame ||
             ballKey !== previousBall ||
             Object.keys(current).some(
                (key) =>
-                  Math.abs(
-                     current[key as keyof typeof current] - target[key as keyof typeof target],
-                  ) > 0.0001,
+                  current[key as keyof typeof current] !==
+                  previousCamera[key as keyof typeof current],
             );
-         const ease = reduce.matches ? 1 : 1 - Math.exp(-Math.min(64, now - last) / 200);
-         last = now;
-         for (const key of Object.keys(current) as (keyof typeof current)[])
-            current[key] += (target[key] - current[key]) * ease;
-         const r = canvas.getBoundingClientRect(),
-            ratio = Math.min(1.5, devicePixelRatio, Math.sqrt(4000000 / (r.width * r.height)));
-         canvas.dataset.coverage = String(
-            !!backdropBounds &&
-               backdropDetail === detailKey() &&
-               containsLandscape(
-                  backdropBounds,
-                  landscapeFootprint({ ...current, width: r.width, height: r.height }),
-               ),
-         );
+         const visible = covered(current);
+         dialog.dataset.worldReady = String(visible);
+         canvas.dataset.cameraX = current.x.toFixed(4);
+         canvas.dataset.cameraY = current.y.toFixed(4);
+         canvas.dataset.coverage = String(visible && backdropDetail === detailKey());
          const w = Math.max(1, Math.round(r.width * ratio)),
             h = Math.max(1, Math.round(r.height * ratio));
          const resized = canvas.width !== w || canvas.height !== h;
@@ -564,6 +639,7 @@ export async function openLandscapePreview(
       frame = requestAnimationFrame(draw);
    } catch (error) {
       if (!closed) {
+         dialog.dataset.worldReady = 'true';
          status.textContent =
             'The landscape preview could not load. Return to options to continue playing.';
          console.warn('Landscape preview', error);

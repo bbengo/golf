@@ -4,7 +4,7 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    browser,
 }) => {
    // Two browser contexts, full shot animations and visual captures on a shared runner.
-   // Individual action/assertion deadlines remain unchanged.
+   // The first cold shot allows synchronous trajectory computation before acknowledgement.
    test.setTimeout(240000);
    const displayContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
    const phoneContext = await browser.newContext({
@@ -90,7 +90,7 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await expect(phone.locator('#club')).toHaveValue('6I');
    await expect(phone.locator('#effort')).toHaveValue('85');
    await phone.locator('#play').click();
-   await expect(phone.locator('#play')).toHaveText('Show result');
+   await expect(phone.locator('#play')).toHaveText('Show result', { timeout: 30000 });
    await expect(course).toHaveAttribute('data-camera-mode', 'follow');
    await screen.mouse.move(850, 450);
    await screen.mouse.wheel(0, -120);
@@ -120,12 +120,27 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await screen.locator('#openLandscapePreview').click();
    const angled = screen.locator('#landscapePreview canvas');
    await expect(angled).toHaveAttribute('data-ready', 'true', { timeout: 60000 });
+   await expect(screen.locator('#landscapePreview')).toHaveAttribute('data-world-ready', 'true', {
+      timeout: 60000,
+   });
    await expect(angled).toHaveAttribute('data-ball-x', /^-?\d/);
    const initialBall = await angled.getAttribute('data-ball-x');
+   await screen.emulateMedia({ reducedMotion: 'no-preference' });
+   await screen.getByRole('button', { name: 'Follow ball', exact: true }).click();
+   await expect(angled).toHaveAttribute('data-following', 'true');
+   const initialCamera = await angled.getAttribute('data-camera-x');
    await phone.locator('#play').click();
    await expect(phone.locator('#play')).toHaveText('Show result');
    await expect(angled).not.toHaveAttribute('data-ball-x', initialBall!, { timeout: 15000 });
+   await expect(angled).not.toHaveAttribute('data-camera-x', initialCamera!);
+   await angled.press('ArrowLeft');
+   await expect(angled).toHaveAttribute('data-following', 'false');
    await expect(phone.locator('#play')).toHaveText('Next shot', { timeout: 30000 });
+   await expect(angled).toHaveAttribute('data-following', 'false');
+   await screen.getByRole('button', { name: 'Follow ball', exact: true }).click();
+   await screen.emulateMedia({ reducedMotion: 'reduce' });
+   await expect(angled).toHaveAttribute('data-following', 'false');
+   await expect(screen.getByRole('button', { name: 'Follow ball', exact: true })).toBeDisabled();
    await screen.keyboard.press('Escape');
    await screen.locator('#closeGameOptions').click();
    expect(images).toEqual([]);

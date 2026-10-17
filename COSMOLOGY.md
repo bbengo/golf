@@ -467,3 +467,23 @@ The marker uses one reusable nine-float GPU buffer, released with preview resour
 Why: live angled playback should observe the same authoritative shot as overhead/phone play, not run a second simulation. This is the first gameplay presentation integration, not full angled gameplay: direct aiming, shot controls, camera following, trajectory/effect depth and refined occlusion across terrain LOD remain pending. Existing near/far depth compromises also apply to this marker.
 
 Validation: pure sampling tests pass for irregular-time interpolation, finish clamping, copy isolation, resolved-state sampling and unchanged records. Typecheck and build passed. All three browser tests passed: normal paired gameplay extended with live angled marker movement during a phone-triggered shot, exploration/current-ball framing and unchanged-shot return, and unavailable-WebGL recovery. The estate capture was visually reviewed with the marker visible at the tee. Formatting and diff checks passed; the existing legacy bundle warning remains.
+
+
+## 2026-10-17: optional angled ball following
+
+The angled landscape now offers an explicit Follow ball toggle alongside Current ball. It follows the shared recorded ball position without changing the simulation or overhead camera. A 320 ms exponential response eases camera position and framing, compared with the existing 200 ms manual response. Framing starts at an 85-metre half-span and widens by up to 75 metres with height above local ground. Orientation remains the player's choice.
+
+Pointer interaction, keyboard navigation, zoom, pan-mode selection, ground inspection and viewpoint buttons turn following off immediately. It remains off after the shot until explicitly enabled again. Enabling reduced motion disables following, including when that preference changes while the dialog is open; Current ball remains available for explicit reframing. The preference listener is removed on close. Following also stops if the live session moves to another course.
+
+Why: an angled live marker is difficult to watch if the camera stays behind. Optional tracking adds useful shot observation while preserving deliberate manual exploration and the accepted gentle camera response. This remains partial angled gameplay: direct aim/shot controls, effects, robust terrain-LOD occlusion and device profiling are still open. No launch, contact or trajectory coefficients change.
+
+Validation: typecheck, production build and the paired-phone browser test passed, including live follow movement, manual handover and live reduced-motion suppression.
+
+
+## 2026-10-18: covered angled camera and quieter controls
+
+The displayed angled camera advances only when its conservative ground footprint fits the resident distant terrain. Requested navigation still drives streaming beyond the original course image. While terrain catches up, the camera holds its last covered view. Startup and viewport changes that invalidate that view receive an opaque preparation surface; once a distant requested view is resident it can be reframed safely. This prevents exposed rectangular world edges without reintroducing old image-boundary physics restrictions. Coverage includes a 512-metre relief allowance and is independent of woodland detail refresh.
+
+The overlay now uses compact dark surfaces, restrained typography, a unified viewpoint dock and an expandable camera-help panel. Back to options remains visible during preparation and graphics failure. The angled view remains exploration/shot observation; aiming and shot controls remain in the existing overhead/phone interfaces.
+
+Validation: all three browser regressions passed (paired phone/follow, exploration across wide/portrait views and unavailable-WebGL recovery). All three focused ball/coverage checks passed, plus typecheck, production build and formatting. Wide and portrait captures were visually reviewed. A held camera no longer repeatedly redraws unchanged geometry. The first cold-shot test allows 30 seconds for synchronous computation; terrain readiness is awaited before testing following. The existing legacy bundle-size warning remains. Physical device performance and seamless near/far terrain appearance remain open.
