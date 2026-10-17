@@ -408,7 +408,14 @@ export async function startDisplay(onFirstFrame?: () => void) {
       previousRevision = -1;
    let firstFrame = true;
    function frame(time: number) {
-      renderer.draw(session, time);
+      // The full-screen landscape study owns visible rendering. Keep shot completion
+      // and relay publication live, but avoid repainting an occluded idle course.
+      if (
+         firstFrame ||
+         session.phase === 'animating' ||
+         !document.querySelector('#landscapePreview[open]')
+      )
+         renderer.draw(session, time);
       if (time - lastPublish > 300 || session.revision !== previousRevision) {
          lastPublish = time;
          previousRevision = session.revision;

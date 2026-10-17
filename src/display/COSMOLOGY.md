@@ -64,3 +64,10 @@ Experience options includes Morning / Daylight / Late afternoon. The value is va
 ## UCG tool restoration, 13 October 2026
 
 Controls is now the first Game options tab and owns desktop/minimal/clear choices and phone pairing. Short presentation settings use native radio choices. Course & player tools is a separate menu destination with terrain, shot profile, yardages, player, journal and research tabs. Shared session/player/terrain/shot APIs provide the behaviour; research controls are not duplicated throughout the settings pages. See the root COSMOLOGY parity table for original-to-Purity destinations and model-reference limits.
+
+
+## 2026-10-17: suspend hidden idle course drawing
+
+The display loop now skips SimpleCourse.draw while the full-screen landscape dialog is open and the session is idle. The first frame always draws. Active shot animation still draws because the current renderer owns session.finish() when the recorded trajectory ends; blindly suspending it would leave phone-triggered shots unfinished. Relay publication remains outside this condition and continues normally. Closing the dialog naturally resumes the next frame, including after preview failure.
+
+Why: two complete landscape renderers were running while only the preview was visible. This removes the hidden idle work without changing session timing or pairing. It is not a full renderer/simulation-loop separation; extracting animation completion from drawing is still a worthwhile engine follow-up. Validation checks the actual underlying canvas redraw count while the preview is open and after return. Both final preview browser tests passed, including the idle redraw-count assertion, resumed drawing, remote travel, resize/return and WebGL fallback. Typecheck, build, formatting and diff checks passed. The final landscape capture was visually reviewed; material detail is more consistent but coarse terrain/shoreline transitions remain visible.

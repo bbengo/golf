@@ -92,7 +92,7 @@ export async function openLandscapePreview(course: CockpitSession['course'], day
          program,
          compile(
             gl.FRAGMENT_SHADER,
-            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform float edgeFade;void main(){vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,96.0,min(edge.x,edge.y)):1.0;gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,alpha);}`,
+            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform float edgeFade;void main(){vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,alpha);}`,
          ),
       );
       gl.linkProgram(program);

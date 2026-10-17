@@ -1,3 +1,4 @@
+import { terrainColour } from './terrain-material';
 import { distantWoodland } from './distant-woodland';
 import type { LandscapeView } from './landscape-projection';
 import type { Bounds } from './camera';
@@ -122,7 +123,7 @@ export async function landscapeBackdrop(
                ? waterColour(x, y, Math.max(0, -worldWetness(c, x, y) * 28), daylight)
                : worldGroundColour(c, x, y);
          const pixel = (j * textureSize + i) * 4;
-         pixels.set([...colour, 255], pixel);
+         pixels.set([...terrainColour(colour, x, y), 255], pixel);
       }
       if (j % 8 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
    }

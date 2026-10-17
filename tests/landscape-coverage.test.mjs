@@ -1,3 +1,4 @@
+import { terrainColour } from '../src/core/rendering/terrain-material.ts';
 import { DISTANT_CROWN_TRIANGLES } from '../src/core/rendering/distant-woodland.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -90,7 +91,11 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
          const actual = Array.from(pixels.slice(offset, offset + 3));
          assert.deepEqual(
             actual,
-            waterColour(x, y, Math.max(0, -worldWetness(course, x, y) * 28), 'evening'),
+            terrainColour(
+               waterColour(x, y, Math.max(0, -worldWetness(course, x, y) * 28), 'evening'),
+               x,
+               y,
+            ),
          );
          assert.equal(pixels[offset + 3], 255);
          waterColours.add(actual.join(','));

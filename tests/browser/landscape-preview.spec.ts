@@ -5,6 +5,14 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    test.setTimeout(180000);
    const errors: string[] = [];
    page.on('pageerror', (e) => errors.push(e.message));
+   await page.addInitScript(() => {
+      const clear = CanvasRenderingContext2D.prototype.clearRect;
+      CanvasRenderingContext2D.prototype.clearRect = function (...args) {
+         if (this.canvas.id === 'course')
+            this.canvas.dataset.drawCount = String(Number(this.canvas.dataset.drawCount || 0) + 1);
+         return clear.apply(this, args);
+      };
+   });
    await page.emulateMedia({ reducedMotion: 'reduce' });
    await page.goto('/#play');
    await expect(page.locator('#desktopPlay')).toBeVisible({ timeout: 30000 });
@@ -17,6 +25,10 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
       canvas = dialog.locator('canvas');
    await expect(canvas).toHaveAttribute('data-ready', 'true', { timeout: 60000 });
    expect(Number(await canvas.getAttribute('data-triangles'))).toBeGreaterThan(10000);
+   const courseCanvas = page.locator('#course');
+   const hiddenDraws = await courseCanvas.getAttribute('data-draw-count');
+   await page.waitForTimeout(350);
+   await expect(courseCanvas).toHaveAttribute('data-draw-count', hiddenDraws!);
    await page.screenshot({ path: 'test-results/landscape-preview-estate.png' });
    await dialog.getByRole('button', { name: 'Woodland pavilion', exact: true }).click();
    await canvas.focus();
@@ -53,6 +65,9 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    await page.screenshot({ path: 'test-results/landscape-preview-phone.png' });
    await page.keyboard.press('Escape');
    await expect(dialog).toHaveCount(0);
+   await expect
+      .poll(async () => Number(await courseCanvas.getAttribute('data-draw-count')))
+      .toBeGreaterThan(Number(hiddenDraws));
    await expect(page.locator('#gameOptions')).toBeVisible();
    await expect(page.locator('#openLandscapePreview')).toBeFocused();
    await page.locator('#closeGameOptions').click();

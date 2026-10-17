@@ -1,4 +1,4 @@
-﻿/** Cosmetic material variation sampled in world coordinates, rasterized to atlas pixels. */
+import { terrainTone } from './terrain-material'; /** Cosmetic material variation sampled in world coordinates, rasterized to atlas pixels. */
 export function terrainVariation(
    width: number,
    height: number,
@@ -9,39 +9,11 @@ export function terrainVariation(
    tile.height = Math.ceil(height / 3);
    const ctx = tile.getContext('2d')!;
    const pixels = ctx.createImageData(tile.width, tile.height);
-   const hash = (x: number, y: number) => {
-      let n = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ 731;
-      n = Math.imul(n ^ (n >>> 13), 1274126177);
-      return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
-   };
-   const noise = (x: number, y: number) => {
-      const ix = Math.floor(x),
-         iy = Math.floor(y);
-      const fx = x - ix,
-         fy = y - iy;
-      const u = fx * fx * (3 - 2 * fx),
-         v = fy * fy * (3 - 2 * fy);
-      const a = hash(ix, iy),
-         b = hash(ix + 1, iy),
-         c = hash(ix, iy + 1),
-         d = hash(ix + 1, iy + 1);
-      return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
-   };
    for (let y = 0; y < tile.height; y++)
       for (let x = 0; x < tile.width; x++) {
          const wx = origin.minX + (x * 3) / origin.scale,
             wy = origin.maxY - (y * 3) / origin.scale;
-         const n =
-            noise(wx / 128, wy / 128) * 0.48 +
-            noise(wx / 35, wy / 35) * 0.3 +
-            noise(wx / 9, wy / 9) * 0.22;
-         const bright = n > 0.5;
-         pixels.data.set(
-            bright
-               ? [211, 202, 132, Math.round((n - 0.5) * 110)]
-               : [13, 35, 27, Math.round((0.5 - n) * 145)],
-            (y * tile.width + x) * 4,
-         );
+         pixels.data.set(terrainTone(wx, wy), (y * tile.width + x) * 4);
       }
    ctx.putImageData(pixels, 0, 0);
    return tile;

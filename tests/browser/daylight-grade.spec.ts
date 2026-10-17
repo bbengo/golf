@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 import { expect, test } from '@playwright/test';
 
-test('distant daylight grade stays world aligned across rectangular regions', async ({ page }) => {
+test.beforeEach(async ({ page }) => {
    test.setTimeout(90000);
-   await page.route('**/__test/daylight*', async (route) => {
+   await page.route('**/__test/*', async (route) => {
       const name = new URL(route.request().url()).pathname.split('/').pop()!;
       const source = readFileSync(`src/core/rendering/${name}.ts`, 'utf8');
       const compiled = stripTypeScriptTypes(source);
@@ -15,6 +15,9 @@ test('distant daylight grade stays world aligned across rectangular regions', as
       route.fulfill({ contentType: 'text/html', body: '<html></html>' }),
    );
    await page.goto('/material-test');
+});
+
+test('distant daylight grade stays world aligned across rectangular regions', async ({ page }) => {
    const result = await page.evaluate(async () => {
       const path = '/__test/daylight-grade';
       const { gradeDaylightPixels, daylightGradeLine } = await import(path);
@@ -55,4 +58,42 @@ test('distant daylight grade stays world aligned across rectangular regions', as
    expect(Math.max(...result.errors)).toBeLessThanOrEqual(2);
    expect(new Set(result.colours).size).toBe(3);
    expect(result.colours).not.toContain('80,110,70');
+});
+
+test('distant terrain colour matches Canvas compositing across materials and world coordinates', async ({
+   page,
+}) => {
+   const errors = await page.evaluate(async () => {
+      const path = '/__test/terrain-material';
+      const { terrainTone, terrainColour } = await import(path);
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 1;
+      const ctx = canvas.getContext('2d')!;
+      const errors: number[] = [];
+      for (const base of [
+         [75, 111, 57],
+         [199, 184, 143],
+         [57, 111, 120],
+      ])
+         for (let i = -20; i <= 20; i++) {
+            const x = i * 79.3,
+               y = i * -113.7;
+            const tone = terrainTone(x, y);
+            const background = ctx.createImageData(1, 1);
+            background.data.set([...base, 255]);
+            ctx.putImageData(background, 0, 0);
+            const overlay = document.createElement('canvas');
+            overlay.width = overlay.height = 1;
+            const oc = overlay.getContext('2d')!;
+            const image = oc.createImageData(1, 1);
+            image.data.set(tone);
+            oc.putImageData(image, 0, 0);
+            ctx.drawImage(overlay, 0, 0);
+            const actual = ctx.getImageData(0, 0, 1, 1).data;
+            const expected: number[] = terrainColour(base, x, y);
+            errors.push(...expected.map((v, j) => Math.abs(v - actual[j])));
+         }
+      return errors;
+   });
+   expect(Math.max(...errors)).toBeLessThanOrEqual(2);
 });

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-17: shared ground texture treatment
+
+- Reused the detailed atlas earth-tone field in distant terrain and water.
+- Widened the ground-only perimeter blend while retaining the existing object fade.
+- Added a browser comparison of Canvas and distant colour compositing.
+- Suspended hidden idle overhead redraws during angled exploration, retaining active shot completion and relay updates.
+
 ## 2026-10-16: graduated woodland transitions
 
 - Reserved part of the distant tree sampling budget for a tapered band around detailed terrain.
