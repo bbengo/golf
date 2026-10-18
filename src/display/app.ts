@@ -1,3 +1,4 @@
+import { mountLandscapeControls } from './landscape-controls';
 import { analyseShot, compareShots } from '../core/simulation/shot-analysis';
 import { InputTrace } from '../lab/input-trace.js';
 import { startStudyTools } from './study-tools';
@@ -86,7 +87,9 @@ export async function startDisplay(onFirstFrame?: () => void) {
       },
       () => {
          void import('../core/rendering/landscape-preview').then(({ openLandscapePreview }) =>
-            openLandscapePreview(session.course, session.environment.daylight, session),
+            openLandscapePreview(session.course, session.environment.daylight, session, (dialog) =>
+               mountLandscapeControls(dialog, session, send, aimAt),
+            ),
          );
       },
    );

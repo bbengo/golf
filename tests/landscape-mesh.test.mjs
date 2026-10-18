@@ -69,3 +69,24 @@ test('streamed outer region uses physical elevations and material colours beyond
       assert.ok(mesh.vertices[i + 6] >= 0, 'outer terrain must not stretch the estate texture');
    }
 });
+
+test('terrain lighting shares normals at repeated vertices and across mesh resolutions', async () => {
+   const c = createPurityCourse();
+   const bounds = { minX: 1600, maxX: 1640, minY: 1200, maxY: 1240 };
+   const seen = new Map();
+   let shared = 0;
+   for (const step of [8, 16]) {
+      const mesh = await landscapeMesh(c, bounds, step, () => false, true);
+      for (let i = 0; i < mesh.terrainTriangles * 27; i += 9) {
+         const key = `${mesh.vertices[i]}:${mesh.vertices[i + 1]}`;
+         const normal = Array.from(mesh.vertices.slice(i + 3, i + 6));
+         assert.ok(Math.abs(Math.hypot(...normal) - 1) < 1e-6);
+         if (seen.has(key)) {
+            assert.deepEqual(normal, seen.get(key));
+            shared++;
+         }
+         seen.set(key, normal);
+      }
+   }
+   assert.ok(shared > 50);
+});

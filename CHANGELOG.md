@@ -1,3 +1,11 @@
+## 2026-10-18: play directly in the angled landscape
+
+- Added an opt-in angled shot panel, illustrated caddy, effort/shaping and synchronized phone controls.
+- Added physical-ground aiming, a target ring, optional recorded flight trail and bounded impact particles.
+- Shared world-space terrain normals across resolutions and removed duplicate angled texture lighting.
+- Applied quality-aware distant textures, ball visibility/colour and effect preferences to the angled view.
+- Close stale angled views when practice setup changes the course.
+
 ## 2026-10-18: angled view coverage and interface polish
 
 - Hold camera motion at rendered coverage while the requested landscape streams.

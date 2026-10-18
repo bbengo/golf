@@ -5,7 +5,7 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
 }) => {
    // Two browser contexts, full shot animations and visual captures on a shared runner.
    // The first cold shot allows synchronous trajectory computation before acknowledgement.
-   test.setTimeout(240000);
+   test.setTimeout(300000);
    const displayContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
    const phoneContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
@@ -108,7 +108,7 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await phone.locator('[data-panel="shot"]').click();
    await expect(course).toHaveAttribute('data-camera-zoom', '1.000');
    await phone.locator('#play').click();
-   await expect(phone.locator('#play')).toHaveText('Show result');
+   await expect(phone.locator('#play')).toHaveText('Show result', { timeout: 30000 });
    await expect(course).toHaveAttribute('data-camera-mode', 'framed');
    await expect(course).toHaveAttribute('data-camera-zoom', '1.000');
    await expect(phone.locator('#play')).toHaveText('Next shot', { timeout: 20000 });
@@ -130,7 +130,7 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await expect(angled).toHaveAttribute('data-following', 'true');
    const initialCamera = await angled.getAttribute('data-camera-x');
    await phone.locator('#play').click();
-   await expect(phone.locator('#play')).toHaveText('Show result');
+   await expect(phone.locator('#play')).toHaveText('Show result', { timeout: 30000 });
    await expect(angled).not.toHaveAttribute('data-ball-x', initialBall!, { timeout: 15000 });
    await expect(angled).not.toHaveAttribute('data-camera-x', initialCamera!);
    await angled.press('ArrowLeft');
@@ -141,6 +141,41 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await screen.emulateMedia({ reducedMotion: 'reduce' });
    await expect(angled).toHaveAttribute('data-following', 'false');
    await expect(screen.getByRole('button', { name: 'Follow ball', exact: true })).toBeDisabled();
+   await screen.getByRole('button', { name: 'Play in this view', exact: true }).click();
+   const angledControls = screen.locator('.landscape-play');
+   await angledControls.locator('[data-play]').click();
+   await expect(phone.locator('#play')).toHaveText('Play this shot');
+   await angledControls.locator('[data-club]').click();
+   await angledControls.locator('[data-caddy="8I"]').click();
+   await expect(phone.locator('#club')).toHaveValue('8I');
+   await angledControls.locator('[data-effort]').fill('70');
+   await expect(phone.locator('#effort')).toHaveValue('70');
+   const oldAim = await angled.getAttribute('data-aim-x');
+   await angled.click({ position: { x: 760, y: 400 } });
+   await expect(angled).not.toHaveAttribute('data-aim-x', oldAim!);
+   const aimAfter = await angled.getAttribute('data-aim-x');
+   await screen.mouse.move(760, 400);
+   await screen.mouse.down();
+   await screen.mouse.move(820, 420, { steps: 5 });
+   await screen.mouse.up();
+   await expect(angled).toHaveAttribute('data-aim-x', aimAfter!);
+   await screen.screenshot({ path: 'test-results/landscape-play-controls.png' });
+   await angledControls.locator('[data-play]').click();
+   // A short shot may resolve before an assertion observes its transient animation.
+   await expect(phone.locator('#play')).toHaveText('Next shot', { timeout: 30000 });
+   await expect(angledControls.locator('[data-notice]')).toContainText('carry');
+   await angledControls.locator('[data-mulligan]').click();
+   await expect(phone.locator('#play')).toHaveText('Play this shot');
+   await screen.setViewportSize({ width: 390, height: 844 });
+   await screen.screenshot({ path: 'test-results/landscape-play-portrait.png' });
+   const panelBox = await angledControls.boundingBox();
+   expect(panelBox!.x).toBeGreaterThanOrEqual(0);
+   expect(panelBox!.x + panelBox!.width).toBeLessThanOrEqual(390);
+   await screen.getByRole('button', { name: 'Hide shot controls' }).click();
+   await expect(
+      screen.getByRole('button', { name: 'Play in this view', exact: true }),
+   ).toBeVisible();
+
    await screen.keyboard.press('Escape');
    await screen.locator('#closeGameOptions').click();
    expect(images).toEqual([]);

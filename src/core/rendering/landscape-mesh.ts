@@ -1,3 +1,4 @@
+import { landscapeNormal } from './landscape-lighting';
 import type { Point } from '../contracts/cockpit';
 import { Course } from '../course/course.js';
 import { worldTrees, worldGroundColour, worldHash } from '../course/procedural-world';
@@ -40,6 +41,8 @@ export async function landscapeMesh(
    )
       throw Error('Invalid preview mesh budget');
    const data: number[] = [];
+   const groundNormals = new Map<string, [number, number, number]>();
+   let drawingGround = true;
    let canopyNormal: { centre: V; r: number; rz: number } | null = null;
    const triangle = (a: V, b: V, d: V, colour: number[]) => {
       const u = b.map((v, i) => v - a[i]),
@@ -53,6 +56,15 @@ export async function landscapeMesh(
       normal = normal.map((n) => n / length);
       for (const p of [a, b, d]) {
          let n = normal;
+         if (drawingGround) {
+            const key = `${p[0]}:${p[1]}`;
+            let cached = groundNormals.get(key);
+            if (!cached) {
+               cached = landscapeNormal(c, p[0], p[1]);
+               groundNormals.set(key, cached);
+            }
+            n = cached;
+         }
          if (canopyNormal) {
             const c = canopyNormal;
             n = [
@@ -170,6 +182,8 @@ export async function landscapeMesh(
       if (j % 24 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
    }
    const terrainTriangles = data.length / 27;
+   drawingGround = false;
+   groundNormals.clear();
    const box = (
       x0: number,
       y0: number,

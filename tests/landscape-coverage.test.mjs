@@ -108,3 +108,17 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
       /closed/,
    );
 });
+
+test('distant texture requests reject unbounded allocations', async () => {
+   await assert.rejects(
+      landscapeBackdrop(
+         createPurityCourse(),
+         { minX: 0, maxX: 100, minY: 0, maxY: 100 },
+         () => false,
+         'day',
+         undefined,
+         4096,
+      ),
+      /Invalid/,
+   );
+});

@@ -516,31 +516,34 @@ export class CourseAtlas {
             }
          }
       }
-      // Soft illumination uses the simulation's height field; it changes no geometry.
-      const light = document.createElement('canvas');
-      light.width = Math.ceil(w / 18);
-      light.height = Math.ceil(h / 18);
-      const lc = light.getContext('2d')!,
-         pixels = lc.createImageData(light.width, light.height);
-      for (let y = 0; y < light.height; y++)
-         for (let x = 0; x < light.width; x++) {
-            const p = { x: bounds.minX + (x * 18) / s, y: bounds.maxY - (y * 18) / s };
-            if (Course.surfaceAt(c, p).type === 'water') continue;
-            const slope = Course.slopeAt(c, p),
-               shade = Math.max(
-                  -0.055,
-                  Math.min(0.055, -(slope.x * sun.x + slope.y * sun.y) * 0.12),
+      // WebGL lights the shared normals itself; overhead retains baked relief.
+      if (includeObjects) {
+         // Soft illumination uses the simulation's height field; it changes no geometry.
+         const light = document.createElement('canvas');
+         light.width = Math.ceil(w / 18);
+         light.height = Math.ceil(h / 18);
+         const lc = light.getContext('2d')!,
+            pixels = lc.createImageData(light.width, light.height);
+         for (let y = 0; y < light.height; y++)
+            for (let x = 0; x < light.width; x++) {
+               const p = { x: bounds.minX + (x * 18) / s, y: bounds.maxY - (y * 18) / s };
+               if (Course.surfaceAt(c, p).type === 'water') continue;
+               const slope = Course.slopeAt(c, p),
+                  shade = Math.max(
+                     -0.055,
+                     Math.min(0.055, -(slope.x * sun.x + slope.y * sun.y) * 0.12),
+                  );
+               pixels.data.set(
+                  shade > 0
+                     ? [255, 239, 185, Math.round(shade * 255)]
+                     : [26, 52, 49, Math.round(-shade * 255)],
+                  (y * light.width + x) * 4,
                );
-            pixels.data.set(
-               shade > 0
-                  ? [255, 239, 185, Math.round(shade * 255)]
-                  : [26, 52, 49, Math.round(-shade * 255)],
-               (y * light.width + x) * 4,
-            );
-         }
-      lc.putImageData(pixels, 0, 0);
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(light, 0, 0, w, h);
+            }
+         lc.putImageData(pixels, 0, 0);
+         ctx.imageSmoothingEnabled = true;
+         ctx.drawImage(light, 0, 0, w, h);
+      }
       // Fine, seeded grain stays still when panning and never affects a lie.
       for (const mark of worldDecoration(bounds, 5, 613, 2)) {
          const { x, y } = point(mark);

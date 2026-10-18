@@ -1,3 +1,4 @@
+import { landscapeNormal } from './landscape-lighting';
 import { terrainColour } from './terrain-material';
 import { distantWoodland } from './distant-woodland';
 import type { LandscapeView } from './landscape-projection';
@@ -57,8 +58,10 @@ export async function landscapeBackdrop(
    cancelled = () => false,
    daylight: Daylight = 'day',
    detail?: Bounds,
+   textureSize = 256,
 ) {
    if (
+      ![256, 384, 512].includes(textureSize) ||
       !Object.values(bounds).every(Number.isFinite) ||
       bounds.maxX <= bounds.minX ||
       bounds.maxY <= bounds.minY
@@ -66,12 +69,14 @@ export async function landscapeBackdrop(
       throw Error('Invalid landscape backdrop bounds');
    const size = 128;
    const points: { x: number; y: number; z: number }[] = [];
+   const normals: [number, number, number][] = [];
    for (let j = 0; j <= size; j++) {
       if (cancelled()) throw Error('Preview closed');
       for (let i = 0; i <= size; i++) {
          const x = bounds.minX + ((bounds.maxX - bounds.minX) * i) / size;
          const y = bounds.minY + ((bounds.maxY - bounds.minY) * j) / size;
          const surface = Course.surfaceAt(c, { x, y });
+         normals.push(landscapeNormal(c, x, y));
          points.push({
             x,
             y,
@@ -84,17 +89,8 @@ export async function landscapeBackdrop(
    let offset = 0;
    const triangle = (ia: number, ib: number, ic: number) => {
       for (const index of [ia, ib, ic]) {
-         const p = points[index],
-            row = Math.floor(index / (size + 1)),
-            col = index % (size + 1);
-         const left = points[row * (size + 1) + Math.max(0, col - 1)];
-         const right = points[row * (size + 1) + Math.min(size, col + 1)];
-         const down = points[Math.max(0, row - 1) * (size + 1) + col];
-         const up = points[Math.min(size, row + 1) * (size + 1) + col];
-         const nx = -(right.z - left.z) / (right.x - left.x),
-            ny = -(up.z - down.z) / (up.y - down.y);
-         const length = Math.hypot(nx, ny, 1);
-         vertices.set([p.x, p.y, p.z, nx / length, ny / length, 1 / length, -1, 0, 0], offset);
+         const p = points[index];
+         vertices.set([p.x, p.y, p.z, ...normals[index], -1, 0, 0], offset);
          offset += 9;
       }
    };
@@ -110,7 +106,6 @@ export async function landscapeBackdrop(
       }
       if (j % 16 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
    }
-   const textureSize = 256;
    const pixels = new Uint8Array(textureSize * textureSize * 4);
    for (let j = 0; j < textureSize; j++) {
       if (cancelled()) throw Error('Preview closed');

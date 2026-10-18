@@ -1,3 +1,6 @@
+import { readPresentation } from './presentation';
+import { landscapeAimRing, landscapeTrail, landscapeImpacts } from './landscape-guides';
+import type { Point } from '../contracts/cockpit';
 import { recordedBallPosition } from './ball-position';
 import { gradeDaylightPixels } from './daylight-grade';
 import {
@@ -13,11 +16,18 @@ import { CourseAtlas } from './course-atlas';
 import { landscapeMesh } from './landscape-mesh';
 import { DAYLIGHT, type Daylight } from './daylight';
 import type { CockpitSession } from '../session/cockpit-session';
-/** An isolated, depth-tested WebGL study. It never changes aim, ball or round state. */
+export type LandscapeInteraction = {
+   aiming: () => boolean;
+   aim: (point: Point) => void;
+   render: () => void;
+   dispose: () => void;
+};
+/** Depth-tested view; optional UI sends actions through the authoritative session. */
 export async function openLandscapePreview(
    course: CockpitSession['course'],
    daylight: Daylight,
    session?: CockpitSession,
+   mountControls?: (dialog: HTMLDialogElement) => LandscapeInteraction,
 ) {
    if (document.getElementById('landscapePreview')) return;
    const previous = document.activeElement as HTMLElement | null;
@@ -35,6 +45,7 @@ export async function openLandscapePreview(
    const resources: {
       buffer?: WebGLBuffer;
       ball?: WebGLBuffer;
+      guides?: WebGLBuffer;
       backdrop?: WebGLBuffer;
       backdropTexture?: WebGLTexture;
       texture?: WebGLTexture;
@@ -43,15 +54,18 @@ export async function openLandscapePreview(
    } = {
       shaders: [],
    };
+   let interaction: LandscapeInteraction | undefined;
    const gl = canvas.getContext('webgl', { alpha: false, antialias: true });
    const cleanup = () => {
       if (closed) return;
       closed = true;
       cancelAnimationFrame(frame);
+      interaction?.dispose();
       if (gl) {
          if (resources.backdropTexture) gl.deleteTexture(resources.backdropTexture);
          if (resources.backdrop) gl.deleteBuffer(resources.backdrop);
          if (resources.ball) gl.deleteBuffer(resources.ball);
+         if (resources.guides) gl.deleteBuffer(resources.guides);
          if (resources.buffer) gl.deleteBuffer(resources.buffer);
          if (resources.texture) gl.deleteTexture(resources.texture);
          if (resources.program) gl.deleteProgram(resources.program);
@@ -101,7 +115,7 @@ export async function openLandscapePreview(
          program,
          compile(
             gl.FRAGMENT_SHADER,
-            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform float edgeFade;uniform float ballMarker;void main(){if(ballMarker>0.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(mix(vec3(1.0,0.99,0.91),vec3(0.25,0.33,0.25),smoothstep(0.30,0.5,d)),1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,alpha);}`,
+            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform float edgeFade;uniform float ballMarker;uniform vec3 ballTint;uniform float effectAlpha;void main(){if(ballMarker>1.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(tint,effectAlpha*(1.0-smoothstep(0.25,0.5,d)));return;}if(ballMarker>0.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(mix(ballTint,vec3(0.25,0.33,0.25),smoothstep(0.30,0.5,d)),1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,alpha);}`,
          ),
       );
       gl.linkProgram(program);
@@ -158,6 +172,9 @@ export async function openLandscapePreview(
       resources.ball = ballBuffer;
       const ballData = new Float32Array(9);
       let previousBall = '';
+      let previousGuide = '';
+      const guideBuffer = gl.createBuffer()!;
+      resources.guides = guideBuffer;
       const backdropBuffer = gl.createBuffer()!;
       resources.backdrop = backdropBuffer;
       const backdropTexture = gl.createTexture()!;
@@ -238,7 +255,7 @@ export async function openLandscapePreview(
                z: ball.z ?? Course.heightAt(course, ball),
                span: 85,
             });
-            inspection = 'Live ball position. Shot controls remain on your phone or overhead view.';
+            inspection = 'Live ball position. Open shot controls here, or play from your phone.';
             status.textContent = inspection;
             for (const button of nav.querySelectorAll('button:not([data-pan])'))
                button.setAttribute('aria-pressed', String(button === ballButton));
@@ -302,14 +319,17 @@ export async function openLandscapePreview(
          target.z = Course.heightAt(course, target);
       };
       let pointer: { x: number; y: number } | null = null;
+      let press: { x: number; y: number; moved: boolean } | null = null;
       canvas.onpointerdown = (e) => {
          stopFollowing();
          pointer = { x: e.clientX, y: e.clientY };
+         press = { ...pointer, moved: false };
          canvas.setPointerCapture(e.pointerId);
          canvas.focus();
       };
       canvas.onpointermove = (e) => {
          if (!pointer) return;
+         if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 5) press.moved = true;
          if (panMode || e.shiftKey) {
             pan(e.clientX - pointer.x, e.clientY - pointer.y);
             pointer = { x: e.clientX, y: e.clientY };
@@ -322,12 +342,33 @@ export async function openLandscapePreview(
          );
          pointer = { x: e.clientX, y: e.clientY };
       };
-      canvas.onpointerup =
-         canvas.onpointercancel =
-         canvas.onlostpointercapture =
-            () => {
-               pointer = null;
-            };
+      canvas.onpointerup = (event) => {
+         if (
+            press &&
+            !press.moved &&
+            interaction?.aiming() &&
+            dialog.dataset.worldReady === 'true'
+         ) {
+            const rect = canvas.getBoundingClientRect();
+            const hit = pickLandscape(
+               { x: event.clientX - rect.left, y: event.clientY - rect.top },
+               { ...current, width: rect.width, height: rect.height },
+               (p) => {
+                  const surface = Course.surfaceAt(course, p);
+                  return surface.type === 'water'
+                     ? surface.waterHeight
+                     : Course.heightAt(course, p);
+               },
+            );
+            if (hit) interaction.aim(hit);
+         }
+         pointer = null;
+         press = null;
+      };
+      canvas.onpointercancel = canvas.onlostpointercapture = () => {
+         pointer = null;
+         press = null;
+      };
       const zoom = (factor: number) => {
          stopFollowing();
          target.span = Math.max(35, Math.min(720, target.span * factor));
@@ -361,10 +402,15 @@ export async function openLandscapePreview(
             );
          else zoom(e.key === '-' ? 1.15 : 1 / 1.15);
       };
+      interaction = mountControls?.(dialog);
+      if (interaction)
+         dialog.querySelector('header p:last-child')!.textContent =
+            'Explore, or open shot controls to play here.';
       status.textContent = 'Preview ready. Choose a viewpoint or orbit the estate.';
       canvas.dataset.ready = 'true';
       canvas.dataset.triangles = String(mesh.triangles);
       canvas.ondblclick = (event) => {
+         if (interaction?.aiming()) return;
          stopFollowing();
          const rect = canvas.getBoundingClientRect();
          const hit = pickLandscape(
@@ -398,15 +444,19 @@ export async function openLandscapePreview(
       let backdropRequest = '',
          backdropSettledAt = 0;
       let backdropDetail = '';
+      let backdropResolution = 0;
       const detailKey = () => JSON.stringify(detailBounds);
       const refreshBackdrop = async () => {
          if (backdropBuilding || performance.now() < backdropRetry) return;
+         const quality = readPresentation(document.body.dataset).renderQuality;
+         const resolution = quality === 'crisp' ? 512 : quality === 'economy' ? 256 : 384;
          const rect = canvas.getBoundingClientRect();
          const needed = landscapeFootprint({ ...target, width: rect.width, height: rect.height });
          if (
             backdropBounds &&
             containsLandscape(backdropBounds, needed) &&
-            backdropDetail === detailKey()
+            backdropDetail === detailKey() &&
+            backdropResolution === resolution
          )
             return;
          const request = [target.x, target.y, target.span, target.pitch, rect.width, rect.height]
@@ -440,6 +490,7 @@ export async function openLandscapePreview(
                   () => closed || superseded(),
                   daylight,
                   treeDetail,
+                  resolution,
                );
             if (closed || superseded()) return;
             gl.bindTexture(gl.TEXTURE_2D, backdropTexture);
@@ -458,6 +509,8 @@ export async function openLandscapePreview(
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
             backdropBounds = nextBounds;
             backdropDetail = requestedDetail;
+            backdropResolution = resolution;
+            canvas.dataset.textureResolution = String(resolution);
             backdropCount = vertices.length / 9;
             firstFrame = true;
             canvas.dataset.backdropReady = 'true';
@@ -537,6 +590,19 @@ export async function openLandscapePreview(
       };
       const draw = (now: number) => {
          if (closed) return;
+         if (session && session.course !== course) {
+            dialog.close();
+            return;
+         }
+         interaction?.render();
+         const presentation = readPresentation(document.body.dataset);
+         const effectTime = session?.last ? session.shotTime(now, false) : Infinity;
+         const effectsActive =
+            !reduce.matches &&
+            presentation.impactCue === 'subtle' &&
+            session?.phase !== 'plan' &&
+            !!session?.last &&
+            effectTime < session.last.result.duration + 2.4;
          const ball =
             session && session.course === course ? recordedBallPosition(session, now) : null;
          if (following && (!ball || reduce.matches)) stopFollowing();
@@ -553,13 +619,22 @@ export async function openLandscapePreview(
          void refreshTerrain();
          void refreshBackdrop();
          const ballKey = ball ? `${ball.x}:${ball.y}:${ball.z}` : '';
+         const guideKey = `${interaction?.aiming()}:${session?.revision}:${session?.phase}:${JSON.stringify(presentation)}:${effectsActive ? now : 0}`;
          const previousCamera = { ...current };
          const ease = reduce.matches
             ? 1
             : 1 - Math.exp(-Math.min(64, now - last) / (following ? 320 : 200));
          last = now;
          const r = canvas.getBoundingClientRect(),
-            ratio = Math.min(1.5, devicePixelRatio, Math.sqrt(4000000 / (r.width * r.height)));
+            ratio = Math.min(
+               presentation.renderQuality === 'economy'
+                  ? 1
+                  : presentation.renderQuality === 'crisp'
+                    ? 2
+                    : 1.5,
+               devicePixelRatio,
+               Math.sqrt(4000000 / (r.width * r.height)),
+            );
          const next = { ...current };
          for (const key of Object.keys(current) as (keyof typeof current)[])
             next[key] =
@@ -579,6 +654,7 @@ export async function openLandscapePreview(
          const changed =
             firstFrame ||
             ballKey !== previousBall ||
+            guideKey !== previousGuide ||
             Object.keys(current).some(
                (key) =>
                   current[key as keyof typeof current] !==
@@ -600,6 +676,7 @@ export async function openLandscapePreview(
          if (changed || resized) {
             firstFrame = false;
             previousBall = ballKey;
+            previousGuide = guideKey;
             gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.uniform3f(centre, current.x, current.y, current.z);
@@ -620,6 +697,53 @@ export async function openLandscapePreview(
             bindGeometry(buffer);
             gl.drawArrays(gl.TRIANGLES, 0, mesh.vertices.length / 9);
             gl.disable(gl.BLEND);
+            // Presentation-only guides use the same camera/depth buffer as terrain.
+            // Bound the trail upload; no second trajectory calculation is performed.
+            if (session && session.course === course) {
+               gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), 0);
+               let points = new Float32Array();
+               if (interaction?.aiming())
+                  points = landscapeAimRing(course, session.aim, current.span);
+               else if (
+                  presentation.shotTrace === 'last' &&
+                  session.phase !== 'plan' &&
+                  session.last &&
+                  ball
+               )
+                  points = landscapeTrail(session.last.result.trajectory, session.shotTime(now), {
+                     ...ball,
+                     z: ball.z ?? Course.heightAt(course, ball),
+                  });
+               if (points.length) {
+                  gl.bindBuffer(gl.ARRAY_BUFFER, guideBuffer);
+                  gl.bufferData(gl.ARRAY_BUFFER, points, gl.DYNAMIC_DRAW);
+                  bindGeometry(guideBuffer);
+                  gl.drawArrays(gl.LINE_STRIP, 0, points.length / 9);
+               }
+               canvas.dataset.aimX = String(session.aim.x);
+               canvas.dataset.aimY = String(session.aim.y);
+            }
+            if (effectsActive && session?.last) {
+               gl.enable(gl.BLEND);
+               gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+               gl.depthMask(false);
+               gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), 0);
+               for (const batch of landscapeImpacts(
+                  course,
+                  session.last.result.events,
+                  effectTime,
+               )) {
+                  gl.bindBuffer(gl.ARRAY_BUFFER, guideBuffer);
+                  gl.bufferData(gl.ARRAY_BUFFER, batch.vertices, gl.DYNAMIC_DRAW);
+                  bindGeometry(guideBuffer);
+                  gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 2);
+                  gl.uniform1f(gl.getUniformLocation(program, 'markerSize'), 4 * ratio);
+                  gl.uniform1f(gl.getUniformLocation(program, 'effectAlpha'), batch.alpha);
+                  gl.drawArrays(gl.POINTS, 0, batch.vertices.length / 9);
+               }
+               gl.depthMask(true);
+               gl.disable(gl.BLEND);
+            }
             if (ball) {
                const z = ball.z ?? Course.heightAt(course, ball);
                ballData.set([ball.x, ball.y, z + 0.04, 0, 0, 1, 1, 1, 1]);
@@ -627,7 +751,16 @@ export async function openLandscapePreview(
                gl.bufferData(gl.ARRAY_BUFFER, ballData, gl.DYNAMIC_DRAW);
                bindGeometry(ballBuffer);
                gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 1);
-               gl.uniform1f(gl.getUniformLocation(program, 'markerSize'), 7 * ratio);
+               gl.uniform3f(
+                  gl.getUniformLocation(program, 'ballTint'),
+                  1,
+                  presentation.ballColour === 'yellow' ? 0.88 : 0.99,
+                  presentation.ballColour === 'yellow' ? 0.25 : 0.91,
+               );
+               gl.uniform1f(
+                  gl.getUniformLocation(program, 'markerSize'),
+                  (presentation.ballVisibility === 'enhanced' ? 11 : 7) * ratio,
+               );
                gl.drawArrays(gl.POINTS, 0, 1);
                canvas.dataset.ballX = String(ball.x);
                canvas.dataset.ballY = String(ball.y);

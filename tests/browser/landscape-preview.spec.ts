@@ -35,7 +35,7 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    await expect(dialog.getByRole('button', { name: 'Follow ball', exact: true })).toBeDisabled();
    const ballX = await canvas.getAttribute('data-ball-x');
    await dialog.getByRole('button', { name: 'Current ball', exact: true }).click();
-   await expect(dialog.locator('[role=status]')).toContainText('Live ball position');
+   await expect(dialog.locator('.preview-status')).toContainText('Live ball position');
    await expect(canvas).toHaveAttribute('data-ball-x', ballX!);
 
    await dialog.getByRole('button', { name: 'Woodland pavilion', exact: true }).click();
@@ -46,7 +46,7 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    const box = await canvas.boundingBox();
    await canvas.dblclick({ position: { x: box!.width * 0.52, y: box!.height * 0.55 } });
    await expect(canvas).toHaveAttribute('data-pick-x', /^-?\d/);
-   await expect(dialog.locator('[role=status]')).toContainText('Your shot target is unchanged');
+   await expect(dialog.locator('.preview-status')).toContainText('Your shot target is unchanged');
 
    await dialog.getByRole('button', { name: 'Whole estate', exact: true }).click();
    await canvas.focus();
