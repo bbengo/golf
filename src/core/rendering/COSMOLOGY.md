@@ -504,3 +504,14 @@ The tree-geometry module supplies a deterministic asymmetric crown envelope to b
 Validation: twelve focused geometry/woodland tests pass, covering fixed triangle counts, nonzero faces, deterministic crown continuity, envelope bounds, finite branch geometry, unchanged physical snapshots and distant tree retention. Typecheck and production build pass, with the existing legacy course chunk warning.
 
 Final validation: both landscape browser checks passed, including idle rendering, wide/portrait coverage and unavailable-WebGL recovery. The pavilion capture was reviewed: varied silhouettes are apparent, but forks remain partly hidden by foliage from the elevated camera. Formatting passes.
+
+
+## 2026-10-19: opt-in CPU diagnostics and obsolete terrain cancellation
+
+Detailed terrain generation now checks whether its requested centre has fallen more than 240 metres behind the camera target at existing cancellation checkpoints. Previously it completed the mesh before discarding it. Obsolete work exits without displaying a terrain-error message, allowing the next request to build the current destination. Coverage guards and the accepted camera easing remain unchanged.
+
+Add `?profile3d=1` before the route hash (for example `/?profile3d=1#play`) to enable a bounded CPU diagnostic collector. After entering 3D, inspect `JSON.parse(document.querySelector('#landscapePreview canvas').dataset.performance)` in browser devtools. It reports median/p95 CPU draw-submission duration over at most 120 rendered frames, last successful detail/backdrop build wall times, and cancelled detail builds. Build time includes cooperative yields and upload time; draw time excludes preceding session/stream checks and is not GPU execution time. Neither metric is FPS. Snapshots update at most once per second, without forcing redraws or adding gameplay UI. Normal sessions do not allocate the collector.
+
+Validation: seven focused diagnostics/mesh tests pass, including bounded sample retention, percentiles, cancellation support and unchanged course evidence. Typecheck and build pass. The existing legacy course bundle-size warning remains. Actual device GPU timing, peak memory and visual quality profiling are still required before claiming performance targets.
+
+Final verification: both browser checks passed with diagnostics enabled for exploration, including bounded sample publication, terrain build timing, idle draw stability, wide/portrait coverage and fallback recovery. Formatting passes.

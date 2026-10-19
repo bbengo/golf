@@ -1,3 +1,9 @@
+## 2026-10-19: bounded 3D diagnostics and earlier terrain cancellation
+
+- Cancel obsolete detailed terrain during generation instead of after completion.
+- Add opt-in CPU draw and terrain-build diagnostics through `?profile3d=1`.
+- Bound diagnostic storage to 120 frames with no normal-gameplay HUD.
+
 ## 2026-10-19: tapered trunks and forked tree structure
 
 - Add tapered trunks and three visible forks to detailed trees within a fixed 200-triangle total.

@@ -8,6 +8,8 @@ Latest ball/performance pass: spherical impostor lighting, bounded zoom-responsi
 
 Vegetation update: continuous near/distant foliage tone replaces per-vertex colour noise. Detailed crowns now use 160 rather than 192 triangles by removing collapsed pole geometry. Tapered trunks and three forks now bring each detailed tree to 200 triangles, below the earlier 204 total but above the optimized 172. Near/distant crowns share an asymmetric envelope. Leaf detail, full branching, density transitions and device FPS validation remain open.
 
+Performance tooling: `?profile3d=1#play` enables bounded CPU draw/build metrics in the landscape canvas `data-performance`. Detailed terrain now cancels obsolete destinations during generation. Use these metrics alongside real-device GPU tools; CPU submission duration is not FPS or GPU timing.
+
 Remaining work is quality and external validation: physical-device/GPU and phone sleep/reconnect testing, transition peak-memory profiling, finer shoreline/material continuity, vegetation density transitions and measured physics calibration. These are not claimed complete by browser automation.
 
 The four engine implementation tracks now have working foundations: shared procedural world and outer-water elevations/beds; versioned baseline ball/aero/contact profiles; shared weather/sunlight shot snapshots; recorded-shot comparison and a seeded 12-shot consistency study. Older notes below are chronological history, not the current completion checklist.

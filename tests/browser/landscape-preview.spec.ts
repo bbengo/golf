@@ -14,7 +14,7 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
       };
    });
    await page.emulateMedia({ reducedMotion: 'reduce' });
-   await page.goto('/#play');
+   await page.goto('/?profile3d=1#play');
    await expect(page.locator('#desktopPlay')).toBeVisible({ timeout: 30000 });
    const club = await page.locator('#selectedClubName').textContent();
    await page.keyboard.press('Escape');
@@ -34,6 +34,17 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    await page.waitForTimeout(350);
    await expect(canvas).toHaveAttribute('data-rendered-frames', idleFrames!);
    await expect(canvas).toHaveAttribute('data-ball-shadow', 'true');
+   await expect(canvas).toHaveAttribute('data-performance', /cpuDrawP95Ms/);
+   const diagnostics = JSON.parse((await canvas.getAttribute('data-performance'))!);
+   expect(diagnostics.samples).toBeGreaterThan(0);
+   expect(diagnostics.samples).toBeLessThanOrEqual(120);
+   await expect
+      .poll(
+         async () =>
+            JSON.parse((await canvas.getAttribute('data-performance'))!).lastBackdropBuildMs,
+      )
+      .toBeGreaterThan(0);
+
    await page.screenshot({ path: 'test-results/landscape-preview-estate.png' });
    await expect(canvas).toHaveAttribute('data-ball-x', /^-?\d/);
    await expect(dialog.getByRole('button', { name: 'Follow ball', exact: true })).toBeDisabled();

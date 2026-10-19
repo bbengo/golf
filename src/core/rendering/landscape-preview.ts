@@ -1,3 +1,4 @@
+import { LandscapePerformance } from './landscape-performance';
 import { ballLight, ballDiameter, ballShadow } from './landscape-ball';
 import { readPresentation } from './presentation';
 import { landscapeAimRing, landscapeTrail, landscapeImpacts } from './landscape-guides';
@@ -41,6 +42,11 @@ export async function openLandscapePreview(
    dialog.showModal();
    const canvas = dialog.querySelector('canvas')!,
       status = dialog.querySelector<HTMLElement>('.preview-status')!;
+   const diagnostics =
+      new URLSearchParams(location.search).get('profile3d') === '1'
+         ? new LandscapePerformance()
+         : null;
+   let lastDiagnostic = 0;
    let closed = false,
       frame = 0;
    const resources: {
@@ -485,6 +491,7 @@ export async function openLandscapePreview(
          }
          if (performance.now() - backdropSettledAt < 180) return;
          backdropBuilding = true;
+         const buildStarted = performance.now();
          const nextBounds = paddedLandscape(needed);
          const requestedDetail = detailKey();
          const treeDetail = { ...detailBounds };
@@ -533,6 +540,7 @@ export async function openLandscapePreview(
             canvas.dataset.backdropVertices = String(backdropCount);
             canvas.dataset.backdropTerrainVertices = String(terrainVertices);
             canvas.dataset.distantTrees = String(treeCount);
+            diagnostics?.recordBuild('backdrop', performance.now() - buildStarted);
          } catch (error) {
             if (!closed && !superseded()) {
                console.warn('Landscape backdrop', error);
@@ -548,8 +556,10 @@ export async function openLandscapePreview(
          if (performance.now() - lastRequest < 250) return;
          lastRequest = performance.now();
          building = true;
+         const buildStarted = performance.now();
          const x = Math.round(target.x / 128) * 128,
             y = Math.round(target.y / 128) * 128;
+         const obsolete = () => Math.hypot(target.x - x, target.y - y) > 240;
          status.textContent = inspection || 'Preparing surrounding terrain...';
          canvas.dataset.streaming = 'true';
          try {
@@ -557,13 +567,16 @@ export async function openLandscapePreview(
                course,
                { minX: x - 768, maxX: x + 768, minY: y - 768, maxY: y + 768 },
                16,
-               () => closed,
+               () => closed || obsolete(),
                true,
                true,
             );
             if (closed) return;
             // Discard obsolete work if the player moved on during generation.
-            if (Math.hypot(target.x - x, target.y - y) > 240) return;
+            if (obsolete()) {
+               diagnostics?.cancelBuild();
+               return;
+            }
             const patch = new CourseAtlas().groundTexture(course, daylight, {
                minX: x - 768,
                maxX: x + 768,
@@ -584,6 +597,7 @@ export async function openLandscapePreview(
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
             gl.bufferData(gl.ARRAY_BUFFER, next.vertices, gl.STATIC_DRAW);
             mesh = next;
+            diagnostics?.recordBuild('detail', performance.now() - buildStarted);
             loadedX = x;
             loadedY = y;
             firstFrame = true;
@@ -594,7 +608,8 @@ export async function openLandscapePreview(
                inspection ||
                'Surrounding landscape ready. Shift-drag or use Pan landscape to explore.';
          } catch (error) {
-            if (!closed) {
+            if (obsolete()) diagnostics?.cancelBuild();
+            if (!closed && !obsolete()) {
                lastRequest = performance.now() + 5000;
                status.textContent =
                   'Terrain could not update. Return to a saved viewpoint to retry.';
@@ -691,6 +706,7 @@ export async function openLandscapePreview(
             gl.viewport(0, 0, w, h);
          }
          if (changed || resized) {
+            const drawStarted = diagnostics ? performance.now() : 0;
             canvas.dataset.renderedFrames = String(++renderedFrames);
             firstFrame = false;
             previousBall = ballKey;
@@ -843,6 +859,11 @@ export async function openLandscapePreview(
                canvas.dataset.ballY = String(ball.y);
                canvas.dataset.ballZ = String(z);
             }
+            diagnostics?.recordDraw(performance.now() - drawStarted);
+         }
+         if (diagnostics && now - lastDiagnostic >= 1000) {
+            canvas.dataset.performance = JSON.stringify(diagnostics.snapshot());
+            lastDiagnostic = now;
          }
          frame = requestAnimationFrame(draw);
       };
