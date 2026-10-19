@@ -30,6 +30,10 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    const hiddenDraws = await courseCanvas.getAttribute('data-draw-count');
    await page.waitForTimeout(350);
    await expect(courseCanvas).toHaveAttribute('data-draw-count', hiddenDraws!);
+   const idleFrames = await canvas.getAttribute('data-rendered-frames');
+   await page.waitForTimeout(350);
+   await expect(canvas).toHaveAttribute('data-rendered-frames', idleFrames!);
+   await expect(canvas).toHaveAttribute('data-ball-shadow', 'true');
    await page.screenshot({ path: 'test-results/landscape-preview-estate.png' });
    await expect(canvas).toHaveAttribute('data-ball-x', /^-?\d/);
    await expect(dialog.getByRole('button', { name: 'Follow ball', exact: true })).toBeDisabled();

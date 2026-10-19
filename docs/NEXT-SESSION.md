@@ -4,7 +4,7 @@
 
 Latest completed implementation: angled gameplay uses the shared session and paired-phone command path; camera coverage is guarded during streaming and resize; terrain uses a stitched adaptive surface with continuous depth; materials and authored trees remain visible outside the detailed window. The desktop/portrait shot panel and medium-width control spacing have been checked. Distant material boundaries now use four subpixel samples to reduce coarse shoreline/fairway edge stepping, with unchanged GPU texture sizes. Historical sections below describe earlier stages and are superseded by this status.
 
-Latest ball/performance pass: spherical impostor lighting, bounded zoom-responsive ball size, binary-search playback, cached shader locations and reused ball allocation. Real GPU/frame-time profiling remains necessary; the ball still uses point-centre depth and has no ground shadow.
+Latest ball/performance pass: spherical impostor lighting, bounded zoom-responsive ball size, binary-search playback, cached shader locations and reused ball allocation. Real GPU/frame-time profiling remains necessary; the ball still uses point-centre depth. A bounded terrain-conforming contact shadow is now implemented, with altitude fade and water suppression; full scene shadowing and ball surface detail remain open. Aim geometry is cached across orbit frames.
 
 Remaining work is quality and external validation: physical-device/GPU and phone sleep/reconnect testing, transition peak-memory profiling, finer shoreline/material continuity, vegetation density transitions and measured physics calibration. These are not claimed complete by browser automation.
 

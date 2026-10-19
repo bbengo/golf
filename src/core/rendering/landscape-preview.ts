@@ -1,4 +1,4 @@
-import { ballLight, ballDiameter } from './landscape-ball';
+import { ballLight, ballDiameter, ballShadow } from './landscape-ball';
 import { readPresentation } from './presentation';
 import { landscapeAimRing, landscapeTrail, landscapeImpacts } from './landscape-guides';
 import type { Point } from '../contracts/cockpit';
@@ -46,6 +46,7 @@ export async function openLandscapePreview(
    const resources: {
       buffer?: WebGLBuffer;
       ball?: WebGLBuffer;
+      shadow?: WebGLBuffer;
       guides?: WebGLBuffer;
       backdrop?: WebGLBuffer;
       backdropTexture?: WebGLTexture;
@@ -65,6 +66,7 @@ export async function openLandscapePreview(
       if (gl) {
          if (resources.backdropTexture) gl.deleteTexture(resources.backdropTexture);
          if (resources.backdrop) gl.deleteBuffer(resources.backdrop);
+         if (resources.shadow) gl.deleteBuffer(resources.shadow);
          if (resources.ball) gl.deleteBuffer(resources.ball);
          if (resources.guides) gl.deleteBuffer(resources.guides);
          if (resources.buffer) gl.deleteBuffer(resources.buffer);
@@ -108,15 +110,15 @@ export async function openLandscapePreview(
          program,
          compile(
             gl.VERTEX_SHADER,
-            `attribute vec3 position;attribute vec3 normal;attribute vec3 colour;uniform vec3 centre;uniform vec4 view;uniform vec3 sun;uniform vec4 bounds;uniform vec4 detailBounds;uniform float markerSize;varying vec3 tint;varying vec2 uv;varying vec2 detailUV;varying vec2 detailExtent;varying vec2 extent;varying float terrain;varying float lighting;
- void main(){detailExtent=detailBounds.zw-detailBounds.xy;detailUV=vec2((position.x-detailBounds.x)/detailExtent.x,(detailBounds.w-position.y)/detailExtent.y);gl_PointSize=markerSize;extent=bounds.zw-bounds.xy;vec3 p=position-centre;float co=cos(view.x),si=sin(view.x);float x=co*p.x-si*p.y,y=si*p.x+co*p.y;float sy=sin(view.y),cy=cos(view.y);gl_Position=vec4(x/(view.z*view.w),(y*sy+p.z*cy)/view.z,(y*cy-p.z*sy)/32000.0,1.0);float light=0.60+0.40*max(0.0,dot(normalize(normal),normalize(sun)));tint=colour*light;lighting=light;terrain=colour.r<0.0?1.0:0.0;uv=vec2((position.x-bounds.x)/(bounds.z-bounds.x),(bounds.w-position.y)/(bounds.w-bounds.y));}`,
+            `attribute vec3 position;attribute vec3 normal;attribute vec3 colour;uniform vec3 centre;uniform vec4 view;uniform vec3 sun;uniform vec4 bounds;uniform vec4 detailBounds;uniform float markerSize;varying float shadowOpacity;varying vec3 tint;varying vec2 uv;varying vec2 detailUV;varying vec2 detailExtent;varying vec2 extent;varying float terrain;varying float lighting;
+ void main(){shadowOpacity=colour.r;detailExtent=detailBounds.zw-detailBounds.xy;detailUV=vec2((position.x-detailBounds.x)/detailExtent.x,(detailBounds.w-position.y)/detailExtent.y);gl_PointSize=markerSize;extent=bounds.zw-bounds.xy;vec3 p=position-centre;float co=cos(view.x),si=sin(view.x);float x=co*p.x-si*p.y,y=si*p.x+co*p.y;float sy=sin(view.y),cy=cos(view.y);gl_Position=vec4(x/(view.z*view.w),(y*sy+p.z*cy)/view.z,(y*cy-p.z*sy)/32000.0,1.0);float light=0.60+0.40*max(0.0,dot(normalize(normal),normalize(sun)));tint=colour*light;lighting=light;terrain=colour.r<0.0?1.0:0.0;uv=vec2((position.x-bounds.x)/(bounds.z-bounds.x),(bounds.w-position.y)/(bounds.w-bounds.y));}`,
          ),
       );
       gl.attachShader(
          program,
          compile(
             gl.FRAGMENT_SHADER,
-            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 detailUV;varying vec2 detailExtent;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform sampler2D detailGround;uniform float blendDetail;uniform float edgeFade;uniform float ballMarker;uniform vec3 ballTint;uniform vec3 ballSun;uniform float effectAlpha;void main(){if(ballMarker>1.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(tint,effectAlpha*(1.0-smoothstep(0.25,0.5,d)));return;}if(ballMarker>0.5){vec2 p=(gl_PointCoord-vec2(0.5))*2.0;p.y=-p.y;float r=dot(p,p);if(r>1.0)discard;vec3 n=vec3(p,sqrt(max(0.0,1.0-r)));float diffuse=max(0.0,dot(n,ballSun));vec3 halfLight=normalize(ballSun+vec3(0.0,0.0,1.0));float spec=pow(max(0.0,dot(n,halfLight)),48.0)*0.22;vec3 shade=ballTint*(0.32+0.68*diffuse)+vec3(spec);gl_FragColor=vec4(shade,1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;if(alpha<0.01)discard;vec3 material=texture2D(ground,uv).rgb;if(blendDetail>0.5&&terrain>0.5){vec2 de=min(detailUV,1.0-detailUV)*detailExtent;float weight=smoothstep(0.0,128.0,min(de.x,de.y));material=mix(material,texture2D(detailGround,clamp(detailUV,0.0,1.0)).rgb,weight);}gl_FragColor=vec4(terrain>0.5?material*lighting:tint,alpha);}`,
+            `precision mediump float;varying float shadowOpacity;varying vec3 tint;varying vec2 uv;varying vec2 detailUV;varying vec2 detailExtent;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform sampler2D detailGround;uniform float blendDetail;uniform float edgeFade;uniform float ballMarker;uniform vec3 ballTint;uniform vec3 ballSun;uniform float effectAlpha;void main(){if(ballMarker>2.5){gl_FragColor=vec4(0.04,0.08,0.05,shadowOpacity);return;}if(ballMarker>1.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(tint,effectAlpha*(1.0-smoothstep(0.25,0.5,d)));return;}if(ballMarker>0.5){vec2 p=(gl_PointCoord-vec2(0.5))*2.0;p.y=-p.y;float r=dot(p,p);if(r>1.0)discard;vec3 n=vec3(p,sqrt(max(0.0,1.0-r)));float diffuse=max(0.0,dot(n,ballSun));vec3 halfLight=normalize(ballSun+vec3(0.0,0.0,1.0));float spec=pow(max(0.0,dot(n,halfLight)),48.0)*0.22;vec3 shade=ballTint*(0.32+0.68*diffuse)+vec3(spec);gl_FragColor=vec4(shade,1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;if(alpha<0.01)discard;vec3 material=texture2D(ground,uv).rgb;if(blendDetail>0.5&&terrain>0.5){vec2 de=min(detailUV,1.0-detailUV)*detailExtent;float weight=smoothstep(0.0,128.0,min(de.x,de.y));material=mix(material,texture2D(detailGround,clamp(detailUV,0.0,1.0)).rgb,weight);}gl_FragColor=vec4(terrain>0.5?material*lighting:tint,alpha);}`,
          ),
       );
       gl.linkProgram(program);
@@ -182,6 +184,15 @@ export async function openLandscapePreview(
       gl.bindBuffer(gl.ARRAY_BUFFER, ballBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, ballData.byteLength, gl.DYNAMIC_DRAW);
       const pointRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE) as Float32Array;
+      const shadowBuffer = gl.createBuffer()!;
+      resources.shadow = shadowBuffer;
+      gl.bindBuffer(gl.ARRAY_BUFFER, shadowBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, 24 * 3 * 9 * 4, gl.DYNAMIC_DRAW);
+      let shadowKey = '',
+         shadowCount = 0;
+      let aimKey = '',
+         aimPoints = new Float32Array();
+      let renderedFrames = 0;
       let previousBall = '';
       let previousGuide = '';
       const guideBuffer = gl.createBuffer()!;
@@ -680,6 +691,7 @@ export async function openLandscapePreview(
             gl.viewport(0, 0, w, h);
          }
          if (changed || resized) {
+            canvas.dataset.renderedFrames = String(++renderedFrames);
             firstFrame = false;
             previousBall = ballKey;
             previousGuide = guideKey;
@@ -721,9 +733,14 @@ export async function openLandscapePreview(
             if (session && session.course === course) {
                gl.uniform1f(uniform('edgeFade'), 0);
                let points = new Float32Array();
-               if (interaction?.aiming())
-                  points = landscapeAimRing(course, session.aim, current.span);
-               else if (
+               if (interaction?.aiming()) {
+                  const key = `${session.aim.x}:${session.aim.y}:${current.span}`;
+                  if (key !== aimKey) {
+                     aimPoints = landscapeAimRing(course, session.aim, current.span);
+                     aimKey = key;
+                  }
+                  points = aimPoints;
+               } else if (
                   presentation.shotTrace === 'last' &&
                   session.phase !== 'plan' &&
                   session.last &&
@@ -772,6 +789,33 @@ export async function openLandscapePreview(
                // Lift the readable impostor by its apparent world radius so the
                // terrain does not cut its lower hemisphere. Simulation stays at z.
                const visualRadius = (diameter * current.span) / h;
+               const key = `${ball.x}:${ball.y}:${z}:${visualRadius}`;
+               if (key !== shadowKey) {
+                  const vertices = ballShadow(
+                     { ...ball, z },
+                     visualRadius,
+                     { x: light.x, y: light.y, z: 1 / light.length },
+                     (x, y) => Course.heightAt(course, { x, y }),
+                     (x, y) => Course.surfaceAt(course, { x, y }).type === 'water',
+                  );
+                  shadowCount = vertices.length / 9;
+                  if (vertices.length) {
+                     gl.bindBuffer(gl.ARRAY_BUFFER, shadowBuffer);
+                     gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertices);
+                  }
+                  shadowKey = key;
+               }
+               if (shadowCount) {
+                  gl.uniform1f(uniform('ballMarker'), 3);
+                  gl.enable(gl.BLEND);
+                  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                  gl.depthMask(false);
+                  bindGeometry(shadowBuffer);
+                  gl.drawArrays(gl.TRIANGLES, 0, shadowCount);
+                  gl.depthMask(true);
+                  gl.disable(gl.BLEND);
+               }
+               canvas.dataset.ballShadow = String(shadowCount > 0);
                ballData.set([ball.x, ball.y, z + Math.max(0.04, visualRadius), 0, 0, 1, 1, 1, 1]);
                gl.bindBuffer(gl.ARRAY_BUFFER, ballBuffer);
                gl.bufferSubData(gl.ARRAY_BUFFER, 0, ballData);

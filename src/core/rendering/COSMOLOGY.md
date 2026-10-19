@@ -471,3 +471,14 @@ Performance: recorded trajectory interpolation now finds its interval with binar
 Validation: four focused tests cover long-trace bounded reads (under 30 accesses for 100,000 points), interpolation/evidence preservation, normalized camera-space sunlight and bounded zoom-responsive size. Typecheck and production build pass, with the pre-existing legacy course bundle-size warning.
 
 Browser validation: the paired-phone/angled-gameplay, landscape exploration and unavailable-WebGL checks passed before the final presentation-height correction. The final correction passed the paired angled-gameplay regression, including phone reconnect and portrait layout. The desktop capture was reviewed and confirms the ball is no longer cut in half by the terrain.
+
+
+## 2026-10-19: ground contact shadow and cached aiming geometry
+
+The lit angled ball now casts a small soft contact shadow. A bounded height-field search projects away from the selected sunlight; a 24-triangle fan samples local ground elevation and blends without writing depth. The shadow spreads and fades with altitude, disappears at 40 metres above ground, and is suppressed on water. Its radius follows the readable ball marker rather than claiming regulation-scale photometry. This is a near-ground visual cue, not a full-scene shadow map or a collision query. It does not account for canopy/building occlusion, and steep/discontinuous terrain can still expose the limitations of the height-field approximation.
+
+The shadow buffer is allocated once, updated only when the ball or its apparent radius changes and deleted when the view closes. Aim-ring terrain geometry is cached by target and zoom span, avoiding 65 repeated surface/elevation samples on orbit-only frames. A diagnostic rendered-frame count supports an idle-render browser regression; it is not an FPS indicator and does not introduce an in-game HUD.
+
+Validation: five focused ball/playback tests pass, including sloped-ground conformance, sun direction, altitude fade, water suppression, fixed geometry size and bounded trajectory lookup. Typecheck and production build pass. Physics and the accepted camera easing are unchanged.
+
+Final validation: all three browser regressions passed, including paired angled shots, phone reconnect, stable idle render count, contact-shadow presence, wide/portrait coverage and WebGL fallback. The desktop close-up was visually reviewed. Changed files pass formatting. Real-device FPS and GPU memory improvements remain unmeasured.

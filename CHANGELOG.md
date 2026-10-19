@@ -1,3 +1,9 @@
+## 2026-10-19: grounded 3D ball and cached target geometry
+
+- Add a terrain-conforming soft ball shadow with sun direction, altitude fade and water suppression.
+- Reuse shadow GPU storage and cache target-ring terrain sampling across orbit frames.
+- Add a browser assertion that stationary 3D views stop issuing render passes.
+
 ## 2026-10-19: spherical ball lighting and leaner playback
 
 - Shade the angled ball with camera-relative sunlight and a restrained highlight; scale its readable size with zoom.
