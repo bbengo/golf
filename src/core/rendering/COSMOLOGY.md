@@ -515,3 +515,16 @@ Add `?profile3d=1` before the route hash (for example `/?profile3d=1#play`) to e
 Validation: seven focused diagnostics/mesh tests pass, including bounded sample retention, percentiles, cancellation support and unchanged course evidence. Typecheck and build pass. The existing legacy course bundle-size warning remains. Actual device GPU timing, peak memory and visual quality profiling are still required before claiming performance targets.
 
 Final verification: both browser checks passed with diagnostics enabled for exploration, including bounded sample publication, terrain build timing, idle draw stability, wide/portrait coverage and fallback recovery. Formatting passes.
+
+
+## 2026-10-19: optional asynchronous GPU timing
+
+The existing `?profile3d=1` diagnostic mode now requests WebGL 1's EXT_disjoint_timer_query extension. When supported, it measures the submitted draw pass on the GPU separately from CPU submission time. One pending query is allowed; later animation callbacks poll availability without waiting, flushing, or calling finish. Invalid/disjoint clock intervals are discarded. Closing or losing the graphics context releases/abandons query resources safely. Normal sessions never request this extension.
+
+The canvas `data-performance` adds gpuTimingSupported, gpuSamples, gpuDrawMedianMs and gpuDrawP95Ms. At most 120 accepted GPU samples are retained. No available samples means null timings, not zero or an invented estimate. GPU draw duration excludes terrain preparation and earlier uploads, and is not an end-to-end frame rate or memory measurement. CPU instrumentation includes timer-call overhead when enabled. This is measurement infrastructure, not an automatic quality change or a performance-speedup claim.
+
+The implementation follows the Khronos extension specification: https://registry.khronos.org/webgl/extensions/EXT_disjoint_timer_query/ . Four focused tests cover asynchronous availability, one-query bounds, nanosecond conversion, invalid-clock rejection, unsupported contexts, context loss, disposal and separate bounded CPU/GPU samples. Typecheck and build pass; the legacy course chunk warning remains.
+
+Automated-browser observation: the timer extension was unavailable, correctly yielding gpuTimingSupported=false and null GPU durations. One initial diagnostic snapshot contained two CPU draw samples (median about 0.1 ms, p95 4 ms) and a 27,150 ms backdrop build. This sparse, uncontrolled automation sample is not a hardware benchmark; it identifies terrain preparation as a worthwhile profiling target, not a proven GPU bottleneck.
+
+Both browser regressions passed, including optional diagnostics, idle rendering, navigation, close/return and unavailable-WebGL fallback. Formatting passes. GPU-capable device measurements remain pending.

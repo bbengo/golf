@@ -36,6 +36,10 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    await expect(canvas).toHaveAttribute('data-ball-shadow', 'true');
    await expect(canvas).toHaveAttribute('data-performance', /cpuDrawP95Ms/);
    const diagnostics = JSON.parse((await canvas.getAttribute('data-performance'))!);
+   expect(typeof diagnostics.gpuTimingSupported).toBe('boolean');
+   expect(diagnostics.gpuSamples).toBeLessThanOrEqual(120);
+   if (!diagnostics.gpuTimingSupported) expect(diagnostics.gpuDrawP95Ms).toBeNull();
+   console.info('Landscape timing diagnostics:', JSON.stringify(diagnostics));
    expect(diagnostics.samples).toBeGreaterThan(0);
    expect(diagnostics.samples).toBeLessThanOrEqual(120);
    await expect

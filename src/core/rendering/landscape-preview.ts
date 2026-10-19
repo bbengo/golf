@@ -1,3 +1,4 @@
+import { LandscapeGpuTimer } from './landscape-gpu-timer';
 import { LandscapePerformance } from './landscape-performance';
 import { ballLight, ballDiameter, ballShadow } from './landscape-ball';
 import { readPresentation } from './presentation';
@@ -64,11 +65,14 @@ export async function openLandscapePreview(
    };
    let interaction: LandscapeInteraction | undefined;
    const gl = canvas.getContext('webgl', { alpha: false, antialias: true });
+   const gpuTimer =
+      gl && diagnostics ? new LandscapeGpuTimer(gl, (ms) => diagnostics.recordGpu(ms)) : null;
    const cleanup = () => {
       if (closed) return;
       closed = true;
       cancelAnimationFrame(frame);
       interaction?.dispose();
+      gpuTimer?.dispose();
       if (gl) {
          if (resources.backdropTexture) gl.deleteTexture(resources.backdropTexture);
          if (resources.backdrop) gl.deleteBuffer(resources.backdrop);
@@ -94,6 +98,7 @@ export async function openLandscapePreview(
    }
    canvas.addEventListener('webglcontextlost', (e) => {
       e.preventDefault();
+      gpuTimer?.dispose();
       cancelAnimationFrame(frame);
       dialog.dataset.worldReady = 'true';
       if (!closed)
@@ -626,6 +631,7 @@ export async function openLandscapePreview(
             dialog.close();
             return;
          }
+         gpuTimer?.poll();
          interaction?.render();
          const presentation = readPresentation(document.body.dataset);
          const effectTime = session?.last ? session.shotTime(now, false) : Infinity;
@@ -707,6 +713,7 @@ export async function openLandscapePreview(
          }
          if (changed || resized) {
             const drawStarted = diagnostics ? performance.now() : 0;
+            gpuTimer?.begin();
             canvas.dataset.renderedFrames = String(++renderedFrames);
             firstFrame = false;
             previousBall = ballKey;
@@ -859,10 +866,14 @@ export async function openLandscapePreview(
                canvas.dataset.ballY = String(ball.y);
                canvas.dataset.ballZ = String(z);
             }
+            gpuTimer?.end();
             diagnostics?.recordDraw(performance.now() - drawStarted);
          }
          if (diagnostics && now - lastDiagnostic >= 1000) {
-            canvas.dataset.performance = JSON.stringify(diagnostics.snapshot());
+            canvas.dataset.performance = JSON.stringify({
+               ...diagnostics.snapshot(),
+               gpuTimingSupported: gpuTimer?.supported ?? false,
+            });
             lastDiagnostic = now;
          }
          frame = requestAnimationFrame(draw);

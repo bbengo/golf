@@ -19,3 +19,13 @@ test('CPU diagnostic window is bounded and reports only its retained samples', (
    assert.equal(metrics.snapshot().cancelledDetailBuilds, 1);
    assert.equal(new LandscapePerformance().snapshot().cpuDrawP95Ms, 0);
 });
+
+test('GPU samples are separately bounded and unavailable timings are null', () => {
+   const metrics = new LandscapePerformance();
+   assert.equal(metrics.snapshot().gpuDrawP95Ms, null);
+   for (let i = 1; i <= 240; i++) metrics.recordGpu(i);
+   metrics.recordGpu(NaN);
+   assert.equal(metrics.snapshot().gpuSamples, 120);
+   assert.equal(metrics.snapshot().gpuDrawP95Ms, 234);
+   assert.equal(metrics.snapshot().samples, 0);
+});

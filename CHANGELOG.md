@@ -1,3 +1,9 @@
+## 2026-10-19: optional GPU draw diagnostics
+
+- Add asynchronous GPU draw timings where the WebGL timer extension is available.
+- Keep one query pending, discard invalid clock intervals and clean up on close/context loss.
+- Report unsupported or unmeasured GPU timings as unavailable, independently of CPU measurements.
+
 ## 2026-10-19: bounded 3D diagnostics and earlier terrain cancellation
 
 - Cancel obsolete detailed terrain during generation instead of after completion.

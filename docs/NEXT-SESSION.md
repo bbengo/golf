@@ -8,7 +8,9 @@ Latest ball/performance pass: spherical impostor lighting, bounded zoom-responsi
 
 Vegetation update: continuous near/distant foliage tone replaces per-vertex colour noise. Detailed crowns now use 160 rather than 192 triangles by removing collapsed pole geometry. Tapered trunks and three forks now bring each detailed tree to 200 triangles, below the earlier 204 total but above the optimized 172. Near/distant crowns share an asymmetric envelope. Leaf detail, full branching, density transitions and device FPS validation remain open.
 
-Performance tooling: `?profile3d=1#play` enables bounded CPU draw/build metrics in the landscape canvas `data-performance`. Detailed terrain now cancels obsolete destinations during generation. Use these metrics alongside real-device GPU tools; CPU submission duration is not FPS or GPU timing.
+Performance tooling: `?profile3d=1#play` enables bounded CPU draw/build metrics in the landscape canvas `data-performance`. Detailed terrain now cancels obsolete destinations during generation. Use these metrics alongside real-device GPU tools; CPU submission duration is not FPS or GPU timing. Optional asynchronous GPU timing is now included when EXT_disjoint_timer_query is supported; inspect gpuTimingSupported and gpuSamples before interpreting its separate median/p95 values. Unsupported or unsampled values are null. Real-device profiling and peak-memory measurement remain outstanding.
+
+Next performance investigation: break down backdrop generation into terrain, material sampling, woodland and upload phases. Automation observed a roughly 27-second initial backdrop preparation with unavailable GPU timing; this is a profiling lead, not representative hardware evidence.
 
 Remaining work is quality and external validation: physical-device/GPU and phone sleep/reconnect testing, transition peak-memory profiling, finer shoreline/material continuity, vegetation density transitions and measured physics calibration. These are not claimed complete by browser automation.
 
