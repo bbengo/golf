@@ -8,8 +8,14 @@ export function recordedBallPosition(session: CockpitSession, time: number): Poi
    const elapsed = session.shotTime(time);
    if (elapsed >= duration || !trajectory.length) return { ...finish };
    if (elapsed <= trajectory[0].t) return { ...trajectory[0] };
-   let i = 1;
-   while (i < trajectory.length - 1 && trajectory[i].t < elapsed) i++;
+   let low = 1,
+      high = trajectory.length - 1;
+   while (low < high) {
+      const middle = (low + high) >>> 1;
+      if (trajectory[middle].t < elapsed) low = middle + 1;
+      else high = middle;
+   }
+   const i = low;
    if (trajectory.length === 1) return { ...trajectory[0] };
    const a = trajectory[i - 1],
       b = trajectory[i];

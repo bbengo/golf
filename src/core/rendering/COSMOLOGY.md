@@ -458,3 +458,16 @@ The texture allocation remains 256/384/512 by quality setting; a temporary bound
 Validation: five focused material/coverage tests pass, covering fractional shoreline colour, unchanged interiors, sample budget, cancellation, authored fairway retention, water colour and camera coverage. Typecheck and production build pass; the existing legacy course bundle-size warning remains.
 
 Final verification: both landscape browser regressions passed, covering wide/portrait exploration, preserved shot state and unavailable-WebGL recovery. The wide capture was reviewed; material boundaries are softened, while the documented coarse distant geometry and density differences remain. Changed source/test files pass formatting.
+
+
+## 2026-10-19: lit ball presentation and playback overhead
+
+The angled ball previously used a fixed-size disc with a dark circular rim. It now reconstructs a visible spherical normal per fragment and shades it against the scene sun transformed into camera space, with a restrained specular highlight. Orbiting changes the light orientation correctly. Its readable diameter grows during approach, bounded at 24 CSS pixels and the device point-size limit; normal/enhanced visibility and ivory/yellow preferences remain supported.
+
+This is an inexpensive spherical impostor, not a tessellated physical ball. Its depth still comes from the centre point, and it deliberately exceeds physical size at estate scale. Visual review caught the terrain clipping the larger marker; its presentation centre is now raised by its apparent world radius so the lower hemisphere clears the surface. Published ball coordinates and collision remain unchanged. It does not yet supply a ground shadow, dimples, spin-visible markings or geometric self-occlusion. Those remain presentation opportunities; collision radius and flight are unchanged.
+
+Performance: recorded trajectory interpolation now finds its interval with binary search, retaining interpolation and finish behaviour while avoiding a scan from the first point every frame. Shader uniform and attribute locations are cached, and the fixed ball buffer is allocated once then updated in place. These remove avoidable CPU/driver work; they do not establish an FPS claim or solve terrain-generation/GPU costs. The accepted camera easing is unchanged.
+
+Validation: four focused tests cover long-trace bounded reads (under 30 accesses for 100,000 points), interpolation/evidence preservation, normalized camera-space sunlight and bounded zoom-responsive size. Typecheck and production build pass, with the pre-existing legacy course bundle-size warning.
+
+Browser validation: the paired-phone/angled-gameplay, landscape exploration and unavailable-WebGL checks passed before the final presentation-height correction. The final correction passed the paired angled-gameplay regression, including phone reconnect and portrait layout. The desktop capture was reviewed and confirms the ball is no longer cut in half by the terrain.

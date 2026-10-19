@@ -1,3 +1,4 @@
+import { ballLight, ballDiameter } from './landscape-ball';
 import { readPresentation } from './presentation';
 import { landscapeAimRing, landscapeTrail, landscapeImpacts } from './landscape-guides';
 import type { Point } from '../contracts/cockpit';
@@ -115,12 +116,17 @@ export async function openLandscapePreview(
          program,
          compile(
             gl.FRAGMENT_SHADER,
-            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 detailUV;varying vec2 detailExtent;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform sampler2D detailGround;uniform float blendDetail;uniform float edgeFade;uniform float ballMarker;uniform vec3 ballTint;uniform float effectAlpha;void main(){if(ballMarker>1.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(tint,effectAlpha*(1.0-smoothstep(0.25,0.5,d)));return;}if(ballMarker>0.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(mix(ballTint,vec3(0.25,0.33,0.25),smoothstep(0.30,0.5,d)),1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;if(alpha<0.01)discard;vec3 material=texture2D(ground,uv).rgb;if(blendDetail>0.5&&terrain>0.5){vec2 de=min(detailUV,1.0-detailUV)*detailExtent;float weight=smoothstep(0.0,128.0,min(de.x,de.y));material=mix(material,texture2D(detailGround,clamp(detailUV,0.0,1.0)).rgb,weight);}gl_FragColor=vec4(terrain>0.5?material*lighting:tint,alpha);}`,
+            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 detailUV;varying vec2 detailExtent;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform sampler2D detailGround;uniform float blendDetail;uniform float edgeFade;uniform float ballMarker;uniform vec3 ballTint;uniform vec3 ballSun;uniform float effectAlpha;void main(){if(ballMarker>1.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(tint,effectAlpha*(1.0-smoothstep(0.25,0.5,d)));return;}if(ballMarker>0.5){vec2 p=(gl_PointCoord-vec2(0.5))*2.0;p.y=-p.y;float r=dot(p,p);if(r>1.0)discard;vec3 n=vec3(p,sqrt(max(0.0,1.0-r)));float diffuse=max(0.0,dot(n,ballSun));vec3 halfLight=normalize(ballSun+vec3(0.0,0.0,1.0));float spec=pow(max(0.0,dot(n,halfLight)),48.0)*0.22;vec3 shade=ballTint*(0.32+0.68*diffuse)+vec3(spec);gl_FragColor=vec4(shade,1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;if(alpha<0.01)discard;vec3 material=texture2D(ground,uv).rgb;if(blendDetail>0.5&&terrain>0.5){vec2 de=min(detailUV,1.0-detailUV)*detailExtent;float weight=smoothstep(0.0,128.0,min(de.x,de.y));material=mix(material,texture2D(detailGround,clamp(detailUV,0.0,1.0)).rgb,weight);}gl_FragColor=vec4(terrain>0.5?material*lighting:tint,alpha);}`,
          ),
       );
       gl.linkProgram(program);
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw Error('Preview linking failed');
       gl.useProgram(program);
+      const uniforms = new Map<string, WebGLUniformLocation | null>();
+      const uniform = (name: string) => {
+         if (!uniforms.has(name)) uniforms.set(name, gl.getUniformLocation(program, name));
+         return uniforms.get(name)!;
+      };
       await new Promise((resolve) => setTimeout(resolve, 30));
       if (closed) return;
       const ground = new CourseAtlas().groundTexture(course, daylight);
@@ -146,7 +152,7 @@ export async function openLandscapePreview(
       ground.canvas.width = ground.canvas.height = 1;
       if (textureSource !== ground.canvas) textureSource.width = textureSource.height = 1;
       gl.uniform4f(
-         gl.getUniformLocation(program, 'bounds'),
+         uniform('bounds'),
          ground.bounds.minX,
          ground.bounds.minY,
          ground.bounds.maxX,
@@ -159,10 +165,12 @@ export async function openLandscapePreview(
       resources.buffer = buffer;
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW);
+      const attributes = ['position', 'normal', 'colour'].map((name) =>
+         gl.getAttribLocation(program, name),
+      );
       const bindGeometry = (geometry: WebGLBuffer) => {
          gl.bindBuffer(gl.ARRAY_BUFFER, geometry);
-         for (const [i, name] of ['position', 'normal', 'colour'].entries()) {
-            const a = gl.getAttribLocation(program, name);
+         for (const [i, a] of attributes.entries()) {
             gl.enableVertexAttribArray(a);
             gl.vertexAttribPointer(a, 3, gl.FLOAT, false, 36, i * 12);
          }
@@ -171,6 +179,9 @@ export async function openLandscapePreview(
       const ballBuffer = gl.createBuffer()!;
       resources.ball = ballBuffer;
       const ballData = new Float32Array(9);
+      gl.bindBuffer(gl.ARRAY_BUFFER, ballBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, ballData.byteLength, gl.DYNAMIC_DRAW);
+      const pointRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE) as Float32Array;
       let previousBall = '';
       let previousGuide = '';
       const guideBuffer = gl.createBuffer()!;
@@ -186,20 +197,14 @@ export async function openLandscapePreview(
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       const bindGround = (image: WebGLTexture, area: Bounds) => {
          gl.bindTexture(gl.TEXTURE_2D, image);
-         gl.uniform4f(
-            gl.getUniformLocation(program, 'bounds'),
-            area.minX,
-            area.minY,
-            area.maxX,
-            area.maxY,
-         );
+         gl.uniform4f(uniform('bounds'), area.minX, area.minY, area.maxX, area.maxY);
       };
       bindGround(texture, detailBounds);
       gl.enable(gl.DEPTH_TEST);
       gl.clearColor(0.12, 0.19, 0.18, 1);
-      const centre = gl.getUniformLocation(program, 'centre'),
-         view = gl.getUniformLocation(program, 'view'),
-         sun = gl.getUniformLocation(program, 'sun');
+      const centre = uniform('centre'),
+         view = uniform('view'),
+         sun = uniform('sun');
       const light = DAYLIGHT[daylight];
       gl.uniform3f(sun, light.x, light.y, 1 / light.length);
       const current = { x: 150, y: 300, z: 190, yaw: -0.3, pitch: 0.82, span: 580 };
@@ -557,7 +562,7 @@ export async function openLandscapePreview(
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, patch.canvas);
             gl.uniform4f(
-               gl.getUniformLocation(program, 'bounds'),
+               uniform('bounds'),
                patch.bounds.minX,
                patch.bounds.minY,
                patch.bounds.maxX,
@@ -678,11 +683,11 @@ export async function openLandscapePreview(
             firstFrame = false;
             previousBall = ballKey;
             previousGuide = guideKey;
-            gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 0);
-            gl.uniform1i(gl.getUniformLocation(program, 'ground'), 0);
-            gl.uniform1i(gl.getUniformLocation(program, 'detailGround'), 1);
+            gl.uniform1f(uniform('ballMarker'), 0);
+            gl.uniform1i(uniform('ground'), 0);
+            gl.uniform1i(uniform('detailGround'), 1);
             gl.uniform4f(
-               gl.getUniformLocation(program, 'detailBounds'),
+               uniform('detailBounds'),
                detailBounds.minX,
                detailBounds.minY,
                detailBounds.maxX,
@@ -691,19 +696,19 @@ export async function openLandscapePreview(
             gl.activeTexture(gl.TEXTURE1);
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.activeTexture(gl.TEXTURE0);
-            gl.uniform1f(gl.getUniformLocation(program, 'blendDetail'), 1);
+            gl.uniform1f(uniform('blendDetail'), 1);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.uniform3f(centre, current.x, current.y, current.z);
             gl.uniform4f(view, current.yaw, current.pitch, current.span, w / h);
             if (backdropCount && backdropBounds) {
-               gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), 0);
+               gl.uniform1f(uniform('edgeFade'), 0);
                bindGround(backdropTexture, backdropBounds);
                bindGeometry(backdropBuffer);
                gl.drawArrays(gl.TRIANGLES, 0, backdropCount);
                // One stitched terrain surface owns depth throughout the visible world.
             }
-            gl.uniform1f(gl.getUniformLocation(program, 'blendDetail'), 0);
-            gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), backdropCount ? 1 : 0);
+            gl.uniform1f(uniform('blendDetail'), 0);
+            gl.uniform1f(uniform('edgeFade'), backdropCount ? 1 : 0);
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             bindGround(texture, detailBounds);
@@ -714,7 +719,7 @@ export async function openLandscapePreview(
             // Presentation-only guides use the same camera/depth buffer as terrain.
             // Bound the trail upload; no second trajectory calculation is performed.
             if (session && session.course === course) {
-               gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), 0);
+               gl.uniform1f(uniform('edgeFade'), 0);
                let points = new Float32Array();
                if (interaction?.aiming())
                   points = landscapeAimRing(course, session.aim, current.span);
@@ -741,7 +746,7 @@ export async function openLandscapePreview(
                gl.enable(gl.BLEND);
                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                gl.depthMask(false);
-               gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), 0);
+               gl.uniform1f(uniform('edgeFade'), 0);
                for (const batch of landscapeImpacts(
                   course,
                   session.last.result.events,
@@ -750,9 +755,9 @@ export async function openLandscapePreview(
                   gl.bindBuffer(gl.ARRAY_BUFFER, guideBuffer);
                   gl.bufferData(gl.ARRAY_BUFFER, batch.vertices, gl.DYNAMIC_DRAW);
                   bindGeometry(guideBuffer);
-                  gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 2);
-                  gl.uniform1f(gl.getUniformLocation(program, 'markerSize'), 4 * ratio);
-                  gl.uniform1f(gl.getUniformLocation(program, 'effectAlpha'), batch.alpha);
+                  gl.uniform1f(uniform('ballMarker'), 2);
+                  gl.uniform1f(uniform('markerSize'), 4 * ratio);
+                  gl.uniform1f(uniform('effectAlpha'), batch.alpha);
                   gl.drawArrays(gl.POINTS, 0, batch.vertices.length / 9);
                }
                gl.depthMask(true);
@@ -760,21 +765,35 @@ export async function openLandscapePreview(
             }
             if (ball) {
                const z = ball.z ?? Course.heightAt(course, ball);
-               ballData.set([ball.x, ball.y, z + 0.04, 0, 0, 1, 1, 1, 1]);
+               const diameter = Math.min(
+                  pointRange[1],
+                  ballDiameter(current.span, presentation.ballVisibility === 'enhanced') * ratio,
+               );
+               // Lift the readable impostor by its apparent world radius so the
+               // terrain does not cut its lower hemisphere. Simulation stays at z.
+               const visualRadius = (diameter * current.span) / h;
+               ballData.set([ball.x, ball.y, z + Math.max(0.04, visualRadius), 0, 0, 1, 1, 1, 1]);
                gl.bindBuffer(gl.ARRAY_BUFFER, ballBuffer);
-               gl.bufferData(gl.ARRAY_BUFFER, ballData, gl.DYNAMIC_DRAW);
+               gl.bufferSubData(gl.ARRAY_BUFFER, 0, ballData);
                bindGeometry(ballBuffer);
-               gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 1);
+               gl.uniform1f(uniform('ballMarker'), 1);
                gl.uniform3f(
-                  gl.getUniformLocation(program, 'ballTint'),
+                  uniform('ballTint'),
                   1,
                   presentation.ballColour === 'yellow' ? 0.88 : 0.99,
                   presentation.ballColour === 'yellow' ? 0.25 : 0.91,
                );
-               gl.uniform1f(
-                  gl.getUniformLocation(program, 'markerSize'),
-                  (presentation.ballVisibility === 'enhanced' ? 11 : 7) * ratio,
+               const lighting = ballLight(
+                  light.x,
+                  light.y,
+                  1 / light.length,
+                  current.yaw,
+                  current.pitch,
                );
+               gl.uniform3f(uniform('ballSun'), lighting[0], lighting[1], lighting[2]);
+
+               gl.uniform1f(uniform('markerSize'), diameter);
+               canvas.dataset.ballDiameter = String(diameter / ratio);
                gl.drawArrays(gl.POINTS, 0, 1);
                canvas.dataset.ballX = String(ball.x);
                canvas.dataset.ballY = String(ball.y);

@@ -30,3 +30,22 @@ test('both views can sample the same irregular recorded flight without changing 
    session.phase = 'resolved';
    assert.deepEqual(recordedBallPosition(session, 1), session.ball);
 });
+
+test('long recorded shots use bounded lookup while retaining interpolation', () => {
+   let reads = 0;
+   const points = Array.from({ length: 100000 }, (_, i) => ({ t: i * 0.01, x: i, y: i * 2, z: 3 }));
+   const trajectory = new Proxy(points, {
+      get(target, key) {
+         if (/^\d+$/.test(String(key))) reads++;
+         return Reflect.get(target, key);
+      },
+   });
+   const session = {
+      phase: 'animating',
+      last: { result: { trajectory, duration: 1000, finish: points.at(-1) } },
+      shotTime: (t) => t,
+   };
+   const ball = recordedBallPosition(session, 900.005);
+   assert.ok(Math.abs(ball.x - 90000.5) < 0.000001);
+   assert.ok(reads < 30, `trajectory reads: ${reads}`);
+});

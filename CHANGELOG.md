@@ -1,3 +1,10 @@
+## 2026-10-19: spherical ball lighting and leaner playback
+
+- Shade the angled ball with camera-relative sunlight and a restrained highlight; scale its readable size with zoom.
+- Replace linear recorded-trajectory lookup with binary search.
+- Cache shader locations and reuse the ball's GPU allocation.
+- Keep physical ball behaviour, camera easing and visibility preferences intact.
+
 ## 2026-10-19: smoother distant shorelines and material edges
 
 - Integrate subpixel surface coverage along distant water, sand and turf boundaries.
