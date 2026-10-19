@@ -100,3 +100,38 @@ test('object-only windows preserve object geometry without duplicating terrain',
    assert.equal(objects.refinedCells, 0);
    assert.deepEqual(objects.vertices, full.vertices.slice(full.terrainTriangles * 27));
 });
+
+test('detailed crown removes collapsed pole triangles without reducing its ring resolution', async () => {
+   const original = createPurityCourse();
+   const tree = original.objects.find((object) => object.kind === 'tree');
+   const course = { ...original, objects: [tree], places: [], world: undefined };
+   const r = tree.canopyRadius + 1;
+   const mesh = await landscapeMesh(
+      course,
+      {
+         minX: tree.x - r,
+         maxX: tree.x + r,
+         minY: tree.y - r,
+         maxY: tree.y + r,
+      },
+      8,
+      () => false,
+      true,
+      true,
+   );
+   assert.equal(mesh.triangles, 12 + 160);
+   for (let i = 0; i < mesh.vertices.length; i += 27) {
+      const a = mesh.vertices.slice(i, i + 3),
+         b = mesh.vertices.slice(i + 9, i + 12),
+         c = mesh.vertices.slice(i + 18, i + 21);
+      const u = b.map((v, j) => v - a[j]),
+         v = c.map((n, j) => n - a[j]);
+      assert.ok(
+         Math.hypot(
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0],
+         ) > 1e-8,
+      );
+   }
+});

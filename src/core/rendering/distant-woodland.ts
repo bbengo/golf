@@ -1,3 +1,4 @@
+import { foliageTone } from './foliage-material';
 import { Course } from '../course/course.js';
 import { worldTree, worldHash } from '../course/procedural-world';
 import { ECOLOGY_VERSION } from '../course/landscape-regions';
@@ -149,7 +150,11 @@ export async function distantWoodland(
             ny = (p[1] - centre[1]) / (radius * radius),
             nz = (p[2] - centre[2]) / (verticalRadius * verticalRadius);
          const length = Math.hypot(nx, ny, nz) || 1;
-         vertices.set([...p, nx / length, ny / length, nz / length, ...colour], offset);
+         const tone = foliageTone(p, centre, radius, verticalRadius);
+         vertices.set(
+            [...p, nx / length, ny / length, nz / length, ...colour.map((c) => c * tone)],
+            offset,
+         );
          offset += 9;
       }
    };

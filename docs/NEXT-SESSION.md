@@ -6,6 +6,8 @@ Latest completed implementation: angled gameplay uses the shared session and pai
 
 Latest ball/performance pass: spherical impostor lighting, bounded zoom-responsive ball size, binary-search playback, cached shader locations and reused ball allocation. Real GPU/frame-time profiling remains necessary; the ball still uses point-centre depth. A bounded terrain-conforming contact shadow is now implemented, with altitude fade and water suppression; full scene shadowing and ball surface detail remain open. Aim geometry is cached across orbit frames.
 
+Vegetation update: continuous near/distant foliage tone replaces per-vertex colour noise. Detailed crowns now use 160 rather than 192 triangles by removing collapsed pole geometry. Branch/leaf detail, density transitions and device FPS validation remain open.
+
 Remaining work is quality and external validation: physical-device/GPU and phone sleep/reconnect testing, transition peak-memory profiling, finer shoreline/material continuity, vegetation density transitions and measured physics calibration. These are not claimed complete by browser automation.
 
 The four engine implementation tracks now have working foundations: shared procedural world and outer-water elevations/beds; versioned baseline ball/aero/contact profiles; shared weather/sunlight shot snapshots; recorded-shot comparison and a seeded 12-shot consistency study. Older notes below are chronological history, not the current completion checklist.

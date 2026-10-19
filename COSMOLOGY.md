@@ -549,3 +549,14 @@ The shadow buffer is allocated once, updated only when the ball or its apparent 
 Validation: five focused ball/playback tests pass, including sloped-ground conformance, sun direction, altitude fade, water suppression, fixed geometry size and bounded trajectory lookup. Typecheck and production build pass. Physics and the accepted camera easing are unchanged.
 
 Final validation: all three browser regressions passed, including paired angled shots, phone reconnect, stable idle render count, contact-shadow presence, wide/portrait coverage and WebGL fallback. The desktop close-up was visually reviewed. Changed files pass formatting. Real-device FPS and GPU memory improvements remain unmeasured.
+
+
+## 2026-10-19: continuous foliage shading and leaner crowns
+
+Detailed tree colours previously used independent world hashes at each vertex. Interpolation made individual triangles read as unrelated patches, accentuating the faceted crown. The shared foliage-material function now uses continuous, normalized crown coordinates for broad colour patches and darker undersides. Both detailed and distant crowns use the same function; this reduces a material discrepancy without claiming their different shapes or densities are identical.
+
+Detailed crown pole quads contained one collapsed triangle each. Explicit top/bottom triangle fans remove 32 zero-area triangles per crown: 160 instead of 192, retaining the existing 16 sectors and latitude rings. Trunks remain 12 triangles and distant crowns remain 24. Collision envelopes, tree placement and simulation snapshots are unchanged. This is a measurable geometry reduction, not a measured FPS claim. The foliage remains a stylized opaque crown, not individual leaves or branching geometry.
+
+Validation: all eleven focused foliage, mesh and distant-woodland tests pass. Checks include continuity, bounded colour, nonzero triangle area, exact detailed-tree triangle budget, physical terrain/normal consistency, unchanged course snapshots and retained distant trees. Typecheck and production build pass; the existing legacy course bundle warning remains.
+
+Final validation: both landscape browser regressions passed, including idle render stability, wide/portrait exploration and WebGL fallback. The pavilion close-up was reviewed: random triangular colour facets are removed, but simple crown silhouettes remain evident. Formatting passes.

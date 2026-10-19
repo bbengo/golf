@@ -1,3 +1,4 @@
+import { foliageTone } from './foliage-material';
 import { landscapeNormal } from './landscape-lighting';
 import type { Point } from '../contracts/cockpit';
 import { Course } from '../course/course.js';
@@ -77,7 +78,7 @@ export async function landscapeMesh(
             n = n.map((v) => v / length);
          }
          const tint = canopyNormal
-            ? 0.86 + 0.24 * worldHash(Math.floor(p[0] * 2), Math.floor(p[1] * 2 + p[2]))
+            ? foliageTone(p, canopyNormal.centre, canopyNormal.r, canopyNormal.rz)
             : 1;
          data.push(...p, ...n, ...colour.map((v) => v * tint));
       }
@@ -253,7 +254,10 @@ export async function landscapeMesh(
                b = a + Math.PI / 6,
                u = (i * Math.PI) / 8,
                v = u + Math.PI / 8;
-            quad(crown(a, u), crown(a, v), crown(b, v), crown(b, u), col);
+            // Pole quads collapse one triangle to zero area. Emit only the fan.
+            if (j === 0) triangle(crown(a, 0), crown(b, v), crown(b, u), col);
+            else if (j === 5) triangle(crown(a, u), crown(a, v), crown(b, 0), col);
+            else quad(crown(a, u), crown(a, v), crown(b, v), crown(b, u), col);
          }
    }
    canopyNormal = null;

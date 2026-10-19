@@ -1,3 +1,9 @@
+## 2026-10-19: smoother foliage and reduced crown geometry
+
+- Share continuous crown colour variation between nearby and distant trees.
+- Shade crown undersides and remove random per-vertex colour facets.
+- Remove 32 collapsed triangles per detailed crown, preserving ring resolution and physical tree envelopes.
+
 ## 2026-10-19: grounded 3D ball and cached target geometry
 
 - Add a terrain-conforming soft ball shadow with sun direction, altitude fade and water suppression.
