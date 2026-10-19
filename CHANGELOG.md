@@ -1,3 +1,9 @@
+## 2026-10-19: smoother distant shorelines and material edges
+
+- Integrate subpixel surface coverage along distant water, sand and turf boundaries.
+- Preserve interior colours and existing GPU texture budgets; keep generation cancellable.
+- Add material coverage and sampling-budget regressions without changing simulation surfaces.
+
 ## 2026-10-19: distant course woodland
 
 - Retain authored course trees when the detailed terrain window moves away, within the existing vegetation budget.

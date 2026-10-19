@@ -447,3 +447,14 @@ Validation: twelve focused terrain, coverage, object-equivalence, lighting and g
 Distant vegetation now includes the course's authored trees as well as deterministic surrounding-world trees. Previously, moving the detail window away could leave a conspicuously bare course rectangle. Both sources share the existing selection budget, bounds filtering and detail-window exclusion; this adds no duplicate physics objects or new collision rules.
 
 Validation: all four distant-woodland regressions pass, including retention of authored course trees after the detailed window moves away. Both final browser regressions passed: wide/portrait exploration with unchanged-shot return, and unavailable-WebGL recovery. The final wide capture confirms authored woodland remains visible. Formatting passed. The connected-terrain checks and paired angled gameplay checks are recorded above. Physical-device performance, shoreline detail and vegetation density transitions remain follow-up work.
+
+
+## 2026-10-19: subpixel coverage for distant material boundaries
+
+The distant texture previously classified a whole texel from one surface query. At wide camera spans this made water banks, bunkers and fairway margins change in coarse blocks. The new landscape-material module first records centre samples, then identifies differing neighbouring surface types and averages four quarter-pixel samples only at those boundaries. Uniform interiors retain their exact existing colours and the restrained shared water palette.
+
+The texture allocation remains 256/384/512 by quality setting; a temporary bounded label array supports boundary detection. Sampling is capped at five surface queries per texel including the original pass, yields between row groups and checks cancellation in both passes. Terrain elevations, collision, water extent and ball physics are untouched. This improves material coverage, not geometric shoreline resolution. Features too narrow to hit any centre sample can still be missed, and distant vegetation density/material transitions still need further art refinement.
+
+Validation: five focused material/coverage tests pass, covering fractional shoreline colour, unchanged interiors, sample budget, cancellation, authored fairway retention, water colour and camera coverage. Typecheck and production build pass; the existing legacy course bundle-size warning remains.
+
+Final verification: both landscape browser regressions passed, covering wide/portrait exploration, preserved shot state and unavailable-WebGL recovery. The wide capture was reviewed; material boundaries are softened, while the documented coarse distant geometry and density differences remain. Changed source/test files pass formatting.

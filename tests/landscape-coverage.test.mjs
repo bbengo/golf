@@ -11,7 +11,7 @@ import {
 import { landscapeRay } from '../src/core/rendering/landscape-projection.ts';
 import { createPurityCourse } from '../src/core/course/purity-course.ts';
 import { Course } from '../src/core/course/course.js';
-import { worldWetness } from '../src/core/course/procedural-world.ts';
+import { worldWetness, worldGroundColour } from '../src/core/course/procedural-world.ts';
 import { waterColour } from '../src/core/rendering/water-material.ts';
 
 test('coverage encloses every corner ray across wide screens, shallow pitch and relief', () => {
@@ -88,13 +88,47 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
          const x = bounds.minX + ((col + 0.5) / textureSize) * (bounds.maxX - bounds.minX);
          const y = bounds.maxY - ((row + 0.5) / textureSize) * (bounds.maxY - bounds.minY);
          const surface = Course.surfaceAt(course, { x, y }).type;
+         // Exact material-colour checks apply to interiors; boundary pixels now
+         // integrate several physical surfaces (covered by the material tests).
+         const step = (bounds.maxX - bounds.minX) / textureSize;
+         let boundary = false;
+         for (const dx of [-1, 0, 1])
+            for (const dy of [-1, 0, 1])
+               if (
+                  Course.surfaceAt(course, { x: x + dx * step, y: y + dy * step }).type !== surface
+               )
+                  boundary = true;
          if (surface === 'fairway') {
             const rgb = [1, 3, 5].map((i) => parseInt(SURFACE_COLOURS.fairway.slice(i, i + 2), 16));
             const at = (row * textureSize + col) * 4;
-            assert.deepEqual(Array.from(pixels.slice(at, at + 3)), terrainColour(rgb, x, y));
+            let expected = terrainColour(rgb, x, y);
+            if (boundary) {
+               expected = [0, 0, 0];
+               for (const dx of [-0.25, 0.25])
+                  for (const dy of [-0.25, 0.25]) {
+                     const sx = x + dx * step,
+                        sy = y + dy * step;
+                     const type = Course.surfaceAt(course, { x: sx, y: sy }).type;
+                     const hex = SURFACE_COLOURS[type];
+                     const base =
+                        type === 'water'
+                           ? waterColour(
+                                sx,
+                                sy,
+                                Math.max(0, -worldWetness(course, sx, sy) * 28),
+                                'evening',
+                             )
+                           : hex
+                             ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+                             : worldGroundColour(course, sx, sy);
+                     terrainColour(base, sx, sy).forEach((value, i) => (expected[i] += value / 4));
+                  }
+               expected = expected.map(Math.round);
+            }
+            assert.deepEqual(Array.from(pixels.slice(at, at + 3)), expected);
             fairwaySamples++;
          }
-         if (surface !== 'water') continue;
+         if (surface !== 'water' || boundary) continue;
          const offset = (row * textureSize + col) * 4;
          const actual = Array.from(pixels.slice(offset, offset + 3));
          assert.deepEqual(

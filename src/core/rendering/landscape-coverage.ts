@@ -1,3 +1,4 @@
+import { landscapeMaterial } from './landscape-material';
 import { landscapeTerrain } from './landscape-terrain';
 import { terrainColour, SURFACE_COLOURS } from './terrain-material';
 import { distantWoodland } from './distant-woodland';
@@ -75,12 +76,11 @@ export async function landscapeBackdrop(
    )
       throw Error('Invalid landscape backdrop bounds');
    const { vertices } = await landscapeTerrain(c, bounds, detail, cancelled);
-   const pixels = new Uint8Array(textureSize * textureSize * 4);
-   for (let j = 0; j < textureSize; j++) {
-      if (cancelled()) throw Error('Preview closed');
-      for (let i = 0; i < textureSize; i++) {
-         const x = bounds.minX + ((i + 0.5) / textureSize) * (bounds.maxX - bounds.minX);
-         const y = bounds.maxY - ((j + 0.5) / textureSize) * (bounds.maxY - bounds.minY);
+   const { pixels, refinedPixels } = await landscapeMaterial(
+      textureSize,
+      (i, j) => {
+         const x = bounds.minX + (i / textureSize) * (bounds.maxX - bounds.minX);
+         const y = bounds.maxY - (j / textureSize) * (bounds.maxY - bounds.minY);
          const surface = Course.surfaceAt(c, { x, y });
          const colour =
             surface.type === 'water'
@@ -93,11 +93,10 @@ export async function landscapeBackdrop(
                      y <= c.bounds.maxY
                    ? surfaceColours.rough
                    : worldGroundColour(c, x, y);
-         const pixel = (j * textureSize + i) * 4;
-         pixels.set([...terrainColour(colour, x, y), 255], pixel);
-      }
-      if (j % 8 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
-   }
+         return { type: surface.type, colour: terrainColour(colour, x, y) };
+      },
+      cancelled,
+   );
    const woodland = await distantWoodland(c, bounds, cancelled, detail);
    const combined = new Float32Array(vertices.length + woodland.vertices.length);
    combined.set(vertices);
@@ -106,6 +105,7 @@ export async function landscapeBackdrop(
       vertices: combined,
       pixels,
       textureSize,
+      refinedPixels,
       terrainVertices: vertices.length / 9,
       treeCount: woodland.treeCount,
       treeStride: woodland.stride,
