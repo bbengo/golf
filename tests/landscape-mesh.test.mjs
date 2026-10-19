@@ -90,3 +90,13 @@ test('terrain lighting shares normals at repeated vertices and across mesh resol
    }
    assert.ok(shared > 50);
 });
+
+test('object-only windows preserve object geometry without duplicating terrain', async () => {
+   const c = createPurityCourse(),
+      bounds = { minX: -190, maxX: -160, minY: -100, maxY: -70 };
+   const full = await landscapeMesh(c, bounds, 5, () => false, true);
+   const objects = await landscapeMesh(c, bounds, 5, () => false, true, true);
+   assert.equal(objects.terrainTriangles, 0);
+   assert.equal(objects.refinedCells, 0);
+   assert.deepEqual(objects.vertices, full.vertices.slice(full.terrainTriangles * 27));
+});

@@ -40,9 +40,14 @@ export async function distantTrees(
    const trees: NonNullable<ReturnType<typeof worldTree>>[] = [];
    let candidates = 0;
    const seen = new Set<string>();
-   const visit = (x: number, y: number, transition = false) => {
-      candidates++;
-      const tree = worldTree(c, x, y);
+   const visit = (
+      x: number,
+      y: number,
+      transition = false,
+      authored?: NonNullable<ReturnType<typeof worldTree>>,
+   ) => {
+      if (!authored) candidates++;
+      const tree = authored ?? worldTree(c, x, y);
       if (
          !tree ||
          seen.has(tree.id) ||
@@ -100,6 +105,12 @@ export async function distantTrees(
          for (let x = near.x0; x <= near.x1; x++) visit(x * nearStride, y * nearStride, true);
          if ((y - near.y0) % 8 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
       }
+   }
+   // The authored hole must survive leaving the detailed window too. These are
+   // existing colliders, not a second set of decorative trees. The render cap is shared.
+   for (const object of c.objects) {
+      if (cancelled()) throw Error('Preview closed');
+      if (object.kind === 'tree') visit(0, 0, false, object);
    }
    const priority = (tree: (typeof trees)[number]) => {
       const distance = detail

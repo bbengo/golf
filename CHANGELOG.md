@@ -1,3 +1,16 @@
+## 2026-10-19: distant course woodland
+
+- Retain authored course trees when the detailed terrain window moves away, within the existing vegetation budget.
+- Cover authored-tree retention alongside deterministic sampling and transition density in regression tests.
+
+## 2026-10-18: connected angled terrain
+
+- Replaced overlapping near/far ground with one adaptive surface and stitched refinement edges.
+- Blend detailed and distant materials on that surface, preserving one depth buffer for terrain, trees and gameplay.
+- Remove duplicate terrain from detailed object windows and discard invisible edge fragments.
+- Preserve authored hole materials in distant views and separate the play entry from viewpoint navigation.
+- Add topology, distant-material and object-equivalence regression coverage.
+
 ## 2026-10-18: play directly in the angled landscape
 
 - Added an opt-in angled shot panel, illustrated caddy, effort/shaping and synchronized phone controls.

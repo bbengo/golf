@@ -1,4 +1,4 @@
-import { terrainColour } from '../src/core/rendering/terrain-material.ts';
+import { terrainColour, SURFACE_COLOURS } from '../src/core/rendering/terrain-material.ts';
 import { DISTANT_CROWN_TRIANGLES } from '../src/core/rendering/distant-woodland.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -69,7 +69,7 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
    );
    assert.equal(textureSize, 256);
    assert.equal(pixels.length, 256 * 256 * 4);
-   assert.equal(terrainVertices, 128 * 128 * 6);
+   assert.equal(terrainVertices, 128 * 128 * 12);
    assert.ok(treeCount > 0 && treeCount <= 8192);
    assert.equal(vertices.length, terrainVertices * 9 + treeCount * DISTANT_CROWN_TRIANGLES * 27);
    assert.ok(vertices.every(Number.isFinite));
@@ -81,12 +81,20 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
       assert.ok(Math.abs(z - expected) < 0.001);
    }
    let waterSamples = 0;
+   let fairwaySamples = 0;
    const waterColours = new Set();
    for (let row = 0; row < textureSize; row += 3)
       for (let col = 0; col < textureSize; col += 3) {
          const x = bounds.minX + ((col + 0.5) / textureSize) * (bounds.maxX - bounds.minX);
          const y = bounds.maxY - ((row + 0.5) / textureSize) * (bounds.maxY - bounds.minY);
-         if (Course.surfaceAt(course, { x, y }).type !== 'water') continue;
+         const surface = Course.surfaceAt(course, { x, y }).type;
+         if (surface === 'fairway') {
+            const rgb = [1, 3, 5].map((i) => parseInt(SURFACE_COLOURS.fairway.slice(i, i + 2), 16));
+            const at = (row * textureSize + col) * 4;
+            assert.deepEqual(Array.from(pixels.slice(at, at + 3)), terrainColour(rgb, x, y));
+            fairwaySamples++;
+         }
+         if (surface !== 'water') continue;
          const offset = (row * textureSize + col) * 4;
          const actual = Array.from(pixels.slice(offset, offset + 3));
          assert.deepEqual(
@@ -101,6 +109,7 @@ test('distant terrain has a fixed geometry budget and physical heights, includin
          waterColours.add(actual.join(','));
          waterSamples++;
       }
+   assert.ok(fairwaySamples > 0, 'authored fairways remain visible in the distant material');
    assert.ok(waterSamples > 10, 'exercise distant physical water');
    assert.ok(waterColours.size > 3, 'preserve subtle variation instead of one flat colour');
    await assert.rejects(

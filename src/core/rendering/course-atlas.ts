@@ -1,3 +1,4 @@
+import { SURFACE_COLOURS as colors } from './terrain-material';
 import { paintDaylightGrade } from './daylight-grade';
 import { worldDecoration } from './world-decoration';
 import { paintEstateLandmarks } from './estate-landmarks';
@@ -11,18 +12,6 @@ import { Course } from '../course/course.js';
 import type { CockpitSession } from '../session/cockpit-session';
 import type { Point, Snapshot } from '../contracts/cockpit';
 import type { Bounds, CourseCamera } from './camera';
-
-const colors: Record<string, string> = {
-   rough: '#51763e',
-   'deep-rough': '#294f36',
-   fairway: '#83a951',
-   fringe: '#699044',
-   green: '#a7bf70',
-   tee: '#9bb966',
-   sand: '#d9c9a5',
-   water: '#386e70',
-   path: '#aa9e7d',
-};
 
 /** World-anchored colour and texture, cached independently of the camera. */
 export class CourseAtlas {

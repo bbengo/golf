@@ -1,3 +1,15 @@
+export const SURFACE_COLOURS: Record<string, string> = {
+   rough: '#51763e',
+   'deep-rough': '#294f36',
+   fairway: '#83a951',
+   fringe: '#699044',
+   green: '#a7bf70',
+   tee: '#9bb966',
+   sand: '#d9c9a5',
+   water: '#386e70',
+   path: '#aa9e7d',
+};
+
 const hash = (x: number, y: number) => {
    let n = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ 731;
    n = Math.imul(n ^ (n >>> 13), 1274126177);

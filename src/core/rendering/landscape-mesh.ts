@@ -26,6 +26,7 @@ export async function landscapeMesh(
    step = 8,
    cancelled = () => false,
    textured = false,
+   objectsOnly = false,
 ): Promise<Mesh> {
    const nx = Math.ceil((bounds.maxX - bounds.minX) / step),
       ny = Math.ceil((bounds.maxY - bounds.minY) / step);
@@ -85,101 +86,103 @@ export async function landscapeMesh(
       triangle(a, b, d, colour);
       triangle(a, d, e, colour);
    };
-   const points: V[][] = [];
-   for (let j = 0; j <= ny; j++) {
-      if (cancelled()) throw Error('Preview closed');
-      const row: V[] = [];
-      for (let i = 0; i <= nx; i++) {
+   let refinedCells = 0;
+   if (!objectsOnly) {
+      const points: V[][] = [];
+      for (let j = 0; j <= ny; j++) {
+         if (cancelled()) throw Error('Preview closed');
+         const row: V[] = [];
+         for (let i = 0; i <= nx; i++) {
+            const x = bounds.minX + ((bounds.maxX - bounds.minX) * i) / nx,
+               y = bounds.minY + ((bounds.maxY - bounds.minY) * j) / ny;
+            const surface = Course.surfaceAt(c, { x, y });
+            row.push([
+               x,
+               y,
+               surface.type === 'water' ? surface.waterHeight : Course.heightAt(c, { x, y }),
+            ]);
+         }
+         points.push(row);
+         if (j % 24 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+      // Shared half-grid samples stitch every refined edge to its coarse neighbour.
+      const samples = new Map<string, V>();
+      const sample = (i: number, j: number): V => {
+         if (Number.isInteger(i) && Number.isInteger(j)) return points[j][i];
+         const key = `${i}:${j}`;
+         const existing = samples.get(key);
+         if (existing) return existing;
          const x = bounds.minX + ((bounds.maxX - bounds.minX) * i) / nx,
             y = bounds.minY + ((bounds.maxY - bounds.minY) * j) / ny;
          const surface = Course.surfaceAt(c, { x, y });
-         row.push([
+         const p: V = [
             x,
             y,
             surface.type === 'water' ? surface.waterHeight : Course.heightAt(c, { x, y }),
-         ]);
-      }
-      points.push(row);
-      if (j % 24 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
-   }
-   // Shared half-grid samples stitch every refined edge to its coarse neighbour.
-   const samples = new Map<string, V>();
-   const sample = (i: number, j: number): V => {
-      if (Number.isInteger(i) && Number.isInteger(j)) return points[j][i];
-      const key = `${i}:${j}`;
-      const existing = samples.get(key);
-      if (existing) return existing;
-      const x = bounds.minX + ((bounds.maxX - bounds.minX) * i) / nx,
-         y = bounds.minY + ((bounds.maxY - bounds.minY) * j) / ny;
-      const surface = Course.surfaceAt(c, { x, y });
-      const p: V = [
-         x,
-         y,
-         surface.type === 'water' ? surface.waterHeight : Course.heightAt(c, { x, y }),
-      ];
-      samples.set(key, p);
-      return p;
-   };
-   const refined = new Uint8Array(nx * ny);
-   let refinedCells = 0;
-   for (let j = 0; j < ny; j++)
-      for (let i = 0; i < nx; i++) {
-         const centre = sample(i + 0.5, j + 0.5);
-         const average =
-            (points[j][i][2] +
-               points[j][i + 1][2] +
-               points[j + 1][i][2] +
-               points[j + 1][i + 1][2]) /
-            4;
-         const nearPlace = (c.places ?? []).some(
-            (p: Point) => Math.hypot(p.x - centre[0], p.y - centre[1]) < 45,
-         );
-         if (refinedCells < 12000 && (nearPlace || Math.abs(centre[2] - average) > 0.18)) {
-            refined[j * nx + i] = 1;
-            refinedCells++;
-         }
-      }
-   const detail = (i: number, j: number) =>
-      i >= 0 && i < nx && j >= 0 && j < ny && refined[j * nx + i] === 1;
-   for (let j = 0; j < ny; j++) {
-      if (cancelled()) throw Error('Preview closed');
-      for (let i = 0; i < nx; i++) {
-         const a = sample(i, j),
-            b = sample(i + 1, j),
-            d = sample(i + 1, j + 1),
-            e = sample(i, j + 1),
-            centre = sample(i + 0.5, j + 0.5);
-         const own = detail(i, j);
-         const edges = [
-            own || detail(i, j - 1),
-            own || detail(i + 1, j),
-            own || detail(i, j + 1),
-            own || detail(i - 1, j),
          ];
-         let colour: number[] = [-1, 0, 0];
-         if (!textured) {
-            const type = Course.surfaceAt(c, { x: centre[0], y: centre[1] }).type;
-            colour =
-               palette[type] ??
-               worldGroundColour(c, centre[0], centre[1]).map((v: number) => v / 255);
+         samples.set(key, p);
+         return p;
+      };
+      const refined = new Uint8Array(nx * ny);
+      for (let j = 0; j < ny; j++)
+         for (let i = 0; i < nx; i++) {
+            const centre = sample(i + 0.5, j + 0.5);
+            const average =
+               (points[j][i][2] +
+                  points[j][i + 1][2] +
+                  points[j + 1][i][2] +
+                  points[j + 1][i + 1][2]) /
+               4;
+            const nearPlace = (c.places ?? []).some(
+               (p: Point) => Math.hypot(p.x - centre[0], p.y - centre[1]) < 45,
+            );
+            if (refinedCells < 12000 && (nearPlace || Math.abs(centre[2] - average) > 0.18)) {
+               refined[j * nx + i] = 1;
+               refinedCells++;
+            }
          }
-         if (!edges.some(Boolean)) quad(a, b, d, e, colour);
-         else {
-            const ring = [
-               a,
-               ...(edges[0] ? [sample(i + 0.5, j)] : []),
-               b,
-               ...(edges[1] ? [sample(i + 1, j + 0.5)] : []),
-               d,
-               ...(edges[2] ? [sample(i + 0.5, j + 1)] : []),
-               e,
-               ...(edges[3] ? [sample(i, j + 0.5)] : []),
+      const detail = (i: number, j: number) =>
+         i >= 0 && i < nx && j >= 0 && j < ny && refined[j * nx + i] === 1;
+      for (let j = 0; j < ny; j++) {
+         if (cancelled()) throw Error('Preview closed');
+         for (let i = 0; i < nx; i++) {
+            const a = sample(i, j),
+               b = sample(i + 1, j),
+               d = sample(i + 1, j + 1),
+               e = sample(i, j + 1),
+               centre = sample(i + 0.5, j + 0.5);
+            const own = detail(i, j);
+            const edges = [
+               own || detail(i, j - 1),
+               own || detail(i + 1, j),
+               own || detail(i, j + 1),
+               own || detail(i - 1, j),
             ];
-            for (let k = 0; k < ring.length; k++)
-               triangle(centre, ring[k], ring[(k + 1) % ring.length], colour);
+            let colour: number[] = [-1, 0, 0];
+            if (!textured) {
+               const type = Course.surfaceAt(c, { x: centre[0], y: centre[1] }).type;
+               colour =
+                  palette[type] ??
+                  worldGroundColour(c, centre[0], centre[1]).map((v: number) => v / 255);
+            }
+            if (!edges.some(Boolean)) quad(a, b, d, e, colour);
+            else {
+               const ring = [
+                  a,
+                  ...(edges[0] ? [sample(i + 0.5, j)] : []),
+                  b,
+                  ...(edges[1] ? [sample(i + 1, j + 0.5)] : []),
+                  d,
+                  ...(edges[2] ? [sample(i + 0.5, j + 1)] : []),
+                  e,
+                  ...(edges[3] ? [sample(i, j + 0.5)] : []),
+               ];
+               for (let k = 0; k < ring.length; k++)
+                  triangle(centre, ring[k], ring[(k + 1) % ring.length], colour);
+            }
          }
+         if (j % 24 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
       }
-      if (j % 24 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
    }
    const terrainTriangles = data.length / 27;
    drawingGround = false;

@@ -1927,13 +1927,15 @@ html:has(body.experience) {
 .landscape-play {
    position: absolute;
    z-index: 3;
-   bottom: 24px;
+   top: 245px;
    left: 24px;
 }
 .landscape-play [hidden] {
    display: none !important;
 }
 .landscape-preview[data-playing='true'] .landscape-play {
+   top: auto;
+   bottom: 24px;
    left: 50%;
    transform: translateX(-50%);
    width: min(880px, calc(100% - 48px));

@@ -59,7 +59,9 @@ test('angled landscape preview opens, orbits, visits landmarks and returns witho
    await canvas.focus();
    for (let i = 0; i < 8; i++) await canvas.press('ArrowDown');
    await expect(canvas).toHaveAttribute('data-coverage', 'true', { timeout: 60000 });
-   await expect(canvas).toHaveAttribute('data-backdrop-terrain-vertices', '98304');
+   const terrainVertices = Number(await canvas.getAttribute('data-backdrop-terrain-vertices'));
+   expect(terrainVertices).toBeGreaterThanOrEqual(196608);
+   expect(terrainVertices).toBeLessThanOrEqual(32768 * 8 * 3);
    expect(Number(await canvas.getAttribute('data-distant-trees'))).toBeGreaterThan(0);
    await page.screenshot({ path: 'test-results/landscape-preview-wide-shallow.png' });
 

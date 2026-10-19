@@ -175,6 +175,14 @@ test('QR pairing, live controls, shot, phone reconnect, and display isolation', 
    await expect(
       screen.getByRole('button', { name: 'Play in this view', exact: true }),
    ).toBeVisible();
+   await screen.setViewportSize({ width: 1024, height: 700 });
+   const toggleBox = await screen
+      .getByRole('button', { name: 'Play in this view', exact: true })
+      .boundingBox();
+   const navBox = await screen
+      .getByRole('navigation', { name: 'Landscape viewpoints' })
+      .boundingBox();
+   expect(toggleBox!.y + toggleBox!.height).toBeLessThan(navBox!.y);
 
    await screen.keyboard.press('Escape');
    await screen.locator('#closeGameOptions').click();

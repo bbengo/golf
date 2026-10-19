@@ -22,8 +22,10 @@ test('distant woodland is bounded and samples real deterministic world trees', a
    let shared = 0;
    for (const tree of first.trees) {
       const [, x, y] = tree.id.split(':');
-      assert.deepEqual(tree, worldTree(course, Number(x), Number(y)));
-      assert.ok(['rough', 'deep-rough'].includes(Course.surfaceAt(course, tree).type));
+      const authored = course.objects.find((object) => object.id === tree.id);
+      assert.deepEqual(tree, authored ?? worldTree(course, Number(x), Number(y)));
+      if (!authored)
+         assert.ok(['rough', 'deep-rough'].includes(Course.surfaceAt(course, tree).type));
       if (overlap.has(tree.id)) {
          assert.deepEqual(tree, overlap.get(tree.id));
          shared++;
@@ -96,7 +98,33 @@ test('transition woodland increases nearby coverage within the existing budgets'
    );
    for (const tree of selected.trees) {
       const [, x, y] = tree.id.split(':');
-      assert.deepEqual(tree, worldTree(course, Number(x), Number(y)));
+      assert.deepEqual(
+         tree,
+         course.objects.find((object) => object.id === tree.id) ??
+            worldTree(course, Number(x), Number(y)),
+      );
    }
    assert.equal(JSON.stringify(Course.physicsSnapshot(course)), before);
+});
+
+test('authored course trees remain in distant views after the detailed window moves away', async () => {
+   const c = createPurityCourse(),
+      bounds = c.bounds;
+   const selected = await distantTrees(c, bounds, () => false, {
+      minX: 2000,
+      maxX: 3500,
+      minY: 2000,
+      maxY: 3500,
+   });
+   const ids = new Set(selected.trees.map((tree) => tree.id));
+   const authored = c.objects.filter(
+      (tree) =>
+         tree.kind === 'tree' &&
+         tree.x >= bounds.minX &&
+         tree.x <= bounds.maxX &&
+         tree.y >= bounds.minY &&
+         tree.y <= bounds.maxY,
+   );
+   assert.ok(authored.length > 20);
+   for (const tree of authored) assert.ok(ids.has(tree.id), `missing authored tree ${tree.id}`);
 });

@@ -1,5 +1,5 @@
-import { landscapeNormal } from './landscape-lighting';
-import { terrainColour } from './terrain-material';
+import { landscapeTerrain } from './landscape-terrain';
+import { terrainColour, SURFACE_COLOURS } from './terrain-material';
 import { distantWoodland } from './distant-woodland';
 import type { LandscapeView } from './landscape-projection';
 import type { Bounds } from './camera';
@@ -8,6 +8,13 @@ import { worldGroundColour, worldWetness } from '../course/procedural-world';
 import { waterColour } from './water-material';
 import type { Daylight } from './daylight';
 import type { CockpitSession } from '../session/cockpit-session';
+
+const surfaceColours = Object.fromEntries(
+   Object.entries(SURFACE_COLOURS).map(([key, hex]) => [
+      key,
+      [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)),
+   ]),
+);
 
 /** Conservative ground footprint across yaw, allowing 512 m of relative relief.
  * The supported estate's height envelope is much smaller than this allowance.
@@ -49,7 +56,7 @@ export function paddedLandscape(bounds: Bounds): Bounds {
    };
 }
 
-/** Fixed-budget distant terrain: 128 squared cells, plus bounded distant crowns.
+/** Bounded adaptive terrain surface plus distant crowns.
  * Samples the shared physical world; this is presentation LOD, never collision data.
  */
 export async function landscapeBackdrop(
@@ -67,45 +74,7 @@ export async function landscapeBackdrop(
       bounds.maxY <= bounds.minY
    )
       throw Error('Invalid landscape backdrop bounds');
-   const size = 128;
-   const points: { x: number; y: number; z: number }[] = [];
-   const normals: [number, number, number][] = [];
-   for (let j = 0; j <= size; j++) {
-      if (cancelled()) throw Error('Preview closed');
-      for (let i = 0; i <= size; i++) {
-         const x = bounds.minX + ((bounds.maxX - bounds.minX) * i) / size;
-         const y = bounds.minY + ((bounds.maxY - bounds.minY) * j) / size;
-         const surface = Course.surfaceAt(c, { x, y });
-         normals.push(landscapeNormal(c, x, y));
-         points.push({
-            x,
-            y,
-            z: surface.type === 'water' ? surface.waterHeight : Course.heightAt(c, { x, y }),
-         });
-      }
-      if (j % 8 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
-   }
-   const vertices = new Float32Array(size * size * 6 * 9);
-   let offset = 0;
-   const triangle = (ia: number, ib: number, ic: number) => {
-      for (const index of [ia, ib, ic]) {
-         const p = points[index];
-         vertices.set([p.x, p.y, p.z, ...normals[index], -1, 0, 0], offset);
-         offset += 9;
-      }
-   };
-   for (let j = 0; j < size; j++) {
-      if (cancelled()) throw Error('Preview closed');
-      for (let i = 0; i < size; i++) {
-         const a = j * (size + 1) + i,
-            b = a + 1,
-            d = b + size + 1,
-            e = a + size + 1;
-         triangle(a, b, d);
-         triangle(a, d, e);
-      }
-      if (j % 16 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
-   }
+   const { vertices } = await landscapeTerrain(c, bounds, detail, cancelled);
    const pixels = new Uint8Array(textureSize * textureSize * 4);
    for (let j = 0; j < textureSize; j++) {
       if (cancelled()) throw Error('Preview closed');
@@ -116,7 +85,14 @@ export async function landscapeBackdrop(
          const colour =
             surface.type === 'water'
                ? waterColour(x, y, Math.max(0, -worldWetness(c, x, y) * 28), daylight)
-               : worldGroundColour(c, x, y);
+               : surface.type !== 'rough' && surfaceColours[surface.type]
+                 ? surfaceColours[surface.type]
+                 : x >= c.bounds.minX &&
+                     x <= c.bounds.maxX &&
+                     y >= c.bounds.minY &&
+                     y <= c.bounds.maxY
+                   ? surfaceColours.rough
+                   : worldGroundColour(c, x, y);
          const pixel = (j * textureSize + i) * 4;
          pixels.set([...terrainColour(colour, x, y), 255], pixel);
       }

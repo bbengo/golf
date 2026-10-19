@@ -35,7 +35,7 @@ export async function openLandscapePreview(
    dialog.id = 'landscapePreview';
    dialog.className = 'landscape-preview';
    dialog.setAttribute('aria-labelledby', 'landscapePreviewTitle');
-   dialog.innerHTML = `<canvas tabindex="0" aria-label="Angled landscape preview. Drag to orbit; Shift-drag to pan; scroll to zoom. Use arrow keys to orbit, plus or minus to zoom."></canvas><header><div><p class="hud-eyebrow">PURITY / LANDSCAPE</p><h1 id="landscapePreviewTitle">Explore the course.</h1><p>Angled view &middot; Return to overhead to aim and play.</p></div><button type="button" aria-label="Return to game options">Back to options</button></header><nav aria-label="Landscape viewpoints"></nav><p class="preview-status" role="status">Preparing terrain and woodland...</p><aside class="preview-loading" aria-live="polite"><span class="hud-eyebrow">PURITY</span><strong>Preparing your view</strong><span>Bringing the surrounding landscape into view.</span></aside><footer><details><summary>Camera controls</summary><p>Drag to orbit &middot; Shift-drag to pan &middot; Scroll to zoom</p><p>Double-click ground to explore &middot; Arrow keys to orbit &middot; + / &minus; to zoom &middot; Escape to return</p></details></footer>`;
+   dialog.innerHTML = `<canvas tabindex="0" aria-label="Angled course. Drag to orbit; Shift-drag to pan; scroll to zoom. Use arrow keys to orbit, plus or minus to zoom."></canvas><header><div><p class="hud-eyebrow">PURITY / LANDSCAPE</p><h1 id="landscapePreviewTitle">Explore the course.</h1><p>Angled view &middot; Return to overhead to aim and play.</p></div><button type="button" aria-label="Return to game options">Back to options</button></header><nav aria-label="Landscape viewpoints"></nav><p class="preview-status" role="status">Preparing terrain and woodland...</p><aside class="preview-loading" aria-live="polite"><span class="hud-eyebrow">PURITY</span><strong>Preparing your view</strong><span>Bringing the surrounding landscape into view.</span></aside><footer><details><summary>Camera controls</summary><p>Drag to orbit &middot; Shift-drag to pan &middot; Scroll to zoom</p><p>Double-click ground to explore &middot; Arrow keys to orbit &middot; + / &minus; to zoom &middot; Escape to return</p></details></footer>`;
    document.body.append(dialog);
    dialog.showModal();
    const canvas = dialog.querySelector('canvas')!,
@@ -107,15 +107,15 @@ export async function openLandscapePreview(
          program,
          compile(
             gl.VERTEX_SHADER,
-            `attribute vec3 position;attribute vec3 normal;attribute vec3 colour;uniform vec3 centre;uniform vec4 view;uniform vec3 sun;uniform vec4 bounds;uniform float markerSize;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;
- void main(){gl_PointSize=markerSize;extent=bounds.zw-bounds.xy;vec3 p=position-centre;float co=cos(view.x),si=sin(view.x);float x=co*p.x-si*p.y,y=si*p.x+co*p.y;float sy=sin(view.y),cy=cos(view.y);gl_Position=vec4(x/(view.z*view.w),(y*sy+p.z*cy)/view.z,(y*cy-p.z*sy)/32000.0,1.0);float light=0.60+0.40*max(0.0,dot(normalize(normal),normalize(sun)));tint=colour*light;lighting=light;terrain=colour.r<0.0?1.0:0.0;uv=vec2((position.x-bounds.x)/(bounds.z-bounds.x),(bounds.w-position.y)/(bounds.w-bounds.y));}`,
+            `attribute vec3 position;attribute vec3 normal;attribute vec3 colour;uniform vec3 centre;uniform vec4 view;uniform vec3 sun;uniform vec4 bounds;uniform vec4 detailBounds;uniform float markerSize;varying vec3 tint;varying vec2 uv;varying vec2 detailUV;varying vec2 detailExtent;varying vec2 extent;varying float terrain;varying float lighting;
+ void main(){detailExtent=detailBounds.zw-detailBounds.xy;detailUV=vec2((position.x-detailBounds.x)/detailExtent.x,(detailBounds.w-position.y)/detailExtent.y);gl_PointSize=markerSize;extent=bounds.zw-bounds.xy;vec3 p=position-centre;float co=cos(view.x),si=sin(view.x);float x=co*p.x-si*p.y,y=si*p.x+co*p.y;float sy=sin(view.y),cy=cos(view.y);gl_Position=vec4(x/(view.z*view.w),(y*sy+p.z*cy)/view.z,(y*cy-p.z*sy)/32000.0,1.0);float light=0.60+0.40*max(0.0,dot(normalize(normal),normalize(sun)));tint=colour*light;lighting=light;terrain=colour.r<0.0?1.0:0.0;uv=vec2((position.x-bounds.x)/(bounds.z-bounds.x),(bounds.w-position.y)/(bounds.w-bounds.y));}`,
          ),
       );
       gl.attachShader(
          program,
          compile(
             gl.FRAGMENT_SHADER,
-            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform float edgeFade;uniform float ballMarker;uniform vec3 ballTint;uniform float effectAlpha;void main(){if(ballMarker>1.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(tint,effectAlpha*(1.0-smoothstep(0.25,0.5,d)));return;}if(ballMarker>0.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(mix(ballTint,vec3(0.25,0.33,0.25),smoothstep(0.30,0.5,d)),1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;gl_FragColor=vec4(terrain>0.5?texture2D(ground,uv).rgb*lighting:tint,alpha);}`,
+            `precision mediump float;varying vec3 tint;varying vec2 uv;varying vec2 detailUV;varying vec2 detailExtent;varying vec2 extent;varying float terrain;varying float lighting;uniform sampler2D ground;uniform sampler2D detailGround;uniform float blendDetail;uniform float edgeFade;uniform float ballMarker;uniform vec3 ballTint;uniform float effectAlpha;void main(){if(ballMarker>1.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(tint,effectAlpha*(1.0-smoothstep(0.25,0.5,d)));return;}if(ballMarker>0.5){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(mix(ballTint,vec3(0.25,0.33,0.25),smoothstep(0.30,0.5,d)),1.0);return;}vec2 edge=min(uv,1.0-uv)*extent;float alpha=edgeFade>0.5?smoothstep(0.0,terrain>0.5?256.0:96.0,min(edge.x,edge.y)):1.0;if(alpha<0.01)discard;vec3 material=texture2D(ground,uv).rgb;if(blendDetail>0.5&&terrain>0.5){vec2 de=min(detailUV,1.0-detailUV)*detailExtent;float weight=smoothstep(0.0,128.0,min(de.x,de.y));material=mix(material,texture2D(detailGround,clamp(detailUV,0.0,1.0)).rgb,weight);}gl_FragColor=vec4(terrain>0.5?material*lighting:tint,alpha);}`,
          ),
       );
       gl.linkProgram(program);
@@ -153,7 +153,7 @@ export async function openLandscapePreview(
          ground.bounds.maxY,
       );
       let detailBounds = ground.bounds;
-      let mesh = await landscapeMesh(course, ground.bounds, 8, () => closed, true);
+      let mesh = await landscapeMesh(course, ground.bounds, 8, () => closed, true, true);
       if (closed) return;
       const buffer = gl.createBuffer()!;
       resources.buffer = buffer;
@@ -543,6 +543,7 @@ export async function openLandscapePreview(
                16,
                () => closed,
                true,
+               true,
             );
             if (closed) return;
             // Discard obsolete work if the player moved on during generation.
@@ -678,6 +679,19 @@ export async function openLandscapePreview(
             previousBall = ballKey;
             previousGuide = guideKey;
             gl.uniform1f(gl.getUniformLocation(program, 'ballMarker'), 0);
+            gl.uniform1i(gl.getUniformLocation(program, 'ground'), 0);
+            gl.uniform1i(gl.getUniformLocation(program, 'detailGround'), 1);
+            gl.uniform4f(
+               gl.getUniformLocation(program, 'detailBounds'),
+               detailBounds.minX,
+               detailBounds.minY,
+               detailBounds.maxX,
+               detailBounds.maxY,
+            );
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.uniform1f(gl.getUniformLocation(program, 'blendDetail'), 1);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.uniform3f(centre, current.x, current.y, current.z);
             gl.uniform4f(view, current.yaw, current.pitch, current.span, w / h);
@@ -686,16 +700,16 @@ export async function openLandscapePreview(
                bindGround(backdropTexture, backdropBounds);
                bindGeometry(backdropBuffer);
                gl.drawArrays(gl.TRIANGLES, 0, backdropCount);
-               // The detailed physical surface owns the foreground. Clearing only
-               // depth prevents the coarse approximation poking through it.
-               gl.clear(gl.DEPTH_BUFFER_BIT);
+               // One stitched terrain surface owns depth throughout the visible world.
             }
+            gl.uniform1f(gl.getUniformLocation(program, 'blendDetail'), 0);
             gl.uniform1f(gl.getUniformLocation(program, 'edgeFade'), backdropCount ? 1 : 0);
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             bindGround(texture, detailBounds);
             bindGeometry(buffer);
-            gl.drawArrays(gl.TRIANGLES, 0, mesh.vertices.length / 9);
+            const objectStart = backdropCount ? mesh.terrainTriangles * 3 : 0;
+            gl.drawArrays(gl.TRIANGLES, objectStart, mesh.vertices.length / 9 - objectStart);
             gl.disable(gl.BLEND);
             // Presentation-only guides use the same camera/depth buffer as terrain.
             // Bound the trail upload; no second trajectory calculation is performed.
