@@ -1,3 +1,4 @@
+import { crownPoint, treeWood } from './tree-geometry';
 import { foliageTone } from './foliage-material';
 import { landscapeNormal } from './landscape-lighting';
 import type { Point } from '../contracts/cockpit';
@@ -224,26 +225,13 @@ export async function landscapeMesh(
       canopyNormal = null;
       const z = Course.heightAt(c, tree),
          r = tree.canopyRadius;
-      box(
-         tree.x - tree.trunkRadius,
-         tree.y - tree.trunkRadius,
-         z,
-         tree.x + tree.trunkRadius,
-         tree.y + tree.trunkRadius,
-         z + tree.canopyBase + 1,
-         [0.27, 0.25, 0.17],
-      );
+      const phase = worldHash(Math.floor(tree.x), Math.floor(tree.y)) * Math.PI * 2;
+      for (const [a, b, d] of treeWood(tree, z, phase)) triangle(a, b, d, [0.27, 0.25, 0.17]);
       const centre = z + (tree.height + tree.canopyBase) / 2,
          rz = (tree.height - tree.canopyBase) / 2;
-      const phase = worldHash(Math.floor(tree.x), Math.floor(tree.y)) * Math.PI * 2;
       const crown = (latitude: number, angle: number): V => {
-         const lobe =
-            0.83 + 0.17 * (0.5 + 0.5 * Math.cos(angle * 4 + phase) * Math.cos(latitude * 3));
-         return [
-            tree.x + Math.cos(latitude) * Math.cos(angle) * r * lobe,
-            tree.y + Math.cos(latitude) * Math.sin(angle) * r * lobe,
-            centre + Math.sin(latitude) * rz,
-         ];
+         const p = crownPoint(latitude, angle, phase);
+         return [tree.x + p[0] * r, tree.y + p[1] * r, centre + p[2] * rz];
       };
       const tint = worldHash(Math.floor(tree.x), Math.floor(tree.y));
       const col = [0.23 + tint * 0.09, 0.37 + tint * 0.14, 0.18 + tint * 0.05];

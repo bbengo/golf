@@ -6,7 +6,7 @@ Latest completed implementation: angled gameplay uses the shared session and pai
 
 Latest ball/performance pass: spherical impostor lighting, bounded zoom-responsive ball size, binary-search playback, cached shader locations and reused ball allocation. Real GPU/frame-time profiling remains necessary; the ball still uses point-centre depth. A bounded terrain-conforming contact shadow is now implemented, with altitude fade and water suppression; full scene shadowing and ball surface detail remain open. Aim geometry is cached across orbit frames.
 
-Vegetation update: continuous near/distant foliage tone replaces per-vertex colour noise. Detailed crowns now use 160 rather than 192 triangles by removing collapsed pole geometry. Branch/leaf detail, density transitions and device FPS validation remain open.
+Vegetation update: continuous near/distant foliage tone replaces per-vertex colour noise. Detailed crowns now use 160 rather than 192 triangles by removing collapsed pole geometry. Tapered trunks and three forks now bring each detailed tree to 200 triangles, below the earlier 204 total but above the optimized 172. Near/distant crowns share an asymmetric envelope. Leaf detail, full branching, density transitions and device FPS validation remain open.
 
 Remaining work is quality and external validation: physical-device/GPU and phone sleep/reconnect testing, transition peak-memory profiling, finer shoreline/material continuity, vegetation density transitions and measured physics calibration. These are not claimed complete by browser automation.
 

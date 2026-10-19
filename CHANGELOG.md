@@ -1,3 +1,9 @@
+## 2026-10-19: tapered trunks and forked tree structure
+
+- Add tapered trunks and three visible forks to detailed trees within a fixed 200-triangle total.
+- Share deterministic asymmetric crown shapes between nearby and distant woodland.
+- Preserve existing physical tree bounds and collision behaviour.
+
 ## 2026-10-19: smoother foliage and reduced crown geometry
 
 - Share continuous crown colour variation between nearby and distant trees.

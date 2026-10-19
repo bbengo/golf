@@ -493,3 +493,14 @@ Detailed crown pole quads contained one collapsed triangle each. Explicit top/bo
 Validation: all eleven focused foliage, mesh and distant-woodland tests pass. Checks include continuity, bounded colour, nonzero triangle area, exact detailed-tree triangle budget, physical terrain/normal consistency, unchanged course snapshots and retained distant trees. Typecheck and production build pass; the existing legacy course bundle warning remains.
 
 Final validation: both landscape browser regressions passed, including idle render stability, wide/portrait exploration and WebGL fallback. The pavilion close-up was reviewed: random triangular colour facets are removed, but simple crown silhouettes remain evident. Formatting passes.
+
+
+## 2026-10-19: tapered tree forks and shared crown shape
+
+Detailed trees now replace the rectangular trunk with a five-sided tapered trunk and three tapered forks under the canopy. The four uncapped segments use exactly 40 triangles; their ends terminate inside ground or foliage. Together with the 160-triangle crown, a detailed tree now costs 200 triangles (up from the previous optimized 172, still below the earlier 204). This deliberately spends some of the pole savings on visible structure rather than claiming another performance reduction.
+
+The tree-geometry module supplies a deterministic asymmetric crown envelope to both detailed and distant meshes. Crown vertices remain within the existing physical ellipsoid, including the original height and radius limits. Both levels retain their own fixed sampling resolutions; this improves shape consistency but cannot remove all silhouette or density transitions. New branches are presentation geometry within the existing tree envelope, not new branch colliders. Leaf cards, moving foliage, bark texture and full botanical branching are still unimplemented.
+
+Validation: twelve focused geometry/woodland tests pass, covering fixed triangle counts, nonzero faces, deterministic crown continuity, envelope bounds, finite branch geometry, unchanged physical snapshots and distant tree retention. Typecheck and production build pass, with the existing legacy course chunk warning.
+
+Final validation: both landscape browser checks passed, including idle rendering, wide/portrait coverage and unavailable-WebGL recovery. The pavilion capture was reviewed: varied silhouettes are apparent, but forks remain partly hidden by foliage from the elevated camera. Formatting passes.

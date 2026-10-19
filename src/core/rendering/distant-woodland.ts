@@ -1,3 +1,4 @@
+import { crownPoint } from './tree-geometry';
 import { foliageTone } from './foliage-material';
 import { Course } from '../course/course.js';
 import { worldTree, worldHash } from '../course/procedural-world';
@@ -174,11 +175,8 @@ export async function distantWoodland(
       centre = [tree.x, tree.y, z + tree.canopyBase + verticalRadius];
       const ring = (k: number, latitude: number): V => {
          const angle = (k * Math.PI) / 3 + tint * Math.PI * 2;
-         return [
-            tree.x + Math.cos(angle) * radius * Math.cos(latitude),
-            tree.y + Math.sin(angle) * radius * Math.cos(latitude),
-            centre[2] + verticalRadius * Math.sin(latitude),
-         ];
+         const p = crownPoint(latitude, angle, tint * Math.PI * 2);
+         return [tree.x + p[0] * radius, tree.y + p[1] * radius, centre[2] + p[2] * verticalRadius];
       };
       for (let k = 0; k < 6; k++) {
          const upper = ring(k, Math.PI / 6),

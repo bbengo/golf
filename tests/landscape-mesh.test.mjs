@@ -119,7 +119,7 @@ test('detailed crown removes collapsed pole triangles without reducing its ring 
       true,
       true,
    );
-   assert.equal(mesh.triangles, 12 + 160);
+   assert.equal(mesh.triangles, 40 + 160);
    for (let i = 0; i < mesh.vertices.length; i += 27) {
       const a = mesh.vertices.slice(i, i + 3),
          b = mesh.vertices.slice(i + 9, i + 12),
